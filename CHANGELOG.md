@@ -16,7 +16,8 @@ O formato é inspirado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.
 
 ### Alterado
 
-- PRD 2.0 definido como documento vigente do produto.
+- Roadmap do PRD alinhado ao `roadmap.md`, adotando oficialmente as fases 1 a 6.
+- PRD 2.1 definido como documento vigente do produto.
 - Referência ao PRD anterior atualizada para o caminho do arquivo histórico.
 - Documentação Markdown definida como fonte oficial do projeto.
 
@@ -42,4 +43,3 @@ O formato é inspirado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.
 ### Alterado
 
 - PRD convertido de PDF para Markdown para facilitar versionamento e revisão.
-
