@@ -1,0 +1,7 @@
+# Documentos gerados ou duplicados localmente
+*.docx
+
+# Arquivos do sistema operacional
+.DS_Store
+Thumbs.db
+
