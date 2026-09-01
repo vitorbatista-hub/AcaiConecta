@@ -4,7 +4,7 @@
 
 **Autor:** Vitor Benedito Ribeiro Batista  
 **Local inicial:** Cametá/PA  
-**Versão:** 2.1
+**Versão:** 2.0  
 **Data:** Setembro de 2026  
 **Status:** Proposta para validação  
 **Documento anterior:** [`archive/PRD-v1.md`](archive/PRD-v1.md) (versão 1.0)
@@ -715,27 +715,15 @@ A decisão deverá considerar comportamento real, não apenas opiniões positiva
 
 ## 22. Roadmap
 
-Este documento adota oficialmente as seis fases descritas em [`roadmap.md`](roadmap.md). O conteúdo abaixo é um resumo; objetivos, entregáveis e critérios de conclusão detalhados permanecem centralizados no roadmap oficial.
-
-### Fase 1 — Descoberta e Validação do Problema
+### Fase 0 — Descoberta
 
 - entrevistas;
-- observação do processo atual;
-- validação prática das hipóteses;
-- identificação de participantes para o piloto;
-- decisão de prosseguir, ajustar ou interromper.
+- protótipo;
+- validação das hipóteses;
+- regras operacionais;
+- análise jurídica e financeira inicial.
 
-### Fase 2 — Definição e Prototipação do Produto
-
-- revisão e aprovação do PRD;
-- decisões críticas;
-- fluxos e protótipo navegável;
-- testes de usabilidade;
-- MER e dicionário de dados iniciais;
-- arquitetura técnica;
-- backlog priorizado do MVP.
-
-### Fase 3 — Construção do MVP
+### Fase 1 — MVP e piloto
 
 - aplicação web responsiva;
 - catálogo;
@@ -744,34 +732,27 @@ Este documento adota oficialmente as seis fases descritas em [`roadmap.md`](road
 - administração;
 - notificações essenciais;
 - pagamento na entrega;
-- métricas, testes e ambientes de execução.
+- métricas e suporte.
 
-### Fase 4 — Piloto Controlado em Cametá
-
-- operação com 3 a 5 batedeiras;
-- execução durante 4 a 6 semanas;
-- acompanhamento de pedidos reais;
-- registro de incidentes;
-- consolidação das métricas;
-- decisão formal sobre a continuidade.
-
-### Fase 5 — Consolidação e Crescimento Local
+### Fase 2 — Consolidação
 
 - melhorias baseadas no piloto;
 - avaliações simples;
 - automação operacional;
 - Pix in-app, se aprovado financeira e juridicamente;
+- políticas e suporte mais estruturados.
+
+### Fase 3 — Crescimento local
+
 - entrada gradual de novas batedeiras;
 - melhoria das estimativas;
 - recursos de retenção;
-- definição e avaliação do modelo de receita;
-- políticas e suporte mais estruturados.
+- avaliação do modelo de receita.
 
-### Fase 6 — Expansão Regional
+### Fase 4 — Expansão
 
 - estudo de novas cidades;
 - parametrização regional;
-- piloto controlado em uma segunda cidade;
 - expansão somente após operação sustentável em Cametá.
 
 ---
@@ -886,4 +867,3 @@ O MVP estará pronto para implementação quando:
 |---|---|---|
 | 1.0 | Agosto de 2026 | Visão inicial, fluxos principais e roadmap. |
 | 2.0 | Setembro de 2026 | Escopo implementável, métricas, administração, estados do pedido, entrega, segurança, critérios de aceite e plano do piloto. |
-| 2.1 | Setembro de 2026 | Roadmap do PRD alinhado à organização oficial de seis fases. |
