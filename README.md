@@ -21,6 +21,7 @@ Os trabalhos atuais incluem:
 - [PRD vigente](docs/product/PRD.md)
 - [Roadmap](docs/product/roadmap.md)
 - [Registro de decisões](docs/product/decisions.md)
+- [MER conceitual](docs/architecture/MER.md)
 - [Histórico do PRD 1.0](docs/product/archive/PRD-v1.md)
 - [Changelog](CHANGELOG.md)
 
@@ -33,11 +34,10 @@ O produto será validado inicialmente em **Cametá, Pará**, com um grupo pequen
 - Produto: em definição
 - Protótipo: pendente
 - Arquitetura técnica: pendente
-- Modelo de dados: pendente
+- Modelo de dados: MER conceitual v0.1 criado e pendente de revisão
 - Aplicação: não iniciada
 - Piloto: pendente
 
 ## Princípio de desenvolvimento
 
 O projeto será desenvolvido de forma incremental. Cada fase deverá possuir objetivo, entregáveis e critérios de conclusão antes do início da fase seguinte.
-
