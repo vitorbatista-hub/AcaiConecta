@@ -8,6 +8,7 @@ O formato é inspirado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.
 
 ### Adicionado
 
+- Questionário essencial e anônimo para validação da Fase 1 com batedeiras e consumidores.
 - Schema SQL inicial do MVP para geração do modelo EER no MySQL Workbench.
 - README com visão geral, estado atual e links da documentação.
 - Roadmap com seis fases, entregáveis e critérios de conclusão.
@@ -17,6 +18,9 @@ O formato é inspirado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.
 
 ### Alterado
 
+- Fase 1 concluída após validação com 3 batedeiras e 9 consumidores; Fase 2 iniciada.
+- PRD atualizado para 2.2 com resultados das hipóteses e fila por ordem de criação.
+- Registro de decisões atualizado com escolhas decorrentes da validação inicial.
 - Roadmap do PRD alinhado ao `roadmap.md`, adotando oficialmente as fases 1 a 6.
 - PRD 2.1 definido como documento vigente do produto.
 - Referência ao PRD anterior atualizada para o caminho do arquivo histórico.

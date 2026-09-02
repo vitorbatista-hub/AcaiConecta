@@ -1,11 +1,14 @@
 # Roadmap do AçaíConecta
 
-**Status:** Em definição  
+**Status:** Fase 2 em andamento
 **Última atualização:** Setembro de 2026
 
 Este roadmap organiza o projeto em seis fases. As datas serão definidas somente após a validação do escopo e da capacidade de execução. A passagem entre fases depende dos critérios de conclusão, e não apenas do tempo transcorrido.
 
 ## Fase 1 — Descoberta e Validação do Problema
+
+**Situação:** Concluída em 02/09/2026
+**Evidência:** [`../research/validation-questionnaire.md`](../research/validation-questionnaire.md)
 
 ### Objetivo
 
@@ -27,6 +30,8 @@ Confirmar que o problema é relevante e que existe disposição real de batedeir
 - decisão consciente de prosseguir, ajustar ou interromper.
 
 ## Fase 2 — Definição e Prototipação do Produto
+
+**Situação:** Em andamento
 
 ### Objetivo
 
@@ -152,4 +157,3 @@ Adaptar e replicar o modelo validado em outras cidades.
 ## Regra de governança
 
 Uma fase não será considerada concluída apenas porque seus arquivos ou funcionalidades foram criados. Os critérios de conclusão devem ser verificados, e a decisão de avançar deve ser registrada em `decisions.md` e no `CHANGELOG.md` quando for significativa.
-

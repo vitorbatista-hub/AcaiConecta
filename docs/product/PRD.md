@@ -4,9 +4,9 @@
 
 **Autor:** Vitor Benedito Ribeiro Batista  
 **Local inicial:** Cametá/PA  
-**Versão:** 2.1
+**Versão:** 2.2
 **Data:** Setembro de 2026  
-**Status:** Proposta para validação  
+**Status:** Fase 2 — Definição e Prototipação
 **Documento anterior:** [`archive/PRD-v1.md`](archive/PRD-v1.md) (versão 1.0)
 
 ---
@@ -59,16 +59,18 @@ Ser o canal digital de referência para descobrir e comprar açaí tradicional d
 
 ---
 
-## 4. Hipóteses a validar
+## 4. Hipóteses do produto
 
-| ID | Hipótese | Evidência esperada |
-|---|---|---|
-| H1 | Consumidores têm dificuldade para descobrir batedeiras fora de seus contatos atuais. | Entrevistas e uso recorrente da busca/listagem. |
-| H2 | Consumidores aceitam fazer pedidos por uma plataforma dedicada. | Pedidos reais concluídos durante o piloto. |
-| H3 | Batedeiras aceitam operar um painel além do WhatsApp. | Uso autônomo do painel durante pelo menos quatro semanas. |
-| H4 | Catálogo e acompanhamento estruturado reduzem erros e perguntas repetidas. | Menor ocorrência de pedidos incompletos e solicitações de atualização. |
-| H5 | A operação consegue atender pedidos com estimativas em faixas de tempo. | Maioria das entregas concluída dentro da faixa informada. |
-| H6 | Existe um modelo de receita aceitável para batedeiras e plataforma. | Intenção de pagamento ou aceitação de comissão após o piloto. |
+Os resultados da validação inicial estão registrados no [`questionário da Fase 1`](../research/validation-questionnaire.md). Hipóteses preliminares ainda dependem de comportamento real durante o piloto.
+
+| ID | Hipótese | Situação | Próxima evidência necessária |
+|---|---|---|---|
+| H1 | Consumidores têm dificuldade para descobrir batedeiras fora de seus contatos atuais. | Validada | Acompanhar uso da busca e origem dos pedidos. |
+| H2 | Consumidores aceitam fazer pedidos por uma plataforma dedicada. | Validada preliminarmente | Pedidos reais concluídos durante o piloto. |
+| H3 | Batedeiras aceitam operar um painel além do WhatsApp. | Validada preliminarmente | Uso autônomo do painel durante pelo menos quatro semanas. |
+| H4 | Catálogo e acompanhamento estruturado reduzem erros e perguntas repetidas. | Parcialmente validada | Comparar incidentes e contatos durante o piloto. |
+| H5 | A operação consegue atender pedidos com estimativas em faixas de tempo. | Incerta | Comparar estimativas com tempos reais de entrega. |
+| H6 | Existe um modelo de receita aceitável para batedeiras e plataforma. | Incerta | Avaliar disposição para pagar e custos após a validação operacional. |
 
 ---
 
@@ -381,7 +383,7 @@ Toda transição deverá registrar:
 
 ### 12.6 Fila e estimativa
 
-- pedidos aceitos serão exibidos inicialmente por ordem de aceite;
+- pedidos serão priorizados pelo horário de criação e entrarão na operação após o aceite;
 - a batedeira poderá visualizar prioridade e horário de criação;
 - o sistema não prometerá horário exato no MVP;
 - será apresentada uma faixa estimada configurada pela batedeira;
@@ -681,9 +683,7 @@ Antes da escolha serão estimados:
 
 ### 21.1 Preparação
 
-- entrevistar pelo menos 10 batedeiras;
-- entrevistar entre 15 e 20 consumidores;
-- selecionar 3 a 5 batedeiras com perfis diferentes;
+- confirmar a participação das 3 batedeiras selecionadas na validação inicial;
 - mapear catálogo, bairros, horários e capacidade;
 - testar protótipo navegável;
 - treinar operadores;
@@ -869,14 +869,15 @@ O MVP estará pronto para implementação quando:
 
 ## 27. Próximos passos
 
-1. Revisar este PRD com potenciais clientes e batedeiras.
-2. Responder às decisões pendentes de maior impacto.
-3. Produzir protótipo navegável do cliente, batedeira e administrador.
-4. Executar entrevistas e testes de usabilidade.
-5. Elaborar modelo inicial de dados e arquitetura técnica.
-6. Converter histórias do MVP em backlog priorizado.
-7. Planejar o piloto com 3 a 5 batedeiras.
-8. Iniciar implementação somente após os critérios de prontidão.
+1. Responder às decisões pendentes de maior impacto.
+2. Documentar os fluxos do cliente, batedeira e administrador.
+3. Produzir o protótipo navegável.
+4. Executar testes de usabilidade com o protótipo.
+5. Revisar o modelo de dados e produzir o dicionário de dados.
+6. Definir e registrar a arquitetura técnica.
+7. Converter histórias do MVP em backlog priorizado.
+8. Detalhar a preparação do piloto com as 3 batedeiras confirmadas.
+9. Iniciar a implementação somente após os critérios de prontidão.
 
 ---
 
@@ -887,3 +888,4 @@ O MVP estará pronto para implementação quando:
 | 1.0 | Agosto de 2026 | Visão inicial, fluxos principais e roadmap. |
 | 2.0 | Setembro de 2026 | Escopo implementável, métricas, administração, estados do pedido, entrega, segurança, critérios de aceite e plano do piloto. |
 | 2.1 | Setembro de 2026 | Roadmap do PRD alinhado à organização oficial de seis fases. |
+| 2.2 | Setembro de 2026 | Resultados da Fase 1 incorporados, fila definida por ordem de criação e próximos passos atualizados para a Fase 2. |

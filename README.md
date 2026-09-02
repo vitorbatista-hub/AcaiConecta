@@ -6,21 +6,22 @@ O produto pretende centralizar informações hoje dispersas, como disponibilidad
 
 ## Estado atual
 
-O projeto está na fase de definição e validação do produto. Ainda não existe aplicação implementada.
+A Fase 1 — Descoberta e Validação do Problema foi concluída. O projeto está na Fase 2 — Definição e Prototipação do Produto; ainda não existe aplicação implementada.
 
 Os trabalhos atuais incluem:
 
-- revisão das regras de negócio;
-- definição do escopo do MVP;
-- planejamento da validação prática;
-- preparação do protótipo;
-- resolução das decisões pendentes do produto.
+- resolução das decisões de produto pendentes;
+- criação dos fluxos e do protótipo navegável;
+- revisão do modelo de dados;
+- definição da arquitetura técnica;
+- preparação do backlog do MVP;
 
 ## Documentação
 
 - [PRD vigente](docs/product/PRD.md)
 - [Roadmap](docs/product/roadmap.md)
 - [Registro de decisões](docs/product/decisions.md)
+- [Questionário de validação da Fase 1](docs/research/validation-questionnaire.md)
 - [Schema SQL do MVP](database/schema.sql)
 - [Modelo EER para MySQL Workbench](database/acai_conecta.mwb)
 - [Histórico do PRD 1.0](docs/product/archive/PRD-v1.md)
@@ -34,7 +35,6 @@ O produto será validado inicialmente em **Cametá, Pará**, com um grupo pequen
 
 ## Situação da implementação
 
-- Produto: em definição
 - Protótipo: pendente
 - Arquitetura técnica: pendente
 - Modelo de dados: schema inicial e modelo EER do MVP criados

@@ -23,18 +23,20 @@ Este documento registra decisões de produto e negócio. Decisões arquiteturais
 | DEC-006 | 2026-09-01 | Provisória | A primeira interface será uma aplicação web responsiva. | Reduzir custo e permitir acesso sem depender de lojas de aplicativos. |
 | DEC-007 | 2026-09-01 | Decidida | O projeto será organizado em seis fases com critérios de conclusão. | Evitar crescimento prematuro e separar construção de validação. |
 | DEC-008 | 2026-09-01 | Decidida | Markdown será a fonte oficial da documentação versionada. | Facilitar revisão, histórico e comparação no Git. |
+| DEC-009 | 2026-09-02 | Decidida | A Fase 1 foi concluída e o projeto avançará para a Fase 2. | Três batedeiras aceitaram o piloto e nove consumidores confirmaram preliminarmente o interesse na proposta. |
+| DEC-010 | 2026-09-02 | Decidida | A fila será ordenada pelo horário de criação do pedido. | A operação atual já utiliza ordem de chegada e a regra é compreensível para os participantes. |
+| DEC-011 | 2026-09-02 | Provisória | O prazo inicial para aceitar ou recusar um pedido será de cinco minutos. | As batedeiras consultadas consideraram o prazo viável; o piloto medirá o comportamento real. |
+| DEC-012 | 2026-09-02 | Provisória | O MVP usará campos estruturados, mensagens operacionais e contingência de suporte, sem chat livre. | Estados foram aceitos, mas endereço, troco, reclamações e exceções ainda exigem comunicação. |
+| DEC-013 | 2026-09-02 | Decidida | Fotos de produtos farão parte do MVP; vídeos ficarão para uma fase posterior. | Fotos atendem à necessidade de divulgação com menor complexidade de armazenamento, desempenho e moderação. |
 
 ## Decisões pendentes
 
 | ID | Prioridade | Decisão necessária | Evidência ou responsável esperado |
 |---|---|---|---|
 | PEN-001 | Alta | Retirada no local fará parte do MVP? | Confirmar demanda e operação com batedeiras. |
-| PEN-002 | Alta | Qual será a regra definitiva de ordenação da fila? | Comparar ordem de criação, aceite e necessidade operacional. |
 | PEN-003 | Alta | Quem poderá cancelar após o aceite e em quais estados? | Definir política operacional antes do backlog. |
 | PEN-004 | Alta | Quem marcará e contestará a entrega? | Definir fluxo de conclusão e suporte. |
-| PEN-005 | Alta | Como ocorrerá a comunicação em exceções de entrega? | Testar mensagens predefinidas e contingência. |
 | PEN-006 | Alta | A batedeira poderá se cadastrar sozinha no MVP? | Avaliar complexidade versus benefício no piloto. |
-| PEN-007 | Média | Qual será o prazo definitivo para aceitar pedidos? | Validar capacidade real das batedeiras. |
 | PEN-008 | Média | Quais bairros participarão do piloto? | Mapear cobertura dos participantes selecionados. |
 | PEN-009 | Média | Haverá pedido mínimo por batedeira? | Verificar política comercial de cada participante. |
 | PEN-010 | Média | Qual será o modelo de receita após o piloto? | Avaliar comissão, mensalidade e modelo híbrido. |
@@ -54,4 +56,3 @@ Ao registrar uma decisão, informe:
 - justificativa;
 - consequências;
 - responsável, quando aplicável.
-
