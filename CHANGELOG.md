@@ -8,6 +8,7 @@ O formato é inspirado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.
 
 ### Adicionado
 
+- Schema SQL inicial do MVP para geração do modelo EER no MySQL Workbench.
 - README com visão geral, estado atual e links da documentação.
 - Roadmap com seis fases, entregáveis e critérios de conclusão.
 - Registro centralizado de decisões tomadas e pendentes.

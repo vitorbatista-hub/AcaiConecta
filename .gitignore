@@ -1,7 +1,10 @@
 # Documentos gerados ou duplicados localmente
 *.docx
 
+# Backups temporários do MySQL Workbench
+*.mwb.bak
+*.mwb.~*
+
 # Arquivos do sistema operacional
 .DS_Store
 Thumbs.db
-

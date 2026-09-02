@@ -21,8 +21,12 @@ Os trabalhos atuais incluem:
 - [PRD vigente](docs/product/PRD.md)
 - [Roadmap](docs/product/roadmap.md)
 - [Registro de decisões](docs/product/decisions.md)
+- [Schema SQL do MVP](database/schema.sql)
+- [Modelo EER para MySQL Workbench](database/acai_conecta.mwb)
 - [Histórico do PRD 1.0](docs/product/archive/PRD-v1.md)
 - [Changelog](CHANGELOG.md)
+
+O arquivo `database/schema.sql` é a fonte oficial da estrutura do banco de dados. O arquivo `database/acai_conecta.mwb` é uma representação visual derivada, mantida para consulta no MySQL Workbench.
 
 ## Local de validação
 
@@ -33,11 +37,10 @@ O produto será validado inicialmente em **Cametá, Pará**, com um grupo pequen
 - Produto: em definição
 - Protótipo: pendente
 - Arquitetura técnica: pendente
-- Modelo de dados: pendente
+- Modelo de dados: schema inicial e modelo EER do MVP criados
 - Aplicação: não iniciada
 - Piloto: pendente
 
 ## Princípio de desenvolvimento
 
 O projeto será desenvolvido de forma incremental. Cada fase deverá possuir objetivo, entregáveis e critérios de conclusão antes do início da fase seguinte.
-
