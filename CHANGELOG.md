@@ -18,6 +18,8 @@ O formato é inspirado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.
 
 ### Alterado
 
+- PRD atualizado para 2.3 com operação somente por entrega, regras de cancelamento e contestação, documentação obrigatória, área piloto, monetização e stack do MVP.
+- Registro de decisões consolidado: respostas concluídas foram promovidas a decisões formais e substituídas por pendências específicas ainda abertas.
 - Fase 1 concluída após validação com 3 batedeiras e 9 consumidores; Fase 2 iniciada.
 - PRD atualizado para 2.2 com resultados das hipóteses e fila por ordem de criação.
 - Registro de decisões atualizado com escolhas decorrentes da validação inicial.

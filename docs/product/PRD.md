@@ -4,7 +4,7 @@
 
 **Autor:** Vitor Benedito Ribeiro Batista  
 **Local inicial:** Cametá/PA  
-**Versão:** 2.2
+**Versão:** 2.3
 **Data:** Setembro de 2026  
 **Status:** Fase 2 — Definição e Prototipação
 **Documento anterior:** [`archive/PRD-v1.md`](archive/PRD-v1.md) (versão 1.0)
@@ -15,7 +15,7 @@
 
 O **AçaíConecta** é uma plataforma digital que conecta consumidores a batedeiras de açaí tradicional em Cametá/PA. A proposta é reunir, em um único canal, informações hoje dispersas em contatos de WhatsApp, como disponibilidade, localização, preços, produtos e horários, além de estruturar o recebimento e acompanhamento de pedidos.
 
-O produto será validado inicialmente por meio de uma aplicação web responsiva, com operação limitada a Cametá e um grupo piloto de 3 a 5 batedeiras. As entregas continuarão sob responsabilidade de cada batedeira, sem frota própria da plataforma.
+O produto será validado inicialmente por meio de uma aplicação web responsiva e instalável, com operação limitada ao bairro Centro, em Cametá, e um grupo piloto de 3 a 5 batedeiras. As entregas continuarão sob responsabilidade de cada batedeira, sem frota própria da plataforma.
 
 A primeira versão comercial não terá cartão, split de pagamento, roteirização, chat livre ou expansão para outras cidades. O objetivo do MVP é comprovar que consumidores e batedeiras obtêm valor com descoberta centralizada, catálogo padronizado e pedidos estruturados.
 
@@ -70,7 +70,7 @@ Os resultados da validação inicial estão registrados no [`questionário da Fa
 | H3 | Batedeiras aceitam operar um painel além do WhatsApp. | Validada preliminarmente | Uso autônomo do painel durante pelo menos quatro semanas. |
 | H4 | Catálogo e acompanhamento estruturado reduzem erros e perguntas repetidas. | Parcialmente validada | Comparar incidentes e contatos durante o piloto. |
 | H5 | A operação consegue atender pedidos com estimativas em faixas de tempo. | Incerta | Comparar estimativas com tempos reais de entrega. |
-| H6 | Existe um modelo de receita aceitável para batedeiras e plataforma. | Incerta | Avaliar disposição para pagar e custos após a validação operacional. |
+| H6 | Existe um modelo de receita aceitável para batedeiras e plataforma. | Modelo definido, não validado | Testar valor e aceitação da mensalidade após a validação operacional. |
 
 ---
 
@@ -188,19 +188,20 @@ Responsável por cadastrar ou aprovar batedeiras, revisar informações, prestar
 - atualizar estado do estabelecimento: aberto ou fechado;
 - atualizar disponibilidade de entrega separadamente;
 - gerenciar produtos e disponibilidade;
-- configurar bairros atendidos, pedido mínimo e faixa estimada;
+- configurar bairros atendidos e faixa estimada;
 - receber alerta de novo pedido;
 - aceitar ou recusar com motivo;
 - acompanhar fila de pedidos;
 - atualizar estados permitidos;
 - registrar falha de entrega;
 - consultar resumo operacional básico.
+- realizar o próprio cadastro e enviar a documentação exigida para análise.
 
 ### 8.3 Administrador
 
 - criar, revisar, aprovar, suspender e reativar batedeiras;
 - gerenciar usuários autorizados de uma batedeira;
-- revisar documentos quando essa coleta for habilitada;
+- revisar documentos e impedir a ativação enquanto houver requisito obrigatório ausente, inválido ou vencido;
 - consultar pedidos e histórico de estados;
 - prestar suporte e registrar intervenções;
 - moderar imagens e informações públicas;
@@ -239,7 +240,7 @@ Responsável por cadastrar ou aprovar batedeiras, revisar informações, prestar
 
 Uma batedeira poderá estar:
 
-- **Em análise:** ainda não visível publicamente;
+- **Em análise:** cadastro ou documentação ainda não aprovados; não visível publicamente;
 - **Ativa:** aprovada e autorizada a operar;
 - **Suspensa:** temporariamente indisponível por decisão administrativa;
 - **Desativada:** fora da plataforma.
@@ -248,14 +249,13 @@ Uma batedeira ativa define separadamente:
 
 - **Estabelecimento aberto/fechado**;
 - **Entrega disponível/indisponível**;
-- **Retirada disponível/indisponível**, caso essa opção seja habilitada.
 
 ### 10.2 Horários
 
 - horários regulares serão configurados por dia da semana;
 - o fechamento manual prevalece sobre o horário regular;
 - exceções, como feriados, poderão ser registradas pelo administrador no piloto;
-- pedidos não poderão ser enviados quando a modalidade selecionada estiver indisponível;
+- pedidos não poderão ser enviados quando a entrega estiver indisponível;
 - a interface deverá informar o próximo horário previsto de abertura quando disponível.
 
 ### 10.3 Área de atendimento
@@ -263,12 +263,13 @@ Uma batedeira ativa define separadamente:
 Cada batedeira deverá informar:
 
 - bairros atendidos;
-- pedido mínimo, se houver;
-- modalidade disponível;
+- disponibilidade de entrega;
 - faixa estimada de entrega;
 - observações operacionais aprovadas pelo administrador.
 
 No MVP, não haverá cálculo por distância ou geolocalização automática. O endereço será validado pelo bairro informado.
+
+O piloto atenderá somente o bairro Centro. Cada pedido deverá totalizar pelo menos 1 litro de açaí; essa validação será feita pelo volume dos itens, não pelo valor monetário do pedido.
 
 ---
 
@@ -307,7 +308,6 @@ Cada produto deverá possuir:
 - endereço e referência;
 - forma de pagamento;
 - valor de troco, quando aplicável;
-- modalidade de atendimento;
 - observações;
 - faixa estimada apresentada;
 - estado atual;
@@ -320,7 +320,7 @@ Cada produto deverá possuir:
 | `AGUARDANDO_ACEITE` | Pedido enviado e aguardando resposta. | Não |
 | `ACEITO` | Batedeira confirmou que atenderá. | Não |
 | `EM_PREPARO` | Produção iniciada. | Não |
-| `PRONTO` | Pedido pronto para retirada ou entrega. | Não |
+| `PRONTO` | Pedido pronto para sair para entrega. | Não |
 | `SAIU_PARA_ENTREGA` | Pedido em deslocamento. | Não |
 | `ENTREGUE` | Entrega concluída. | Sim |
 | `RECUSADO` | Batedeira recusou antes do aceite. | Sim |
@@ -347,7 +347,6 @@ EM_PREPARO
 
 PRONTO
 ├── SAIU_PARA_ENTREGA
-├── ENTREGUE, quando houver retirada
 └── CANCELADO
 
 SAIU_PARA_ENTREGA
@@ -374,9 +373,9 @@ Toda transição deverá registrar:
 
 ### 12.5 Cancelamento
 
-- o cliente poderá cancelar livremente enquanto o pedido estiver em `AGUARDANDO_ACEITE`;
-- após o aceite, o cliente deverá solicitar suporte ou cancelamento, sujeito à situação do preparo;
-- a batedeira poderá cancelar após o aceite apenas informando um motivo;
+- cliente e batedeira poderão cancelar até antes da transição para `SAIU_PARA_ENTREGA`;
+- após o aceite, todo cancelamento exigirá identificação do autor e motivo;
+- após `SAIU_PARA_ENTREGA`, problemas serão tratados como falha ou contestação, não como cancelamento comum;
 - cancelamentos após aceite serão acompanhados como indicador de qualidade;
 - enquanto não houver pagamento in-app, não haverá estorno processado pela plataforma;
 - regras financeiras adicionais serão definidas antes da integração de pagamentos.
@@ -411,7 +410,16 @@ Motivos mínimos:
 - estabelecimento não conseguiu concluir;
 - outro motivo, com descrição obrigatória.
 
-### 13.3 Comunicação protegida
+### 13.3 Confirmação e contestação
+
+- o entregador deverá registrar uma fotografia em frente ao endereço;
+- a fotografia será vinculada ao pedido com data, hora e responsável pelo registro;
+- a batedeira marcará o pedido como entregue após a confirmação do entregador;
+- o cliente poderá contestar a entrega;
+- fotografia e histórico do pedido serão evidências para análise manual, mas não constituirão prova isolada do recebimento;
+- o procedimento e o prazo de resolução serão definidos antes do piloto.
+
+### 13.4 Comunicação protegida
 
 O MVP não oferecerá chat livre nem divulgará o WhatsApp publicamente. Entretanto, disponibilizará mensagens operacionais predefinidas vinculadas ao pedido, como:
 
@@ -510,7 +518,7 @@ Login social ficará fora do MVP.
 
 ## 17. Dados pessoais, segurança e privacidade
 
-O produto poderá tratar nome, telefone, e-mail, endereço, histórico de pedidos e dados de responsáveis por batedeiras. Documentos e dados financeiros poderão ser adicionados em fases posteriores.
+O produto poderá tratar nome, telefone, e-mail, endereço, histórico de pedidos, fotografias de entrega e dados e documentos de responsáveis por batedeiras.
 
 Antes do piloto público deverão existir:
 
@@ -522,6 +530,7 @@ Antes do piloto público deverão existir:
 - controle de acesso por função;
 - criptografia em trânsito;
 - armazenamento privado para documentos;
+- armazenamento privado e acesso restrito às fotografias de entrega;
 - validação de tipo e tamanho de uploads;
 - backups e procedimento de restauração;
 - registros de auditoria;
@@ -535,6 +544,14 @@ Antes do piloto público deverão existir:
 - chave Pix não será coletada no MVP enquanto o pagamento ocorrer diretamente;
 - dados não necessários à validação serão adiados;
 - ambientes de teste não deverão utilizar dados pessoais reais.
+
+### 17.2 Documentação da batedeira
+
+- o cadastro poderá ser realizado com CPF do responsável, sem obrigatoriedade de CNPJ;
+- CPF do responsável, alvará de funcionamento e licença sanitária válidos serão requisitos de ativação;
+- a ausência, reprovação ou expiração de documento obrigatório impedirá novos pedidos;
+- requisitos complementares e a viabilidade do cadastro sem CNPJ serão confirmados com os órgãos competentes de Cametá antes do piloto;
+- documentos não serão exibidos publicamente.
 
 ---
 
@@ -604,7 +621,7 @@ Critérios:
 - somente produtos disponíveis podem ser adicionados;
 - preços e total são apresentados antes da confirmação;
 - endereço precisa pertencer a um bairro atendido;
-- pedido não pode ser enviado se a modalidade estiver indisponível;
+- pedido não pode ser enviado se a entrega estiver indisponível;
 - envio repetido da mesma requisição não cria pedidos duplicados;
 - o pedido inicia em `AGUARDANDO_ACEITE`.
 
@@ -656,17 +673,11 @@ Critérios:
 
 ---
 
-## 20. Modelo de receita — hipóteses
+## 20. Modelo de receita
 
-Três alternativas serão avaliadas:
+O modelo escolhido é a mensalidade paga pela batedeira. O valor, a periodicidade de cobrança e eventual gratuidade durante o piloto ainda serão definidos. A escolha do modelo não representa validação da disposição para pagar.
 
-1. **Comissão por pedido:** custo proporcional ao uso, porém depende de pagamento ou conciliação na plataforma.
-2. **Mensalidade:** receita previsível, mas pode dificultar adesão inicial.
-3. **Modelo híbrido:** mensalidade reduzida e comissão menor.
-
-O piloto poderá ser gratuito, desde que as entrevistas incluam perguntas sobre disposição para pagar. Gratuidade no piloto não será interpretada como validação do modelo financeiro.
-
-Antes da escolha serão estimados:
+Antes de definir o valor e as condições da mensalidade, serão estimados:
 
 - ticket médio;
 - margem aproximada das batedeiras;
@@ -737,7 +748,7 @@ Este documento adota oficialmente as seis fases descritas em [`roadmap.md`](road
 
 ### Fase 3 — Construção do MVP
 
-- aplicação web responsiva;
+- aplicação web responsiva e instalável;
 - catálogo;
 - pedido e estados;
 - painel da batedeira;
@@ -797,24 +808,20 @@ Este documento adota oficialmente as seis fases descritas em [`roadmap.md`](road
 
 ### 24.1 Decisões de produto
 
-- retirada no local fará parte do piloto?
 - qual será o prazo definitivo para aceite?
-- quais bairros serão atendidos inicialmente?
-- haverá pedido mínimo por batedeira?
 - mensagens predefinidas serão suficientes?
-- quem poderá cancelar após o aceite?
-- como será tratada uma entrega contestada?
+- qual será o procedimento e o prazo para resolver uma entrega contestada?
 
 ### 24.2 Decisões comerciais
 
 - piloto gratuito ou subsidiado;
-- modelo de receita após validação;
+- valor da mensalidade e gratuidade durante o piloto;
 - responsabilidade pelas tarifas futuras;
 - política de suporte e horários de atendimento.
 
 ### 24.3 Decisões jurídicas e administrativas
 
-- documentos obrigatórios para participação;
+- exigências complementares ou dispensas aplicáveis em Cametá;
 - significado dos selos de verificação;
 - termos de responsabilidade;
 - retenção de documentos e pedidos;
@@ -822,7 +829,6 @@ Este documento adota oficialmente as seis fases descritas em [`roadmap.md`](road
 
 ### 24.4 Decisões técnicas
 
-- stack definitiva;
 - provedor de hospedagem e banco;
 - serviço de autenticação;
 - canal de Web Push;
@@ -831,6 +837,10 @@ Este documento adota oficialmente as seis fases descritas em [`roadmap.md`](road
 - metas quantitativas de disponibilidade e desempenho.
 
 Decisões pendentes não deverão ser preenchidas por suposição durante a implementação. Cada uma deverá ser validada ou registrada formalmente.
+
+### 24.5 Arquitetura definida
+
+O MVP será um monólito modular em TypeScript, com Next.js, React, Tailwind CSS, MySQL e Prisma. A aplicação será web responsiva e instalável; frontend e backend permanecerão na mesma base de código durante o MVP.
 
 ---
 
@@ -889,3 +899,4 @@ O MVP estará pronto para implementação quando:
 | 2.0 | Setembro de 2026 | Escopo implementável, métricas, administração, estados do pedido, entrega, segurança, critérios de aceite e plano do piloto. |
 | 2.1 | Setembro de 2026 | Roadmap do PRD alinhado à organização oficial de seis fases. |
 | 2.2 | Setembro de 2026 | Resultados da Fase 1 incorporados, fila definida por ordem de criação e próximos passos atualizados para a Fase 2. |
+| 2.3 | Setembro de 2026 | Operação somente por entrega, regras de cancelamento e contestação, cadastro documental, monetização, área piloto e stack consolidados. |
