@@ -17,8 +17,8 @@ Este documento registra decisões de produto e negócio. Decisões arquiteturais
 |---|---|---|---|---|
 | DEC-001 | 2026-09-01 | Decidida | Cametá/PA será o mercado inicial. | Reduzir o escopo e validar em um contexto conhecido. |
 | DEC-002 | 2026-09-01 | Decidida | A plataforma não terá frota própria no MVP. | Produção e entrega continuarão sob responsabilidade das batedeiras. |
-| DEC-003 | 2026-09-01 | Decidida | O MVP usará pagamento na entrega: dinheiro ou Pix presencial. | Evitar complexidade financeira antes da validação operacional. |
-| DEC-004 | 2026-09-01 | Decidida | Pix in-app, cartão e split ficarão fora do MVP. | Dependem de modelo financeiro, conciliação e avaliação jurídica. |
+| DEC-003 | 2026-09-01 | Substituída pela DEC-024 | O MVP usaria pagamento na entrega: dinheiro ou Pix presencial. | A decisão foi revista para incorporar Pix on-line ao MVP. |
+| DEC-004 | 2026-09-01 | Substituída pela DEC-024 | Pix in-app, cartão e split ficariam fora do MVP. | O Pix on-line passou a fazer parte do MVP; cartão continua fora. |
 | DEC-005 | 2026-09-01 | Decidida | O piloto será controlado e terá inicialmente de 3 a 5 batedeiras. | Permitir acompanhamento próximo e aprendizado com baixo risco. |
 | DEC-006 | 2026-09-01 | Provisória | A primeira interface será uma aplicação web responsiva. | Reduzir custo e permitir acesso sem depender de lojas de aplicativos. |
 | DEC-007 | 2026-09-01 | Decidida | O projeto será organizado em seis fases com critérios de conclusão. | Evitar crescimento prematuro e separar construção de validação. |
@@ -38,16 +38,21 @@ Este documento registra decisões de produto e negócio. Decisões arquiteturais
 | DEC-021 | 2026-09-03 | Provisória | O modelo de receita após o piloto será uma mensalidade paga pela batedeira. | Evitar conciliação por pedido; preço, período gratuito e condições comerciais ainda serão validados. |
 | DEC-022 | 2026-09-03 | Decidida | CNPJ será opcional, mas CPF do responsável, alvará de funcionamento e licença sanitária válidos serão obrigatórios para ativação. | Permitir participação sem CNPJ sem flexibilizar os requisitos sanitários e operacionais adotados pela plataforma. |
 | DEC-023 | 2026-09-03 | Decidida | O MVP usará TypeScript, Next.js, React, Tailwind CSS, MySQL e Prisma em um monólito modular, entregue como aplicação web responsiva e instalável. | Reduzir complexidade operacional, manter uma única base de código e preservar capacidade de evolução. |
+| DEC-024 | 2026-09-03 | Decidida | O MVP aceitará dinheiro na entrega ou Pix on-line gerado pelo site; Pix presencial e cartão ficarão fora do escopo. | Oferecer confirmação digital do Pix e manter uma alternativa simples na entrega. |
+| DEC-025 | 2026-09-03 | Decidida | O Pix será gerado após o aceite, valerá por dez minutos e admitirá uma única renovação pelo mesmo prazo; a segunda expiração cancelará o pedido. | Evitar cobrar pedidos recusados e impedir reserva indefinida da capacidade da batedeira. |
+| DEC-026 | 2026-09-03 | Decidida | O provedor creditará a venda diretamente na conta conectada da batedeira, sem comissão ou repasse manual pelo AçaíConecta. | A receita da plataforma virá da mensalidade e a plataforma não custodiará o valor das vendas. |
+| DEC-027 | 2026-09-03 | Decidida | A tarifa de processamento do Pix será responsabilidade da batedeira e deverá ser informada antes da ativação. | Vincular o custo da transação ao recebedor da venda sem cobrar valor adicional não informado do cliente. |
+| DEC-028 | 2026-09-03 | Decidida | Pedido Pix pago e cancelado antes de `SAIU_PARA_ENTREGA`, falha reconhecida ou contestação procedente gerarão devolução integral pela transação original. | Manter um procedimento rastreável e evitar devoluções por transferências manuais. |
+| DEC-029 | 2026-09-03 | Decidida | O cliente poderá contestar em até uma hora após `ENTREGUE`; o administrador decidirá em até duas horas úteis de operação. | Garantir prazo posterior ao recebimento e atendimento compatível com o horário de suporte. |
 
 ## Decisões pendentes
 
 | ID | Prioridade | Decisão necessária | Evidência ou responsável esperado |
 |---|---|---|---|
-| PEN-013 | Alta | Qual será o procedimento administrativo e o prazo para resolver uma entrega contestada? | Definir responsáveis, evidências adicionais e resultado possível antes do piloto. |
 | PEN-014 | Alta | Por quanto tempo fotografias de entrega e documentos serão armazenados? | Definir política de privacidade, retenção e acesso antes do piloto. |
 | PEN-015 | Média | Qual será o valor da mensalidade e haverá gratuidade durante o piloto? | Validar disposição para pagar e estimar custos operacionais. |
 | PEN-016 | Média | Quais exigências complementares ou dispensas se aplicam localmente ao cadastro sem CNPJ? | Confirmar o procedimento com os órgãos competentes de Cametá. |
-| PEN-017 | Média | Quais provedores serão usados para hospedagem, banco, autenticação, arquivos e observabilidade? | Comparar custo, suporte e requisitos técnicos antes da implementação. |
+| PEN-017 | Alta | Quais provedores serão usados para pagamentos, hospedagem, banco, autenticação, arquivos e observabilidade? | Validar primeiro se o provedor de pagamento aceita recebedor com CPF, crédito direto, webhook e devolução. |
 
 ## Modelo para novas decisões
 

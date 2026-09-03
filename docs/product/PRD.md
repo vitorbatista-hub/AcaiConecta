@@ -4,7 +4,7 @@
 
 **Autor:** Vitor Benedito Ribeiro Batista  
 **Local inicial:** Cametá/PA  
-**Versão:** 2.3
+**Versão:** 2.4
 **Data:** Setembro de 2026  
 **Status:** Fase 2 — Definição e Prototipação
 **Documento anterior:** [`archive/PRD-v1.md`](archive/PRD-v1.md) (versão 1.0)
@@ -17,7 +17,7 @@ O **AçaíConecta** é uma plataforma digital que conecta consumidores a batedei
 
 O produto será validado inicialmente por meio de uma aplicação web responsiva e instalável, com operação limitada ao bairro Centro, em Cametá, e um grupo piloto de 3 a 5 batedeiras. As entregas continuarão sob responsabilidade de cada batedeira, sem frota própria da plataforma.
 
-A primeira versão comercial não terá cartão, split de pagamento, roteirização, chat livre ou expansão para outras cidades. O objetivo do MVP é comprovar que consumidores e batedeiras obtêm valor com descoberta centralizada, catálogo padronizado e pedidos estruturados.
+A primeira versão comercial não terá cartão, comissão por pedido, roteirização, chat livre ou expansão para outras cidades. O objetivo do MVP é comprovar que consumidores e batedeiras obtêm valor com descoberta centralizada, catálogo padronizado e pedidos estruturados.
 
 ---
 
@@ -92,6 +92,7 @@ Durante um piloto de 4 a 6 semanas:
 - manter cancelamentos após aceite abaixo de 10%;
 - obter recompra de pelo menos 25% dos clientes em até 30 dias;
 - registrar o motivo de 100% das recusas e cancelamentos;
+- conciliar 100% das confirmações e devoluções Pix registradas durante o piloto;
 - obter avaliação qualitativa positiva da maioria das batedeiras participantes.
 
 Esses valores são metas iniciais e poderão ser ajustados antes do piloto, mas não durante sua execução sem registro da mudança.
@@ -109,6 +110,7 @@ Esses valores são metas iniciais e poderão ser ajustados antes do piloto, mas 
 - tempo total até entrega;
 - taxa de pedidos expirados;
 - motivos de recusa e cancelamento;
+- conversão, expiração, renovação e devolução das cobranças Pix;
 - clientes ativos e recorrentes;
 - batedeiras ativas por semana.
 
@@ -175,7 +177,7 @@ Responsável por cadastrar ou aprovar batedeiras, revisar informações, prestar
 - adicionar produtos e quantidades ao pedido;
 - incluir observações limitadas por item ou pedido;
 - informar necessidade de troco;
-- escolher dinheiro ou Pix presencial na entrega;
+- escolher dinheiro na entrega ou Pix on-line;
 - enviar pedido;
 - acompanhar estados do pedido;
 - receber notificações essenciais;
@@ -216,8 +218,7 @@ Responsável por cadastrar ou aprovar batedeiras, revisar informações, prestar
 - aplicativo nativo para Android ou iOS;
 - login com Google ou Apple;
 - cartão de crédito ou débito;
-- Pix gerado dentro da plataforma;
-- split automático;
+- Pix presencial na entrega;
 - carteira ou saldo interno;
 - chat livre;
 - exposição pública do WhatsApp;
@@ -319,6 +320,7 @@ Cada produto deverá possuir:
 |---|---|---|
 | `AGUARDANDO_ACEITE` | Pedido enviado e aguardando resposta. | Não |
 | `ACEITO` | Batedeira confirmou que atenderá. | Não |
+| `AGUARDANDO_PAGAMENTO` | Cobrança Pix vigente e aguardando confirmação. | Não |
 | `EM_PREPARO` | Produção iniciada. | Não |
 | `PRONTO` | Pedido pronto para sair para entrega. | Não |
 | `SAIU_PARA_ENTREGA` | Pedido em deslocamento. | Não |
@@ -338,8 +340,13 @@ AGUARDANDO_ACEITE
 └── CANCELADO
 
 ACEITO
-├── EM_PREPARO
+├── AGUARDANDO_PAGAMENTO, quando for Pix
+├── EM_PREPARO, quando for dinheiro
 └── CANCELADO
+
+AGUARDANDO_PAGAMENTO
+├── EM_PREPARO, após confirmação do Pix
+└── CANCELADO, após cancelamento ou segunda expiração
 
 EM_PREPARO
 ├── PRONTO
@@ -377,8 +384,9 @@ Toda transição deverá registrar:
 - após o aceite, todo cancelamento exigirá identificação do autor e motivo;
 - após `SAIU_PARA_ENTREGA`, problemas serão tratados como falha ou contestação, não como cancelamento comum;
 - cancelamentos após aceite serão acompanhados como indicador de qualidade;
-- enquanto não houver pagamento in-app, não haverá estorno processado pela plataforma;
-- regras financeiras adicionais serão definidas antes da integração de pagamentos.
+- pedido Pix pago e cancelado antes de `SAIU_PARA_ENTREGA` gerará devolução integral pela transação original;
+- falha de entrega reconhecida ou contestação procedente também gerará devolução integral;
+- o MVP não realizará devoluções parciais nem transferências manuais como forma de devolução.
 
 ### 12.6 Fila e estimativa
 
@@ -415,9 +423,10 @@ Motivos mínimos:
 - o entregador deverá registrar uma fotografia em frente ao endereço;
 - a fotografia será vinculada ao pedido com data, hora e responsável pelo registro;
 - a batedeira marcará o pedido como entregue após a confirmação do entregador;
-- o cliente poderá contestar a entrega;
+- o cliente poderá contestar a entrega em até uma hora após o pedido ser marcado como `ENTREGUE`;
 - fotografia e histórico do pedido serão evidências para análise manual, mas não constituirão prova isolada do recebimento;
-- o procedimento e o prazo de resolução serão definidos antes do piloto.
+- o administrador decidirá a contestação em até duas horas úteis de operação;
+- atrasos enquanto o pedido estiver em `SAIU_PARA_ENTREGA` serão tratados pelo suporte.
 
 ### 13.4 Comunicação protegida
 
@@ -440,24 +449,29 @@ Durante o piloto, o administrador poderá atuar como canal de contingência. A n
 Formas permitidas:
 
 - dinheiro na entrega;
-- Pix presencial diretamente para a batedeira.
+- Pix on-line gerado pelo site após o aceite da batedeira.
 
-Para dinheiro, o cliente poderá informar o valor necessário para troco. A plataforma não confirmará ou conciliará pagamentos feitos fora dela.
+Para dinheiro, o cliente poderá informar o valor necessário para troco. A plataforma não confirmará ou conciliará o pagamento em espécie.
 
-### 14.2 Fase posterior
+### 14.2 Fluxo do Pix
 
-Pix in-app somente será implementado após definição de:
+- a primeira cobrança será criada após o aceite e expirará em dez minutos;
+- o cliente poderá solicitar uma única renovação, também válida por dez minutos;
+- cada cobrança possuirá identificador e histórico próprios;
+- cobrança expirada não poderá ser reutilizada;
+- a segunda expiração cancelará automaticamente o pedido;
+- somente a confirmação do provedor por webhook permitirá avançar para `EM_PREPARO`;
+- o processamento deverá ser idempotente para impedir confirmação ou devolução duplicada.
 
-- modelo de receita;
-- comissão;
-- responsável pelas tarifas;
-- processo de cadastro financeiro da batedeira;
-- conciliação;
-- reembolso e contestação;
-- responsabilidade fiscal e contábil;
-- provedor selecionado e condições contratuais.
+### 14.3 Recebimento, tarifas e devoluções
 
-Estados financeiros deverão ser independentes dos estados operacionais do pedido.
+- o valor será creditado diretamente na conta conectada da batedeira;
+- o AçaíConecta não cobrará comissão por pedido nem fará repasse manual;
+- a tarifa do provedor será responsabilidade da batedeira e deverá ser informada antes da ativação;
+- a conta recebedora deverá pertencer ao responsável cadastrado ou ao estabelecimento e ser aprovada pelo provedor;
+- a compatibilidade de recebedores com CPF será requisito para seleção do provedor;
+- devoluções serão integrais e realizadas por meio da transação original;
+- estados financeiros serão independentes dos estados operacionais do pedido.
 
 ---
 
@@ -469,6 +483,7 @@ Cliente:
 
 - pedido enviado;
 - pedido aceito, recusado ou expirado;
+- cobrança Pix gerada, próxima de expirar, paga, expirada ou devolvida;
 - pedido em preparo;
 - pedido saiu para entrega;
 - atraso ou mensagem operacional;
@@ -478,6 +493,7 @@ Batedeira:
 
 - novo pedido;
 - pedido próximo de expirar;
+- pagamento Pix confirmado ou devolvido;
 - cancelamento antes do aceite;
 - intervenção administrativa relevante.
 
@@ -660,14 +676,16 @@ Critérios:
 - pedidos existentes permanecem consultáveis;
 - motivo administrativo é registrado.
 
-### US-06 — Cancelar antes do aceite
+### US-06 — Cancelar antes da saída
 
-**Como** cliente, **quero** cancelar um pedido ainda não aceito, **para** corrigir uma decisão sem depender de suporte.
+**Como** cliente, **quero** cancelar um pedido antes da saída para entrega, **para** interromper uma compra quando a política permitir.
 
 Critérios:
 
-- cancelamento só ocorre a partir de `AGUARDANDO_ACEITE`;
-- pedido cancelado não pode ser aceito;
+- cancelamento é permitido até antes de `SAIU_PARA_ENTREGA`;
+- após o aceite, autor e motivo são obrigatórios;
+- pedido Pix pago gera devolução integral pela transação original;
+- pedido cancelado não admite nova transição operacional;
 - batedeira recebe atualização;
 - evento é registrado no histórico.
 
@@ -754,7 +772,7 @@ Este documento adota oficialmente as seis fases descritas em [`roadmap.md`](road
 - painel da batedeira;
 - administração;
 - notificações essenciais;
-- pagamento na entrega;
+- dinheiro na entrega e Pix on-line;
 - métricas, testes e ambientes de execução.
 
 ### Fase 4 — Piloto Controlado em Cametá
@@ -771,7 +789,6 @@ Este documento adota oficialmente as seis fases descritas em [`roadmap.md`](road
 - melhorias baseadas no piloto;
 - avaliações simples;
 - automação operacional;
-- Pix in-app, se aprovado financeira e juridicamente;
 - entrada gradual de novas batedeiras;
 - melhoria das estimativas;
 - recursos de retenção;
@@ -798,7 +815,9 @@ Este documento adota oficialmente as seis fases descritas em [`roadmap.md`](road
 | Internet instável | Alto | Interface leve, feedback claro e tolerância a repetição. |
 | Dados pessoais expostos | Crítico | Minimização, autorização no servidor e armazenamento privado. |
 | Batedeira sem capacidade de entrega | Alto | Separar abertura de disponibilidade de entrega. |
-| Modelo financeiro inviável | Crítico | Simular alternativas antes de integrar pagamentos. |
+| Falha ou duplicidade no processamento financeiro | Crítico | Webhooks autenticados, idempotência, conciliação e trilha de auditoria. |
+| Provedor não aceitar recebedor com CPF | Alto | Validar cadastro e crédito direto em prova de conceito antes da implementação. |
+| Modelo financeiro inviável | Crítico | Validar custos do provedor e disposição para pagar a mensalidade. |
 | Responsabilidade sobre alimentos | Crítico | Orientação jurídica e termos antes do lançamento público. |
 | Dependência excessiva de fornecedor | Médio | Arquitetura simples, dados exportáveis e integrações isoladas. |
 
@@ -810,13 +829,11 @@ Este documento adota oficialmente as seis fases descritas em [`roadmap.md`](road
 
 - qual será o prazo definitivo para aceite?
 - mensagens predefinidas serão suficientes?
-- qual será o procedimento e o prazo para resolver uma entrega contestada?
 
 ### 24.2 Decisões comerciais
 
 - piloto gratuito ou subsidiado;
 - valor da mensalidade e gratuidade durante o piloto;
-- responsabilidade pelas tarifas futuras;
 - política de suporte e horários de atendimento.
 
 ### 24.3 Decisões jurídicas e administrativas
@@ -829,6 +846,7 @@ Este documento adota oficialmente as seis fases descritas em [`roadmap.md`](road
 
 ### 24.4 Decisões técnicas
 
+- provedor de pagamento compatível com recebedores por CPF, Pix, webhook e devolução;
 - provedor de hospedagem e banco;
 - serviço de autenticação;
 - canal de Web Push;
@@ -874,6 +892,7 @@ O MVP estará pronto para implementação quando:
 - política de privacidade e termos publicados;
 - procedimento para incidentes e cancelamentos definido;
 - testes de pedido, expiração, recusa, cancelamento e falha de entrega aprovados.
+- criação, expiração, renovação, confirmação e devolução Pix aprovadas em homologação.
 
 ---
 
@@ -900,3 +919,4 @@ O MVP estará pronto para implementação quando:
 | 2.1 | Setembro de 2026 | Roadmap do PRD alinhado à organização oficial de seis fases. |
 | 2.2 | Setembro de 2026 | Resultados da Fase 1 incorporados, fila definida por ordem de criação e próximos passos atualizados para a Fase 2. |
 | 2.3 | Setembro de 2026 | Operação somente por entrega, regras de cancelamento e contestação, cadastro documental, monetização, área piloto e stack consolidados. |
+| 2.4 | Setembro de 2026 | Pix on-line incorporado ao MVP com expiração, renovação, crédito direto, devolução integral e prazos de contestação. |

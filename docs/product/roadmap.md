@@ -72,7 +72,8 @@ Implementar a menor solução confiável capaz de operar pedidos reais durante o
 - catálogo e disponibilidade;
 - pedido e máquina de estados;
 - notificações essenciais;
-- pagamento na entrega;
+- dinheiro na entrega e Pix on-line após o aceite;
+- confirmação de pagamento por webhook, expiração, renovação e devolução integral;
 - métricas operacionais;
 - testes e ambientes de homologação e produção.
 
@@ -81,6 +82,7 @@ Implementar a menor solução confiável capaz de operar pedidos reais durante o
 - fluxo completo aprovado em homologação;
 - permissões dos perfis verificadas;
 - pedidos duplicados e transições inválidas protegidos;
+- webhooks idempotentes e conciliação do Pix verificados em homologação;
 - backup, monitoramento e suporte preparados;
 - critérios de lançamento do PRD atendidos;
 - participantes do piloto treinados.
@@ -121,7 +123,6 @@ Corrigir as limitações identificadas e ampliar a operação sustentável em Ca
 - suporte mais estruturado;
 - entrada gradual de novas batedeiras;
 - definição e teste do modelo de receita;
-- pagamentos integrados, caso sejam justificados;
 - avaliações simples e recursos de retenção.
 
 ### Critérios de conclusão
