@@ -1,6 +1,9 @@
 # Documentos gerados ou duplicados localmente
 *.docx
 
+# Orientações locais e privadas para agentes
+AGENTS.md
+
 # Backups temporários do MySQL Workbench
 *.mwb.bak
 *.mwb.~*
