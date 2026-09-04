@@ -4,7 +4,7 @@
 
 **Autor:** Vitor Benedito Ribeiro Batista  
 **Local inicial:** Cametá/PA  
-**Versão:** 2.4
+**Versão:** 2.5
 **Data:** Setembro de 2026  
 **Status:** Fase 2 — Definição e Prototipação
 **Documento anterior:** [`archive/PRD-v1.md`](archive/PRD-v1.md) (versão 1.0)
@@ -17,7 +17,7 @@ O **AçaíConecta** é uma plataforma digital que conecta consumidores a batedei
 
 O produto será validado inicialmente por meio de uma aplicação web responsiva e instalável, com operação limitada ao bairro Centro, em Cametá, e um grupo piloto de 3 a 5 batedeiras. As entregas continuarão sob responsabilidade de cada batedeira, sem frota própria da plataforma.
 
-A primeira versão comercial não terá cartão, comissão por pedido, roteirização, chat livre ou expansão para outras cidades. O objetivo do MVP é comprovar que consumidores e batedeiras obtêm valor com descoberta centralizada, catálogo padronizado e pedidos estruturados.
+A primeira versão não processará pagamentos, documentos ou contestações e não terá cartão, comissão por pedido, roteirização, chat livre ou expansão para outras cidades. O objetivo do MVP é comprovar que consumidores e batedeiras obtêm valor com descoberta centralizada, catálogo padronizado e pedidos estruturados.
 
 ---
 
@@ -70,7 +70,7 @@ Os resultados da validação inicial estão registrados no [`questionário da Fa
 | H3 | Batedeiras aceitam operar um painel além do WhatsApp. | Validada preliminarmente | Uso autônomo do painel durante pelo menos quatro semanas. |
 | H4 | Catálogo e acompanhamento estruturado reduzem erros e perguntas repetidas. | Parcialmente validada | Comparar incidentes e contatos durante o piloto. |
 | H5 | A operação consegue atender pedidos com estimativas em faixas de tempo. | Incerta | Comparar estimativas com tempos reais de entrega. |
-| H6 | Existe um modelo de receita aceitável para batedeiras e plataforma. | Modelo definido, não validado | Testar valor e aceitação da mensalidade após a validação operacional. |
+| H6 | Existe um modelo de receita aceitável para batedeiras e plataforma. | Hipótese adiada | Pesquisar alternativas e testar disposição para pagar somente após a validação operacional. |
 
 ---
 
@@ -92,7 +92,6 @@ Durante um piloto de 4 a 6 semanas:
 - manter cancelamentos após aceite abaixo de 10%;
 - obter recompra de pelo menos 25% dos clientes em até 30 dias;
 - registrar o motivo de 100% das recusas e cancelamentos;
-- conciliar 100% das confirmações e devoluções Pix registradas durante o piloto;
 - obter avaliação qualitativa positiva da maioria das batedeiras participantes.
 
 Esses valores são metas iniciais e poderão ser ajustados antes do piloto, mas não durante sua execução sem registro da mudança.
@@ -110,7 +109,6 @@ Esses valores são metas iniciais e poderão ser ajustados antes do piloto, mas 
 - tempo total até entrega;
 - taxa de pedidos expirados;
 - motivos de recusa e cancelamento;
-- conversão, expiração, renovação e devolução das cobranças Pix;
 - clientes ativos e recorrentes;
 - batedeiras ativas por semana.
 
@@ -177,10 +175,10 @@ Responsável por cadastrar ou aprovar batedeiras, revisar informações, prestar
 - adicionar produtos e quantidades ao pedido;
 - incluir observações limitadas por item ou pedido;
 - informar necessidade de troco;
-- escolher dinheiro na entrega ou Pix on-line;
+- escolher dinheiro ou Pix na entrega;
 - enviar pedido;
 - acompanhar estados do pedido;
-- receber notificações essenciais;
+- visualizar atualizações essenciais dentro da aplicação;
 - consultar pedidos recentes;
 - solicitar cancelamento quando permitido.
 
@@ -191,23 +189,22 @@ Responsável por cadastrar ou aprovar batedeiras, revisar informações, prestar
 - atualizar disponibilidade de entrega separadamente;
 - gerenciar produtos e disponibilidade;
 - configurar bairros atendidos e faixa estimada;
-- receber alerta de novo pedido;
+- configurar taxa de entrega por bairro, inclusive gratuita;
+- receber alerta visual de novo pedido enquanto o painel estiver aberto;
 - aceitar ou recusar com motivo;
 - acompanhar fila de pedidos;
 - atualizar estados permitidos;
 - registrar falha de entrega;
 - consultar resumo operacional básico.
-- realizar o próprio cadastro e enviar a documentação exigida para análise.
 
 ### 8.3 Administrador
 
-- criar, revisar, aprovar, suspender e reativar batedeiras;
-- gerenciar usuários autorizados de uma batedeira;
-- revisar documentos e impedir a ativação enquanto houver requisito obrigatório ausente, inválido ou vencido;
+- cadastrar de forma assistida, ativar, suspender e reativar batedeiras selecionadas para o piloto;
+- vincular um operador responsável a cada batedeira;
 - consultar pedidos e histórico de estados;
 - prestar suporte e registrar intervenções;
 - moderar imagens e informações públicas;
-- configurar categorias e bairros;
+- configurar os bairros atendidos;
 - consultar métricas do piloto;
 - acessar trilha de auditoria.
 
@@ -218,7 +215,8 @@ Responsável por cadastrar ou aprovar batedeiras, revisar informações, prestar
 - aplicativo nativo para Android ou iOS;
 - login com Google ou Apple;
 - cartão de crédito ou débito;
-- Pix presencial na entrega;
+- geração ou conciliação de Pix pela plataforma;
+- devoluções processadas pela plataforma;
 - carteira ou saldo interno;
 - chat livre;
 - exposição pública do WhatsApp;
@@ -231,7 +229,11 @@ Responsável por cadastrar ou aprovar batedeiras, revisar informações, prestar
 - recomendação personalizada;
 - múltiplas cidades;
 - múltiplos idiomas;
-- cálculo automático avançado de capacidade.
+- cálculo automático avançado de capacidade;
+- cadastro autônomo e envio de documentos pela batedeira;
+- múltiplos operadores por batedeira;
+- fotografia de entrega e contestação formal dentro da aplicação;
+- Web Push, SMS e e-mails transacionais de pedidos.
 
 ---
 
@@ -241,7 +243,7 @@ Responsável por cadastrar ou aprovar batedeiras, revisar informações, prestar
 
 Uma batedeira poderá estar:
 
-- **Em análise:** cadastro ou documentação ainda não aprovados; não visível publicamente;
+- **Em análise:** cadastro assistido ainda não aprovado; não visível publicamente;
 - **Ativa:** aprovada e autorizada a operar;
 - **Suspensa:** temporariamente indisponível por decisão administrativa;
 - **Desativada:** fora da plataforma.
@@ -255,7 +257,7 @@ Uma batedeira ativa define separadamente:
 
 - horários regulares serão configurados por dia da semana;
 - o fechamento manual prevalece sobre o horário regular;
-- exceções, como feriados, poderão ser registradas pelo administrador no piloto;
+- exceções serão tratadas pelo fechamento manual durante o piloto;
 - pedidos não poderão ser enviados quando a entrega estiver indisponível;
 - a interface deverá informar o próximo horário previsto de abertura quando disponível.
 
@@ -266,9 +268,9 @@ Cada batedeira deverá informar:
 - bairros atendidos;
 - disponibilidade de entrega;
 - faixa estimada de entrega;
-- observações operacionais aprovadas pelo administrador.
+- taxa de entrega por bairro, em valor fixo, podendo ser zero.
 
-No MVP, não haverá cálculo por distância ou geolocalização automática. O endereço será validado pelo bairro informado.
+No MVP, não haverá cálculo por distância ou geolocalização automática. O endereço será validado pelo bairro informado. A taxa aplicável será exibida antes do envio e copiada para o pedido.
 
 O piloto atenderá somente o bairro Centro. Cada pedido deverá totalizar pelo menos 1 litro de açaí; essa validação será feita pelo volume dos itens, não pelo valor monetário do pedido.
 
@@ -306,6 +308,8 @@ Cada produto deverá possuir:
 - batedeira;
 - itens, quantidades e preços registrados no momento da compra;
 - subtotal;
+- taxa de entrega;
+- total;
 - endereço e referência;
 - forma de pagamento;
 - valor de troco, quando aplicável;
@@ -320,7 +324,6 @@ Cada produto deverá possuir:
 |---|---|---|
 | `AGUARDANDO_ACEITE` | Pedido enviado e aguardando resposta. | Não |
 | `ACEITO` | Batedeira confirmou que atenderá. | Não |
-| `AGUARDANDO_PAGAMENTO` | Cobrança Pix vigente e aguardando confirmação. | Não |
 | `EM_PREPARO` | Produção iniciada. | Não |
 | `PRONTO` | Pedido pronto para sair para entrega. | Não |
 | `SAIU_PARA_ENTREGA` | Pedido em deslocamento. | Não |
@@ -340,13 +343,8 @@ AGUARDANDO_ACEITE
 └── CANCELADO
 
 ACEITO
-├── AGUARDANDO_PAGAMENTO, quando for Pix
-├── EM_PREPARO, quando for dinheiro
+├── EM_PREPARO
 └── CANCELADO
-
-AGUARDANDO_PAGAMENTO
-├── EM_PREPARO, após confirmação do Pix
-└── CANCELADO, após cancelamento ou segunda expiração
 
 EM_PREPARO
 ├── PRONTO
@@ -372,21 +370,19 @@ Toda transição deverá registrar:
 ### 12.4 Aceite e expiração
 
 - a batedeira deverá aceitar ou recusar o pedido;
-- o prazo inicial sugerido para resposta é de 5 minutos;
-- o prazo poderá ser ajustado antes do piloto;
+- o prazo para resposta será de 5 minutos durante o piloto;
 - ao expirar, o pedido não poderá ser aceito posteriormente;
 - pedidos aguardando aceite deverão gerar alerta destacado;
 - a batedeira deverá selecionar um motivo ao recusar.
 
 ### 12.5 Cancelamento
 
-- cliente e batedeira poderão cancelar até antes da transição para `SAIU_PARA_ENTREGA`;
-- após o aceite, todo cancelamento exigirá identificação do autor e motivo;
-- após `SAIU_PARA_ENTREGA`, problemas serão tratados como falha ou contestação, não como cancelamento comum;
+- o cliente poderá cancelar diretamente apenas em `AGUARDANDO_ACEITE`;
+- após o aceite, a batedeira ou o administrador poderá cancelar antes de `SAIU_PARA_ENTREGA` somente por impossibilidade operacional, com autor e motivo registrados;
+- solicitações do cliente após o aceite serão tratadas pelo suporte e não implicarão cancelamento automático;
+- após `SAIU_PARA_ENTREGA`, problemas serão tratados como falha de entrega ou incidente de suporte, não como cancelamento comum;
 - cancelamentos após aceite serão acompanhados como indicador de qualidade;
-- pedido Pix pago e cancelado antes de `SAIU_PARA_ENTREGA` gerará devolução integral pela transação original;
-- falha de entrega reconhecida ou contestação procedente também gerará devolução integral;
-- o MVP não realizará devoluções parciais nem transferências manuais como forma de devolução.
+- a plataforma não processará pagamentos ou devoluções no MVP.
 
 ### 12.6 Fila e estimativa
 
@@ -418,15 +414,12 @@ Motivos mínimos:
 - estabelecimento não conseguiu concluir;
 - outro motivo, com descrição obrigatória.
 
-### 13.3 Confirmação e contestação
+### 13.3 Confirmação e incidentes
 
-- o entregador deverá registrar uma fotografia em frente ao endereço;
-- a fotografia será vinculada ao pedido com data, hora e responsável pelo registro;
-- a batedeira marcará o pedido como entregue após a confirmação do entregador;
-- o cliente poderá contestar a entrega em até uma hora após o pedido ser marcado como `ENTREGUE`;
-- fotografia e histórico do pedido serão evidências para análise manual, mas não constituirão prova isolada do recebimento;
-- o administrador decidirá a contestação em até duas horas úteis de operação;
-- atrasos enquanto o pedido estiver em `SAIU_PARA_ENTREGA` serão tratados pelo suporte.
+- a batedeira marcará o pedido como entregue após a confirmação do responsável pela entrega;
+- o MVP não coletará fotografia ou assinatura do cliente;
+- reclamações, divergências e atrasos serão tratados pelo suporte e registrados no diário operacional externo do piloto;
+- os incidentes servirão como evidência para decidir se um fluxo formal será necessário após o piloto.
 
 ### 13.4 Comunicação protegida
 
@@ -446,32 +439,12 @@ Durante o piloto, o administrador poderá atuar como canal de contingência. A n
 
 ### 14.1 MVP
 
-Formas permitidas:
+Formas informadas no pedido:
 
-- dinheiro na entrega;
-- Pix on-line gerado pelo site após o aceite da batedeira.
+- dinheiro na entrega, com valor para troco quando necessário;
+- Pix na entrega, transferido diretamente pelo cliente à batedeira.
 
-Para dinheiro, o cliente poderá informar o valor necessário para troco. A plataforma não confirmará ou conciliará o pagamento em espécie.
-
-### 14.2 Fluxo do Pix
-
-- a primeira cobrança será criada após o aceite e expirará em dez minutos;
-- o cliente poderá solicitar uma única renovação, também válida por dez minutos;
-- cada cobrança possuirá identificador e histórico próprios;
-- cobrança expirada não poderá ser reutilizada;
-- a segunda expiração cancelará automaticamente o pedido;
-- somente a confirmação do provedor por webhook permitirá avançar para `EM_PREPARO`;
-- o processamento deverá ser idempotente para impedir confirmação ou devolução duplicada.
-
-### 14.3 Recebimento, tarifas e devoluções
-
-- o valor será creditado diretamente na conta conectada da batedeira;
-- o AçaíConecta não cobrará comissão por pedido nem fará repasse manual;
-- a tarifa do provedor será responsabilidade da batedeira e deverá ser informada antes da ativação;
-- a conta recebedora deverá pertencer ao responsável cadastrado ou ao estabelecimento e ser aprovada pelo provedor;
-- a compatibilidade de recebedores com CPF será requisito para seleção do provedor;
-- devoluções serão integrais e realizadas por meio da transação original;
-- estados financeiros serão independentes dos estados operacionais do pedido.
+A plataforma não gerará QR Code, armazenará chave Pix, confirmará pagamentos, cobrará comissão, custodiará valores ou realizará devoluções. A confirmação e eventuais ajustes financeiros ocorrerão diretamente entre cliente e batedeira durante o piloto.
 
 ---
 
@@ -483,7 +456,6 @@ Cliente:
 
 - pedido enviado;
 - pedido aceito, recusado ou expirado;
-- cobrança Pix gerada, próxima de expirar, paga, expirada ou devolvida;
 - pedido em preparo;
 - pedido saiu para entrega;
 - atraso ou mensagem operacional;
@@ -493,17 +465,15 @@ Batedeira:
 
 - novo pedido;
 - pedido próximo de expirar;
-- pagamento Pix confirmado ou devolvido;
 - cancelamento antes do aceite;
 - intervenção administrativa relevante.
 
 ### 15.2 Canais
 
-- notificações dentro da aplicação serão obrigatórias;
-- Web Push será avaliado no protótipo técnico;
-- e-mail será utilizado para autenticação e eventos administrativos;
-- SMS não fará parte do MVP, salvo necessidade demonstrada no piloto;
-- falhas de entrega de notificações deverão ser registradas.
+- a linha do tempo do pedido e os alertas visuais no painel serão obrigatórios;
+- o operador deverá manter o painel aberto durante o horário do piloto;
+- Web Push, SMS e e-mails transacionais de pedidos não farão parte do MVP;
+- o suporte humano será a contingência documentada para falhas de comunicação.
 
 ---
 
@@ -515,12 +485,12 @@ Batedeira:
 - operador de batedeira;
 - administrador.
 
-Um usuário poderá ter mais de um papel futuramente. Permissões serão verificadas no servidor, não apenas ocultadas na interface.
+No MVP, cada usuário possuirá um único papel e cada batedeira terá um operador responsável. Permissões serão verificadas no servidor, não apenas ocultadas na interface.
 
 ### 16.2 Requisitos mínimos
 
-- cadastro com e-mail verificado ou fluxo equivalente definido tecnicamente;
-- recuperação de senha;
+- cadastro do cliente com e-mail e senha;
+- recuperação de acesso assistida pelo administrador durante o piloto;
 - limitação de tentativas;
 - encerramento de sessões;
 - bloqueio de conta;
@@ -534,7 +504,7 @@ Login social ficará fora do MVP.
 
 ## 17. Dados pessoais, segurança e privacidade
 
-O produto poderá tratar nome, telefone, e-mail, endereço, histórico de pedidos, fotografias de entrega e dados e documentos de responsáveis por batedeiras.
+O produto poderá tratar nome, telefone, e-mail, endereço e histórico de pedidos. Dados mínimos do operador responsável serão cadastrados de forma assistida.
 
 Antes do piloto público deverão existir:
 
@@ -545,8 +515,6 @@ Antes do piloto público deverão existir:
 - canal para correção ou exclusão de dados;
 - controle de acesso por função;
 - criptografia em trânsito;
-- armazenamento privado para documentos;
-- armazenamento privado e acesso restrito às fotografias de entrega;
 - validação de tipo e tamanho de uploads;
 - backups e procedimento de restauração;
 - registros de auditoria;
@@ -556,18 +524,16 @@ Antes do piloto público deverão existir:
 ### 17.1 Minimização
 
 - endereço será solicitado somente quando necessário ao pedido;
-- CPF/CNPJ e documentos não serão públicos;
-- chave Pix não será coletada no MVP enquanto o pagamento ocorrer diretamente;
+- CPF, CNPJ, documentos e chave Pix não serão coletados pelo sistema no MVP;
 - dados não necessários à validação serão adiados;
 - ambientes de teste não deverão utilizar dados pessoais reais.
 
-### 17.2 Documentação da batedeira
+### 17.2 Elegibilidade da batedeira
 
-- o cadastro poderá ser realizado com CPF do responsável, sem obrigatoriedade de CNPJ;
-- CPF do responsável, alvará de funcionamento e licença sanitária válidos serão requisitos de ativação;
-- a ausência, reprovação ou expiração de documento obrigatório impedirá novos pedidos;
-- requisitos complementares e a viabilidade do cadastro sem CNPJ serão confirmados com os órgãos competentes de Cametá antes do piloto;
-- documentos não serão exibidos publicamente.
+- somente as batedeiras previamente selecionadas participarão do piloto;
+- verificações jurídicas e administrativas aplicáveis ocorrerão fora do sistema antes da ativação;
+- o administrador registrará apenas o resultado da elegibilidade, sem copiar documentos para a plataforma;
+- os requisitos locais deverão ser confirmados com os órgãos competentes antes do piloto.
 
 ---
 
@@ -608,7 +574,7 @@ Antes do piloto público deverão existir:
 
 - registro centralizado de erros;
 - identificação de requisições e pedidos em suporte;
-- métricas de pedidos e notificações;
+- métricas de pedidos e alertas da aplicação;
 - alertas para falhas críticas;
 - auditoria de ações administrativas.
 
@@ -676,15 +642,15 @@ Critérios:
 - pedidos existentes permanecem consultáveis;
 - motivo administrativo é registrado.
 
-### US-06 — Cancelar antes da saída
+### US-06 — Cancelar ou tratar impossibilidade operacional
 
-**Como** cliente, **quero** cancelar um pedido antes da saída para entrega, **para** interromper uma compra quando a política permitir.
+**Como** cliente, **quero** cancelar um pedido ainda não aceito, **para** interromper uma solicitação antes do início da operação.
 
 Critérios:
 
-- cancelamento é permitido até antes de `SAIU_PARA_ENTREGA`;
-- após o aceite, autor e motivo são obrigatórios;
-- pedido Pix pago gera devolução integral pela transação original;
+- o cliente pode cancelar diretamente apenas em `AGUARDANDO_ACEITE`;
+- após o aceite, apenas batedeira ou administrador podem cancelar por impossibilidade operacional antes de `SAIU_PARA_ENTREGA`;
+- todo cancelamento após o aceite registra autor e motivo;
 - pedido cancelado não admite nova transição operacional;
 - batedeira recebe atualização;
 - evento é registrado no histórico.
@@ -693,7 +659,7 @@ Critérios:
 
 ## 20. Modelo de receita
 
-O modelo escolhido é a mensalidade paga pela batedeira. O valor, a periodicidade de cobrança e eventual gratuidade durante o piloto ainda serão definidos. A escolha do modelo não representa validação da disposição para pagar.
+O piloto será gratuito para clientes e batedeiras, sem comissão por pedido. A mensalidade paga pela batedeira permanece apenas como hipótese para depois da validação operacional; não será implementada nem cobrada no MVP.
 
 Antes de definir o valor e as condições da mensalidade, serão estimados:
 
@@ -772,7 +738,7 @@ Este documento adota oficialmente as seis fases descritas em [`roadmap.md`](road
 - painel da batedeira;
 - administração;
 - notificações essenciais;
-- dinheiro na entrega e Pix on-line;
+- dinheiro ou Pix na entrega, sem processamento pela plataforma;
 - métricas, testes e ambientes de execução.
 
 ### Fase 4 — Piloto Controlado em Cametá
@@ -815,48 +781,32 @@ Este documento adota oficialmente as seis fases descritas em [`roadmap.md`](road
 | Internet instável | Alto | Interface leve, feedback claro e tolerância a repetição. |
 | Dados pessoais expostos | Crítico | Minimização, autorização no servidor e armazenamento privado. |
 | Batedeira sem capacidade de entrega | Alto | Separar abertura de disponibilidade de entrega. |
-| Falha ou duplicidade no processamento financeiro | Crítico | Webhooks autenticados, idempotência, conciliação e trilha de auditoria. |
-| Provedor não aceitar recebedor com CPF | Alto | Validar cadastro e crédito direto em prova de conceito antes da implementação. |
-| Modelo financeiro inviável | Crítico | Validar custos do provedor e disposição para pagar a mensalidade. |
+| Modelo financeiro inviável | Crítico | Medir custos operacionais e validar a disposição para pagar somente após o piloto. |
 | Responsabilidade sobre alimentos | Crítico | Orientação jurídica e termos antes do lançamento público. |
 | Dependência excessiva de fornecedor | Médio | Arquitetura simples, dados exportáveis e integrações isoladas. |
 
 ---
 
-## 24. Dependências e decisões pendentes
+## 24. Decisões encerradas e gates externos
 
-### 24.1 Decisões de produto
+### 24.1 Decisões internas encerradas
 
-- qual será o prazo definitivo para aceite?
-- mensagens predefinidas serão suficientes?
+- prazo de aceite: cinco minutos durante todo o piloto;
+- comunicação: mensagens predefinidas, linha do tempo e suporte humano;
+- cobrança: piloto gratuito, sem comissão ou mensalidade;
+- pagamento: dinheiro ou Pix na entrega, sem processamento pela plataforma;
+- cadastro de batedeira: assistido, com um operador responsável;
+- entrega: sem fotografia ou contestação formal no sistema.
 
-### 24.2 Decisões comerciais
+### 24.2 Gates externos
 
-- piloto gratuito ou subsidiado;
-- valor da mensalidade e gratuidade durante o piloto;
-- política de suporte e horários de atendimento.
+- confirmar as exigências jurídicas e administrativas aplicáveis às participantes em Cametá;
+- concluir a revisão de privacidade e termos do piloto;
+- escolher infraestrutura de hospedagem, banco, autenticação, arquivos e observabilidade durante a especificação de engenharia.
 
-### 24.3 Decisões jurídicas e administrativas
+Os gates externos não serão preenchidos por suposição. Eles não impedem o protótipo, mas os dois primeiros impedem o piloto e a escolha de infraestrutura impede o início da construção.
 
-- exigências complementares ou dispensas aplicáveis em Cametá;
-- significado dos selos de verificação;
-- termos de responsabilidade;
-- retenção de documentos e pedidos;
-- enquadramento fiscal e contratual.
-
-### 24.4 Decisões técnicas
-
-- provedor de pagamento compatível com recebedores por CPF, Pix, webhook e devolução;
-- provedor de hospedagem e banco;
-- serviço de autenticação;
-- canal de Web Push;
-- armazenamento de imagens;
-- ferramentas de observabilidade;
-- metas quantitativas de disponibilidade e desempenho.
-
-Decisões pendentes não deverão ser preenchidas por suposição durante a implementação. Cada uma deverá ser validada ou registrada formalmente.
-
-### 24.5 Arquitetura definida
+### 24.3 Baseline tecnológica definida
 
 O MVP será um monólito modular em TypeScript, com Next.js, React, Tailwind CSS, MySQL e Prisma. A aplicação será web responsiva e instalável; frontend e backend permanecerão na mesma base de código durante o MVP.
 
@@ -885,28 +835,26 @@ O MVP estará pronto para implementação quando:
 - nenhuma vulnerabilidade crítica conhecida;
 - backup e restauração verificados;
 - permissões dos três perfis testadas;
-- notificações críticas funcionando ou com contingência documentada;
+- linha do tempo e alertas críticos funcionando ou com contingência documentada;
 - batedeiras treinadas;
 - suporte disponível;
 - métricas configuradas;
 - política de privacidade e termos publicados;
 - procedimento para incidentes e cancelamentos definido;
-- testes de pedido, expiração, recusa, cancelamento e falha de entrega aprovados.
-- criação, expiração, renovação, confirmação e devolução Pix aprovadas em homologação.
+- testes de pedido, expiração, recusa, cancelamento e falha de entrega aprovados;
+- pagamento na entrega e informação de troco compreendidos nos testes de ponta a ponta.
 
 ---
 
 ## 27. Próximos passos
 
-1. Responder às decisões pendentes de maior impacto.
-2. Documentar os fluxos do cliente, batedeira e administrador.
-3. Produzir o protótipo navegável.
-4. Executar testes de usabilidade com o protótipo.
-5. Revisar o modelo de dados e produzir o dicionário de dados.
-6. Definir e registrar a arquitetura técnica.
-7. Converter histórias do MVP em backlog priorizado.
-8. Detalhar a preparação do piloto com as 3 batedeiras confirmadas.
-9. Iniciar a implementação somente após os critérios de prontidão.
+1. Transformar os fluxos documentados em um protótipo navegável do escopo reduzido.
+2. Executar testes de usabilidade e ajustar os fluxos conforme as evidências.
+3. Revisar o modelo EER a partir do schema SQL e consolidar os dicionários de dados e de métricas.
+4. Definir e registrar a arquitetura técnica e as escolhas de infraestrutura.
+5. Converter histórias do MVP em backlog priorizado.
+6. Obter encaminhamento jurídico e detalhar a preparação do piloto com as 3 batedeiras.
+7. Iniciar a implementação somente após os critérios de prontidão.
 
 ---
 
@@ -920,3 +868,4 @@ O MVP estará pronto para implementação quando:
 | 2.2 | Setembro de 2026 | Resultados da Fase 1 incorporados, fila definida por ordem de criação e próximos passos atualizados para a Fase 2. |
 | 2.3 | Setembro de 2026 | Operação somente por entrega, regras de cancelamento e contestação, cadastro documental, monetização, área piloto e stack consolidados. |
 | 2.4 | Setembro de 2026 | Pix on-line incorporado ao MVP com expiração, renovação, crédito direto, devolução integral e prazos de contestação. |
+| 2.5 | Setembro de 2026 | MVP reduzido ao núcleo de descoberta e pedidos; pagamentos passam a ocorrer na entrega e integrações financeiras, documentação, fotografia e contestação saem do escopo. |

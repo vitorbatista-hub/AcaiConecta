@@ -132,6 +132,8 @@ Resposta: Demora para receber resposta ou para concluir a entrega.
 
 Preencha após concluir todas as conversas.
 
+> Limitação metodológica: as respostas disponíveis foram registradas de forma consolidada por grupo, e não por participante. Elas sustentam a decisão exploratória de avançar para prototipação, mas não permitem analisar divergências individuais ou tratar intenção declarada como comportamento comprovado. Novas rodadas deverão preservar registros anônimos individuais.
+
 ### Participação
 
 - Batedeiras consultadas: 3

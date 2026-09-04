@@ -8,7 +8,7 @@ Este roadmap organiza o projeto em seis fases. As datas serão definidas somente
 ## Fase 1 — Descoberta e Validação do Problema
 
 **Situação:** Concluída em 02/09/2026
-**Evidência:** [`../research/validation-questionnaire.md`](../research/validation-questionnaire.md)
+**Evidências:** [`../research/validation-questionnaire.md`](../research/validation-questionnaire.md) e [`../research/current-order-flow.md`](../research/current-order-flow.md)
 
 ### Objetivo
 
@@ -41,11 +41,11 @@ Transformar a visão do produto em uma especificação implementável e testada 
 
 - PRD revisado e aprovado;
 - decisões críticas registradas;
-- fluxos de cliente, batedeira e administrador;
+- fluxos de cliente, batedeira e administrador documentados, sujeitos à validação no protótipo;
 - protótipo navegável;
 - testes de usabilidade;
 - modelo conceitual e MER inicial;
-- dicionário de dados inicial;
+- dicionário de dados inicial criado, sujeito à revisão conjunta com o modelo EER;
 - arquitetura técnica proposta;
 - backlog priorizado do MVP.
 
@@ -71,9 +71,8 @@ Implementar a menor solução confiável capaz de operar pedidos reais durante o
 - painel administrativo;
 - catálogo e disponibilidade;
 - pedido e máquina de estados;
-- notificações essenciais;
-- dinheiro na entrega e Pix on-line após o aceite;
-- confirmação de pagamento por webhook, expiração, renovação e devolução integral;
+- linha do tempo do pedido e alertas visuais no painel;
+- dinheiro ou Pix na entrega, sem processamento pela plataforma;
 - métricas operacionais;
 - testes e ambientes de homologação e produção.
 
@@ -82,7 +81,6 @@ Implementar a menor solução confiável capaz de operar pedidos reais durante o
 - fluxo completo aprovado em homologação;
 - permissões dos perfis verificadas;
 - pedidos duplicados e transições inválidas protegidos;
-- webhooks idempotentes e conciliação do Pix verificados em homologação;
 - backup, monitoramento e suporte preparados;
 - critérios de lançamento do PRD atendidos;
 - participantes do piloto treinados.

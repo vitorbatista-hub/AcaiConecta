@@ -8,6 +8,10 @@ O formato é inspirado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.
 
 ### Adicionado
 
+- Fluxos operacionais do cliente, da batedeira e do administrador, incluindo exceções e matriz de transições do pedido.
+- Dicionário de dados inicial do MVP reduzido, com relacionamentos, invariantes e políticas de retenção.
+- Orientações para contextualização silenciosa, análise de consistência e feedback contínuo de fase nas sessões de agentes.
+- Fluxo consolidado do processo atual de pedido e entrega, com limitações metodológicas explícitas.
 - Questionário essencial e anônimo para validação da Fase 1 com batedeiras e consumidores.
 - Schema SQL inicial do MVP para geração do modelo EER no MySQL Workbench.
 - README com visão geral, estado atual e links da documentação.
@@ -18,6 +22,13 @@ O formato é inspirado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.
 
 ### Alterado
 
+- Schema SQL e modelo EER atualizados para 0.4, com convenção semanal de domingo (`0`) a sábado (`6`) e representação explícita da exibição de produtos temporariamente indisponíveis; o schema foi validado em MySQL 8.4.
+- Modelo EER regenerado a partir do schema SQL 0.3 e documentação atualizada para refletir seu alinhamento estrutural.
+- Integridade do histórico de pedidos reforçada para impedir remoção em cascata de eventos e perda da referência ao autor.
+- Risco financeiro do PRD alinhado ao MVP sem provedor de pagamento.
+- MVP reduzido ao núcleo de descoberta, catálogo e pedidos: Pix passa a ocorrer na entrega, sem processamento pela plataforma; fotografia, contestação formal, cadastro documental autônomo, múltiplos operadores e notificações externas saem do escopo inicial.
+- PRD atualizado para 2.5, decisões anteriores substituídas formalmente e roadmap alinhado ao escopo reduzido.
+- Schema SQL simplificado para remover infraestrutura financeira, documentação e evidência de entrega do MVP.
 - Schema SQL e modelo EER atualizados para a versão 0.2, incorporando Pix on-line, documentação das batedeiras, volume mínimo, evidência e contestação de entrega.
 - PRD atualizado para 2.4: Pix on-line passa a integrar o MVP, com cobrança após aceite, validade de dez minutos, uma renovação, crédito direto à batedeira e devolução integral.
 - Decisões de Pix presencial substituídas formalmente; prazos de contestação, responsabilidade por tarifas e ausência de comissão por pedido consolidados.
