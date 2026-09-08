@@ -19,6 +19,7 @@ Os trabalhos atuais incluem:
 ## Documentação
 
 - [Protótipo web em elaboração — status, execução e pendências](prototypes/web/README.md)
+- [Referência do protótipo no v0 — ainda não validado](https://v0.app/vitorbatista-hub/chat/acaiconecta-jAWnqGHlb8w)
 - [PRD vigente](docs/product/PRD.md)
 - [Roadmap](docs/product/roadmap.md)
 - [Registro de decisões](docs/product/decisions.md)

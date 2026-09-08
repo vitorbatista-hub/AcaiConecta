@@ -8,6 +8,7 @@ O formato é inspirado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.
 
 ### Adicionado
 
+- Referência do protótipo no v0 nos READMEs principal e do protótipo, com distinção entre o espaço de trabalho on-line e a exportação versionada; correspondência entre as versões ainda não verificada.
 - Protótipo web inicial dos três perfis organizado em `prototypes/web/`, identificado como em elaboração e ainda não validado, com instruções de execução e divergências conhecidas em relação ao PRD 2.5.
 - Fluxos operacionais do cliente, da batedeira e do administrador, incluindo exceções e matriz de transições do pedido.
 - Dicionário de dados inicial do MVP reduzido, com relacionamentos, invariantes e políticas de retenção.

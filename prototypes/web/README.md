@@ -4,6 +4,12 @@
 
 Este código foi importado da versão descompactada fornecida para exploração visual na Fase 2 — Definição e Prototipação do Produto. Contém telas de entrada, cliente, operador de batedeira e administrador, com dados e ações simulados. A implementação do MVP não foi iniciada.
 
+## Referência no v0
+
+[Projeto do protótipo no v0](https://v0.app/vitorbatista-hub/chat/acaiconecta-jAWnqGHlb8w), informado pelo responsável pelo projeto.
+
+O endereço aponta para o espaço de trabalho do protótipo no v0 e não comprova uma publicação de produção ou validação com usuários. Seu conteúdo não pôde ser inspecionado pela ferramenta de consulta nesta atualização; a correspondência entre a versão on-line e esta exportação permanece não verificada. Alterações no v0 não atualizam automaticamente os arquivos versionados neste repositório.
+
 ## Localização e fontes de verdade
 
 `prototypes/web/` reúne o código, as imagens e as dependências desta experiência. O diretório `docs/product/archive/` é reservado ao histórico documental e não é adequado para um protótipo em desenvolvimento.
