@@ -6,7 +6,7 @@ O produto pretende centralizar informações hoje dispersas, como disponibilidad
 
 ## Estado atual
 
-A Fase 1 — Descoberta e Validação do Problema foi concluída. O projeto está na Fase 2 — Definição e Prototipação do Produto; ainda não existe aplicação implementada.
+A Fase 1 — Descoberta e Validação do Problema foi concluída. O projeto está na Fase 2 — Definição e Prototipação do Produto. Há um protótipo de interface em elaboração, ainda não validado; a implementação do MVP não foi iniciada.
 
 Os trabalhos atuais incluem:
 
@@ -18,6 +18,7 @@ Os trabalhos atuais incluem:
 
 ## Documentação
 
+- [Protótipo web em elaboração — status, execução e pendências](prototypes/web/README.md)
 - [PRD vigente](docs/product/PRD.md)
 - [Roadmap](docs/product/roadmap.md)
 - [Registro de decisões](docs/product/decisions.md)
@@ -38,11 +39,20 @@ O produto será validado inicialmente em **Cametá, Pará**, com um grupo pequen
 
 ## Situação da implementação
 
-- Protótipo: pendente
+- Protótipo: versão inicial em elaboração, ainda não validada; revisão de aderência ao PRD e testes de usabilidade pendentes
 - Arquitetura técnica: pendente
 - Modelo de dados: schema SQL, dicionário de dados e modelo EER 0.4 atualizados
 - Aplicação: não iniciada
 - Piloto: pendente
+
+## Organização do repositório
+
+- `docs/`: documentação vigente de produto, pesquisa e banco de dados.
+- `docs/product/archive/`: documentos históricos, sem autoridade sobre os requisitos vigentes.
+- `database/`: schema SQL oficial e modelo visual derivado.
+- `prototypes/web/`: código e recursos do protótipo web em elaboração, com dependências próprias e dados simulados.
+
+O protótipo serve à exploração visual da Fase 2. Suas telas e simulações não substituem o PRD nem representam aprovação das regras de negócio ou da arquitetura do MVP.
 
 ## Princípio de desenvolvimento
 

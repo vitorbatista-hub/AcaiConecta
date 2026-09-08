@@ -8,9 +8,9 @@ O formato é inspirado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.
 
 ### Adicionado
 
+- Protótipo web inicial dos três perfis organizado em `prototypes/web/`, identificado como em elaboração e ainda não validado, com instruções de execução e divergências conhecidas em relação ao PRD 2.5.
 - Fluxos operacionais do cliente, da batedeira e do administrador, incluindo exceções e matriz de transições do pedido.
 - Dicionário de dados inicial do MVP reduzido, com relacionamentos, invariantes e políticas de retenção.
-- Orientações para contextualização silenciosa, análise de consistência e feedback contínuo de fase nas sessões de agentes.
 - Fluxo consolidado do processo atual de pedido e entrega, com limitações metodológicas explícitas.
 - Questionário essencial e anônimo para validação da Fase 1 com batedeiras e consumidores.
 - Schema SQL inicial do MVP para geração do modelo EER no MySQL Workbench.

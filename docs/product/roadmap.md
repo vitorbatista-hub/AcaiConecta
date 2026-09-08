@@ -33,6 +33,8 @@ Confirmar que o problema é relevante e que existe disposição real de batedeir
 
 **Situação:** Em andamento
 
+**Protótipo:** versão inicial disponível em [`../../prototypes/web/`](../../prototypes/web/README.md), em elaboração e ainda não validada. A revisão de aderência ao PRD e os testes de usabilidade permanecem pendentes; sua inclusão no repositório não conclui a fase.
+
 ### Objetivo
 
 Transformar a visão do produto em uma especificação implementável e testada visualmente.
