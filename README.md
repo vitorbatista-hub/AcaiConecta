@@ -40,7 +40,7 @@ O produto será validado inicialmente em **Cametá, Pará**, com um grupo pequen
 
 ## Situação da implementação
 
-- Protótipo: versão inicial em elaboração, ainda não validada; revisão de aderência ao PRD e testes de usabilidade pendentes
+- Protótipo: versão atualizada em elaboração, ainda não validada; revisão de aderência ao PRD e testes de usabilidade pendentes
 - Arquitetura técnica: pendente
 - Modelo de dados: schema SQL, dicionário de dados e modelo EER 0.4 atualizados
 - Aplicação: não iniciada
