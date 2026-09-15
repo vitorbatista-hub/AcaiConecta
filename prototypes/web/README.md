@@ -2,11 +2,11 @@
 
 **Status: protótipo em elaboração, ainda não validado.**
 
-Este código foi importado da versão descompactada fornecida para exploração visual na Fase 2 — Definição e Prototipação do Produto. Contém telas de entrada, cliente, operador de batedeira e administrador, com dados e ações simulados. A implementação do MVP não foi iniciada.
+Esta versão mais recente substitui a exportação anterior e foi fornecida para exploração visual na Fase 2 — Definição e Prototipação do Produto. Contém telas de entrada, cliente, operador de batedeira e administrador, com dados e ações simulados. A implementação do MVP não foi iniciada.
 
 ## Referência no v0
 
-[Projeto do protótipo no v0](https://v0.app/vitorbatista-hub/chat/acaiconecta-jAWnqGHlb8w), informado pelo responsável pelo projeto.
+[Projeto do protótipo no v0](https://v0.app/vitors-projects-edcbface/chat/acaiconecta-jAWnqGHlb8w), informado pelo responsável pelo projeto.
 
 O endereço aponta para o espaço de trabalho do protótipo no v0 e não comprova uma publicação de produção ou validação com usuários. Seu conteúdo não pôde ser inspecionado pela ferramenta de consulta nesta atualização; a correspondência entre a versão on-line e esta exportação permanece não verificada. Alterações no v0 não atualizam automaticamente os arquivos versionados neste repositório.
 
@@ -45,14 +45,18 @@ Esta é uma revisão estática inicial, não uma validação completa do protót
 
 | Fonte no protótipo | Divergência ou limitação | Referência e impacto |
 |---|---|---|
-| `app/cliente/page.tsx` | Menciona pagamento e previsão de retirada. | O PRD, seções 10 e 14, e a DEC-014 definem somente entrega; o fluxo precisa ser ajustado antes da validação. |
-| `app/cliente/page.tsx`, `app/operador/page.tsx`, `lib/mock-data.ts` | Confirmação simulada antecipa o preparo; estados simplificados permitem passar de pronto a entregue. | PRD, seção 12: preservar aceite, expiração, saída para entrega e exceções explícitas. |
-| `app/cliente/page.tsx` | A confirmação não coleta endereço, forma de pagamento ou troco e não valida volume mínimo de 1 litro ou taxa por bairro. | PRD, seções 10 a 14: o fluxo de pedido ainda está incompleto. |
-| `app/admin/page.tsx` | Exibe comissão média de 8% e envio de documentos pela batedeira. | DEC-033 e DEC-034: cadastro assistido sem documentos no sistema e piloto gratuito, sem comissão. |
-| `lib/mock-data.ts`, `components/app-shell.tsx` | Valores monetários são representados em reais com ponto flutuante. | O schema e o PRD exigem centavos; este modelo não deve ser reutilizado no MVP sem correção. |
-| `app/cliente/page.tsx`, `components/app-shell.tsx` | Avaliações, favoritos e distância aparecem como elementos de demonstração; links com `?view=` não estão conectados ao estado local das páginas. | Não representam funcionalidades aprovadas ou navegação integralmente funcional; revisar escopo e interações. |
-| `lib/mock-data.ts`, `app/layout.tsx` | Imagens usam URLs externas e o layout inclui Vercel Analytics em produção. | Há dependência de rede e instrumentação herdada da exportação, sem decisão de infraestrutura do MVP. |
-| `next.config.mjs`, `app/operador/page.tsx`, `components/app-shell.tsx` | Build ignora erros de tipos; `Order.status` inclui `cancelled`, ausente no tipo aceito por `StatusPill`. | A verificação de tipos precisa ser executada e as incompatibilidades corrigidas antes de considerar o código tecnicamente verificado. |
+| `app/cliente/page.tsx` | O envio depende do catálogo selecionado, que é limpo ao fechá-lo; a batedeira deve ser obtida da sacola. | O fluxo pode terminar sem resposta ou associar itens ao estabelecimento incorreto. |
+| Páginas dos três perfis | Pedidos e disponibilidade ficam em estados locais separados. | A simulação ainda não permite validar o ciclo completo entre cliente, operador e administrador. |
+| `lib/mock-data.ts`, `app/operador/page.tsx` | `applyTransition` não aplica a matriz de transições, o prazo ou motivos obrigatórios; não há expiração automática. | PRD, seção 12: aceite vencido, recusa e falha sem motivo foram reproduzidos em verificações pontuais das funções. |
+| `app/cliente/page.tsx`, `components/app-shell.tsx` | Cancelamento sem ação, navegação incompleta após envio e chamadas de `useToast` fora do provedor correspondente. | Ações essenciais e feedback ainda precisam de correção. Navegação móvel e histórico também precisam de validação. |
+| `app/operador/page.tsx` | Gestão de catálogo substituída por “Razas e custos”; compras tratadas como produção, conversão fixa para litros e períodos sem filtragem. | Módulo sem decisão registrada no PRD vigente; não representa ampliação aprovada do MVP. Gestão de catálogo permanece pendente. |
+| `app/operador/page.tsx` | Abertura e entrega vinculadas automaticamente; pedidos aceitos apresentados como “Entrada no caixa”. | PRD, seções 10 e 14: controles independentes e ausência de confirmação financeira pela plataforma. |
+| `app/cliente/page.tsx` | Entrega gratuita e faixa estimada fixadas na apresentação; observação de portaria inserida automaticamente; troco pode acompanhar Pix. | Revisar transparência dos valores, instruções do cliente e regras de pagamento antes de validar o fluxo. |
+| `app/admin/page.tsx` | Mudanças administrativas apenas locais, sem inclusão de eventos de auditoria; cadastro e intervenções incompletos. | PRD, seções 8, 16 e 19: a simulação administrativa ainda não cobre os fluxos exigidos. |
+| `app/cliente/page.tsx` | Modais sem gestão de foco, fechamento por Escape ou nome acessível associado. | Revisão de acessibilidade e teste por teclado pendentes. |
+| `lib/mock-data.ts`, `app/layout.tsx`, `next.config.mjs` | Imagens externas, Analytics herdado e build configurado para ignorar erros de tipos. | Não estabelecem infraestrutura aprovada; build isolado não comprova correção dos tipos. |
+
+Esta versão avança em volumes explícitos, valores em centavos, endereço, pagamento na entrega, mínimo de um litro e estados completos declarados. Esses avanços não eliminam as limitações acima.
 
 Não há integração com MySQL/Prisma, persistência de pedidos ou operação real. Indicadores e mensagens das telas são demonstrativos, não evidências do piloto.
 
@@ -60,4 +64,4 @@ Não há integração com MySQL/Prisma, persistência de pedidos ou operação r
 
 Esta versão deve ser registrada na branch de trabalho. A integração à `main` depende da revisão do conjunto completo de alterações que será incorporado. Versionar o rascunho não equivale a validar usabilidade, aprovar sua aderência ao PRD ou concluir a Fase 2.
 
-Nesta organização foram revisados estaticamente os arquivos e a consistência documental. Build, verificação de tipos e navegação no navegador não foram executados: as dependências não estão instaladas e pnpm não está disponível neste ambiente.
+Nesta substituição foram revisados estaticamente o código e a consistência documental, e executadas verificações pontuais das funções de domínio com Node.js. Build, verificação completa de tipos e navegação no navegador não foram executados: as dependências, pnpm e agent-browser não estão disponíveis neste ambiente. As falhas conhecidas foram preservadas nesta importação e precisam ser corrigidas antes da validação do protótipo.

@@ -23,6 +23,8 @@ O formato é inspirado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.
 
 ### Alterado
 
+- Protótipo anterior substituído pela exportação mais recente em `prototypes/web/`, preservando o código recebido; referência do v0 atualizada e limitações da nova versão documentadas, sem aprovação de mudanças de escopo ou conclusão da Fase 2.
+
 - Schema SQL e modelo EER atualizados para 0.4, com convenção semanal de domingo (`0`) a sábado (`6`) e representação explícita da exibição de produtos temporariamente indisponíveis; o schema foi validado em MySQL 8.4.
 - Modelo EER regenerado a partir do schema SQL 0.3 e documentação atualizada para refletir seu alinhamento estrutural.
 - Integridade do histórico de pedidos reforçada para impedir remoção em cascata de eventos e perda da referência ao autor.

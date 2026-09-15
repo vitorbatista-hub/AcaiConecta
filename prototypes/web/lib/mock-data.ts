@@ -1,309 +1,48 @@
-// Mock data para AçaíConecta - Protótipo
-
-export type Store = {
-  id: string
-  name: string
-  owner: string
-  address: string
-  distance: number
-  rating: number
-  reviews: number
-  isOpen: boolean
-  image: string
-  status: 'open' | 'closed' | 'busy'
-  queueSize: number
-}
-
-export type Product = {
-  id: string
-  name: string
-  description: string
-  price: number
-  image: string
-  storeId: string
-}
-
-export type OrderItem = {
-  productId: string
-  quantity: number
-  customizations: string[]
-}
-
-export type Order = {
-  id: string
-  customerId: string
-  storeId: string
-  items: OrderItem[]
-  total: number
-  status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'delivered' | 'cancelled'
-  createdAt: Date
-  estimatedTime: number
-}
-
-export type Notification = {
-  id: string
-  type: 'order_confirmed' | 'order_ready' | 'order_delivered' | 'promotion'
-  message: string
-  timestamp: Date
-  read: boolean
-}
-
-export type AdminMetrics = {
-  totalOrders: number
-  totalRevenue: number
-  activeStores: number
-  activeCustomers: number
-  avgRating: number
-}
-
-// Referências visuais reais do açaí tradicional: frutos, polpa pura e preparo artesanal.
-export const traditionalAcaiImages = {
-  spoon: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/acai3-NVkTw45YGZbGD2AE0s7p9XgbOHlM74.jpeg',
-  baskets: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/acai2-z1LJbnLkdicCbdZwf6Oqwvgx2tGGg3.jpeg',
-  machine: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/acai4-jfsmlPP4TL2UoUNYTUiDNq9FDSZuA1.jpeg',
-  bowl: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/acai1-JOOqv9ZNnKtv6XzK15nUShZpeOjrJA.webp',
-  ceramicBowl: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Captura%20de%20tela%20de%202026-09-08%2020-00-09-lXQumRrOjMWdFc9gRzMlTt3yO2GTAh.png',
-  metalBowl: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Captura%20de%20tela%20de%202026-09-08%2019-58-23-NkvvlYDT6CSGuRfo7V8aiwVbXfZmzL.png',
-  pouring: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Captura%20de%20tela%20de%202026-09-08%2019-59-48-YqRP786MSn8256c66ZtxC8sEDzA8Do.png',
-} as const
-
-// LOJAS MOCKADAS
-export const mockStores: Store[] = [
-  {
-    id: 'store-001',
-    name: 'Açaí do Seu João',
-    owner: 'João Silva',
-    address: 'Rua das Flores, 42 - Cametá',
-    distance: 0.8,
-    rating: 4.8,
-    reviews: 156,
-    isOpen: true,
-    image: traditionalAcaiImages.spoon,
-    status: 'open',
-    queueSize: 3,
-  },
-  {
-    id: 'store-002',
-    name: 'Açaí Amazônia',
-    owner: 'Maria Santos',
-    address: 'Av. Principal, 128 - Cametá',
-    distance: 1.2,
-    rating: 4.6,
-    reviews: 98,
-    isOpen: true,
-    image: traditionalAcaiImages.baskets,
-    status: 'open',
-    queueSize: 5,
-  },
-  {
-    id: 'store-003',
-    name: 'Puro Açaí',
-    owner: 'Carlos Oliveira',
-    address: 'Rua do Comércio, 75 - Cametá',
-    distance: 1.5,
-    rating: 4.9,
-    reviews: 203,
-    isOpen: true,
-    image: traditionalAcaiImages.machine,
-    status: 'open',
-    queueSize: 2,
-  },
-  {
-    id: 'store-004',
-    name: 'Açaí Tradicional',
-    owner: 'Francisca Costa',
-    address: 'Praça Central, 15 - Cametá',
-    distance: 2.1,
-    rating: 4.5,
-    reviews: 67,
-    isOpen: false,
-    image: traditionalAcaiImages.bowl,
-    status: 'closed',
-    queueSize: 0,
-  },
-]
-
-// PRODUTOS MOCKADOS
-export const mockProducts: Product[] = [
-  {
-    id: 'prod-001',
-    name: 'Açaí Pequeno Tradicional',
-    description: 'Açaí puro, batido na hora, sem açúcar e sem acompanhamentos.',
-    price: 18.0,
-    image: traditionalAcaiImages.ceramicBowl,
-    storeId: 'store-001',
-  },
-  {
-    id: 'prod-002',
-    name: 'Açaí Médio Tradicional',
-    description: 'Açaí puro em porção média, com a textura encorpada da receita local.',
-    price: 24.0,
-    image: traditionalAcaiImages.metalBowl,
-    storeId: 'store-001',
-  },
-  {
-    id: 'prod-003',
-    name: 'Açaí Grande Tradicional',
-    description: 'Porção grande de açaí puro para compartilhar, sem misturas ou derivados.',
-    price: 32.0,
-    image: traditionalAcaiImages.pouring,
-    storeId: 'store-001',
-  },
-  {
-    id: 'prod-004',
-    name: 'Açaí Pequeno da Casa',
-    description: 'Açaí puro, preparado na hora com frutos selecionados da região.',
-    price: 22.0,
-    image: traditionalAcaiImages.baskets,
-    storeId: 'store-002',
-  },
-  {
-    id: 'prod-005',
-    name: 'Açaí Médio da Casa',
-    description: 'Açaí puro em porção média, batido com frutos selecionados da região.',
-    price: 28.0,
-    image: traditionalAcaiImages.spoon,
-    storeId: 'store-002',
-  },
-  {
-    id: 'prod-006',
-    name: 'Açaí Pequeno Tradicional',
-    description: 'Receita tradicional de Cametá, sem açúcar, frutas ou produtos industrializados.',
-    price: 16.0,
-    image: traditionalAcaiImages.bowl,
-    storeId: 'store-003',
-  },
-  {
-    id: 'prod-007',
-    name: 'Açaí Médio Tradicional',
-    description: 'Receita tradicional de Cametá, servida pura e batida na hora.',
-    price: 22.0,
-    image: traditionalAcaiImages.machine,
-    storeId: 'store-003',
-  },
-  {
-    id: 'prod-008',
-    name: 'Açaí Grande Tradicional',
-    description: 'Tamanho família, com a consistência cremosa do açaí tradicional de Cametá.',
-    price: 30.0,
-    image: traditionalAcaiImages.baskets,
-    storeId: 'store-003',
-  },
-]
-
-// PEDIDOS MOCKADOS
-export const mockOrders: Order[] = [
-  {
-    id: 'order-001',
-    customerId: 'customer-001',
-    storeId: 'store-001',
-    items: [
-      { productId: 'prod-002', quantity: 1, customizations: ['Açaí puro'] },
-      { productId: 'prod-001', quantity: 1, customizations: [] },
-    ],
-    total: 42.0,
-    status: 'delivered',
-    createdAt: new Date(Date.now() - 3600000),
-    estimatedTime: 15,
-  },
-  {
-    id: 'order-002',
-    customerId: 'customer-001',
-    storeId: 'store-003',
-    items: [{ productId: 'prod-007', quantity: 2, customizations: ['Açaí puro'] }],
-    total: 44.0,
-    status: 'ready',
-    createdAt: new Date(Date.now() - 1200000),
-    estimatedTime: 20,
-  },
-  {
-    id: 'order-003',
-    customerId: 'customer-001',
-    storeId: 'store-002',
-    items: [{ productId: 'prod-005', quantity: 1, customizations: [] }],
-    total: 28.0,
-    status: 'preparing',
-    createdAt: new Date(Date.now() - 300000),
-    estimatedTime: 12,
-  },
-]
-
-// NOTIFICAÇÕES MOCKADAS
-export const mockNotifications: Notification[] = [
-  {
-    id: 'notif-001',
-    type: 'order_confirmed',
-    message: 'Seu pedido em Puro Açaí foi confirmado!',
-    timestamp: new Date(Date.now() - 300000),
-    read: false,
-  },
-  {
-    id: 'notif-002',
-    type: 'order_ready',
-    message: 'Seu pedido em Açaí do Seu João está pronto para retirada!',
-    timestamp: new Date(Date.now() - 1200000),
-    read: true,
-  },
-  {
-    id: 'notif-003',
-    type: 'promotion',
-    message: 'Promoção especial: 15% de desconto na Açaí Amazônia',
-    timestamp: new Date(Date.now() - 86400000),
-    read: true,
-  },
-]
-
-// MÉTRICAS ADMINISTRATIVAS
-export const mockAdminMetrics: AdminMetrics = {
-  totalOrders: 1847,
-  totalRevenue: 45280.0,
-  activeStores: 3,
-  activeCustomers: 542,
-  avgRating: 4.7,
-}
-
-// FUNÇÕES AUXILIARES
-
-export function getStoreById(id: string): Store | undefined {
-  return mockStores.find((store) => store.id === id)
-}
-
-export function getProductsByStoreId(storeId: string): Product[] {
-  return mockProducts.filter((product) => product.storeId === storeId)
-}
-
-export function getOrdersByCustomerId(customerId: string): Order[] {
-  return mockOrders.filter((order) => order.customerId === customerId)
-}
-
-export function getNotificationsByCustomerId(customerId: string): Notification[] {
-  return mockNotifications
-}
-
-export function calculateOrderTotal(items: OrderItem[]): number {
-  return items.reduce((total, item) => {
-    const product = mockProducts.find((p) => p.id === item.productId)
-    return total + (product?.price || 0) * item.quantity
-  }, 0)
-}
-
-export function getOrderStatusLabel(status: Order['status']): string {
-  const labels: Record<Order['status'], string> = {
-    pending: 'Pendente',
-    confirmed: 'Confirmado',
-    preparing: 'Preparando',
-    ready: 'Pronto',
-    delivered: 'Entregue',
-    cancelled: 'Cancelado',
-  }
-  return labels[status]
-}
-
-export function getStoreStatusColor(status: Store['status']): string {
-  const colors: Record<Store['status'], string> = {
-    open: 'text-green-600',
-    closed: 'text-red-600',
-    busy: 'text-yellow-600',
-  }
-  return colors[status]
-}
+export type AdminStatus = 'EM_ANALISE' | 'ATIVA' | 'SUSPENSA' | 'DESATIVADA'
+export type OrderStatus = 'AGUARDANDO_ACEITE' | 'ACEITO' | 'EM_PREPARO' | 'PRONTO' | 'SAIU_PARA_ENTREGA' | 'ENTREGUE' | 'RECUSADO' | 'EXPIRADO' | 'CANCELADO' | 'FALHA_NA_ENTREGA'
+export type PaymentMethod = 'DINHEIRO' | 'PIX'
+export type Product = { id:string; storeId:string; name:string; description?:string; image?:string; volumeMl:number; priceCents:number; active:boolean; available:boolean; showUnavailable:boolean }
+export type Store = { id:string; name:string; owner:string; operator:string; address:string; neighborhood:'Centro'; image:string; adminStatus:AdminStatus; isOpen:boolean; deliveryAvailable:boolean; hours:string; nextOpening?:string; estimatedRange:string; deliveryFeeCents:number; createdAt:string }
+export type OrderItem = { productId:string; name:string; quantity:number; volumeMl:number; unitPriceCents:number; note?:string }
+export type TimelineEvent = { from?:OrderStatus; to:OrderStatus; at:string; author:string; reason?:string }
+export type Order = { id:string; customerId:string; storeId:string; items:OrderItem[]; subtotalCents:number; deliveryFeeCents:number; totalCents:number; address:{street:string;number:string;complement?:string;neighborhood:string;reference?:string}; phone:string; payment:PaymentMethod; changeForCents?:number; note?:string; status:OrderStatus; createdAt:string; estimatedRange:string; acceptedDeadline:string; timeline:TimelineEvent[] }
+export type Notification = {id:string;orderId?:string;message:string;createdAt:string;read:boolean}
+export type RazaRecord = {id:string;date:string;quantity:number;costCents:number;note?:string}
+export const mockRazas:RazaRecord[]=[{id:'raza-001',date:'2026-09-14',quantity:3,costCents:18500,note:'Compra no mercado municipal'},{id:'raza-002',date:'2026-09-13',quantity:2,costCents:12400,note:'Fornecedor tradicional'},{id:'raza-003',date:'2026-09-08',quantity:4,costCents:24800,note:'Reposição semanal'}]
+export const razaUnitLabel='1 raza = 1 paneiro = 10 frascos'
+export const traditionalAcaiImages={spoon:'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/acai3-NVkTw45YGZbGD2AE0s7p9XgbOHlM74.jpeg',baskets:'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/acai2-z1LJbnLkdicCbdZwf6Oqwvgx2tGGg3.jpeg',machine:'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/acai4-jfsmlPP4TL2UoUNYTUiDNq9FDSZuA1.jpeg',bowl:'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/acai1-JOOqv9ZNnKtv6XzK15nUShZpeOjrJA.webp',ceramicBowl:'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Captura%20de%20tela%20de%202026-09-08%2020-00-09-lXQumRrOjMWdFc9gRzMlTt3yO2GTAh.png',metalBowl:'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Captura%20de%20tela%20de%202026-09-08%2019-58-23-NkvvlYDT6CSGuRfo7V8aiwVbXfZmzL.png',pouring:'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Captura%20de%20tela%20de%202026-09-08%2019-59-48-YqRP786MSn8256c66ZtxC8sEDzA8Do.png'} as const
+export const mockStores:Store[]=[{id:'store-001',name:'Açaí do Seu João',owner:'João Silva',operator:'João Silva',address:'Rua das Flores, 42',neighborhood:'Centro',image:traditionalAcaiImages.ceramicBowl,adminStatus:'ATIVA',isOpen:true,deliveryAvailable:true,hours:'09h às 20h',estimatedRange:'25–35 min',deliveryFeeCents:0,createdAt:'2026-09-01'},{id:'store-002',name:'Açaí Amazônia',owner:'Maria Santos',operator:'Maria Santos',address:'Av. Principal, 128',neighborhood:'Centro',image:traditionalAcaiImages.baskets,adminStatus:'ATIVA',isOpen:true,deliveryAvailable:false,hours:'10h às 19h',estimatedRange:'30–40 min',deliveryFeeCents:0,createdAt:'2026-09-02'},{id:'store-003',name:'Puro Açaí',owner:'Carlos Oliveira',operator:'Carlos Oliveira',address:'Rua do Comércio, 75',neighborhood:'Centro',image:traditionalAcaiImages.machine,adminStatus:'ATIVA',isOpen:false,deliveryAvailable:true,nextOpening:'Amanhã às 08h',hours:'08h às 18h',estimatedRange:'20–30 min',deliveryFeeCents:0,createdAt:'2026-09-03'},{id:'store-004',name:'Açaí da Ilha',owner:'Francisca Costa',operator:'Francisca Costa',address:'Praça Central, 15',neighborhood:'Centro',image:traditionalAcaiImages.metalBowl,adminStatus:'EM_ANALISE',isOpen:false,deliveryAvailable:false,nextOpening:'Após ativação',hours:'09h às 18h',estimatedRange:'35–45 min',deliveryFeeCents:0,createdAt:'2026-09-04'}]
+export const mockProducts:Product[]=[{id:'prod-001',storeId:'store-001',name:'Açaí puro 500 ml',description:'Polpa tradicional batida na hora.',image:traditionalAcaiImages.ceramicBowl,volumeMl:500,priceCents:1800,active:true,available:true,showUnavailable:false},{id:'prod-002',storeId:'store-001',name:'Açaí puro 1 litro',description:'Porção para compartilhar, sem misturas.',image:traditionalAcaiImages.metalBowl,volumeMl:1000,priceCents:3200,active:true,available:true,showUnavailable:false},{id:'prod-003',storeId:'store-001',name:'Açaí puro 300 ml',description:'Porção individual tradicional.',image:traditionalAcaiImages.spoon,volumeMl:300,priceCents:1200,active:true,available:false,showUnavailable:true},{id:'prod-004',storeId:'store-002',name:'Açaí puro 500 ml',description:'Açaí tradicional de Cametá.',image:traditionalAcaiImages.bowl,volumeMl:500,priceCents:2200,active:true,available:true,showUnavailable:false},{id:'prod-005',storeId:'store-002',name:'Açaí puro 1 litro',description:'Polpa encorpada batida na hora.',image:traditionalAcaiImages.pouring,volumeMl:1000,priceCents:3800,active:true,available:true,showUnavailable:false},{id:'prod-006',storeId:'store-003',name:'Açaí puro 500 ml',description:'Disponível quando a batedeira abrir.',image:traditionalAcaiImages.machine,volumeMl:500,priceCents:1600,active:true,available:true,showUnavailable:false}]
+const now=new Date();const iso=(m:number)=>new Date(now.getTime()-m*60000).toISOString();const address={street:'Rua Nova',number:'120',complement:'Casa azul',neighborhood:'Centro',reference:'Perto da praça'}
+export const mockOrders:Order[]=[{id:'AC-1040',customerId:'customer-001',storeId:'store-001',items:[{productId:'prod-002',name:'Açaí puro 1 litro',quantity:1,volumeMl:1000,unitPriceCents:3200}],subtotalCents:3200,deliveryFeeCents:0,totalCents:3200,address,phone:'(91) 98888-0000',payment:'PIX',status:'EM_PREPARO',createdAt:iso(12),estimatedRange:'25–35 min',acceptedDeadline:new Date(now.getTime()+3*60000).toISOString(),timeline:[{to:'AGUARDANDO_ACEITE',at:iso(12),author:'cliente'},{from:'AGUARDANDO_ACEITE',to:'ACEITO',at:iso(10),author:'João Silva'},{from:'ACEITO',to:'EM_PREPARO',at:iso(5),author:'João Silva'}]}]
+export const mockNotifications:Notification[]=[{id:'n-1',orderId:'AC-1040',message:'Seu pedido está em preparo.',createdAt:iso(5),read:false},{id:'n-2',message:'O entregador chegou.',createdAt:iso(40),read:true}]
+export const mockAdminMetrics={responseTime:'3m 12s',acceptance:'86%',completion:'78%',expiration:'4%',cancelledAfterAcceptance:'6%'}
+export const mockUsers=[{name:'João da Silva',email:'joao@email.com',role:'Cliente',status:'Ativo'},{name:'Maria Santos',email:'maria@acaia.com',role:'Operador',status:'Ativo'},{name:'Pedro Lima',email:'pedro@email.com',role:'Cliente',status:'Ativo'}]
+export const pilotNotice='Protótipo de demonstração: dados e ações simulados, sem pagamentos reais.'
+export const supportMessage='Após o aceite, procure suporte. Incidentes do piloto são registrados em diário operacional externo.'
+export const predefinedMessages=['O entregador chegou.','Não encontramos o endereço.','Seu pedido está atrasado.','Precisamos confirmar uma informação do pedido.','Um item ficou indisponível; aguarde contato do suporte.']
+export const operatorStoreId='store-001';export const requiredVolumeMl=1000;export const acceptanceWindowMinutes=5;export const orderMinVolumeMessage='Adicione pelo menos 1.000 ml para enviar o pedido.'
+export const getStoreById=(id:string)=>mockStores.find(s=>s.id===id);export const getProductsByStoreId=(id:string)=>mockProducts.filter(p=>p.storeId===id);export const getProducts=getProductsByStoreId;export const getOrdersByCustomerId=(id:string)=>mockOrders.filter(o=>o.customerId===id);export const getNotificationsByCustomerId=()=>mockNotifications
+export const getActiveStores=()=>mockStores.filter(s=>s.adminStatus==='ATIVA').sort((a,b)=>Number(b.isOpen)-Number(a.isOpen));export const getOperatorStore=()=>mockStores.find(s=>s.id===operatorStoreId)!;export const getAdminStores=()=>mockStores
+export const getOrderStatusLabel=(s:OrderStatus)=>({AGUARDANDO_ACEITE:'Aguardando resposta',ACEITO:'Aceito',EM_PREPARO:'Em preparo',PRONTO:'Pronto',SAIU_PARA_ENTREGA:'Saiu para entrega',ENTREGUE:'Entregue',RECUSADO:'Recusado',EXPIRADO:'Expirado',CANCELADO:'Cancelado',FALHA_NA_ENTREGA:'Falha na entrega'} as Record<OrderStatus,string>)[s]
+export const getStoreAvailabilityText=(s:Store)=>`${s.isOpen?'Aberta agora':`Fechada · ${s.nextOpening??s.hours}`} · ${s.deliveryAvailable?'Entrega disponível':'Entrega indisponível'}`
+export const getFeeText=(s:Store)=>s.deliveryAvailable?(s.deliveryFeeCents?`Taxa R$ ${cents(s.deliveryFeeCents)}`:'Entrega grátis'):'Sem entrega disponível'
+export const filterVisibleProducts=(id:string)=>getProductsByStoreId(id).filter(p=>p.active&&(p.available||p.showUnavailable));export const isStoreOrderable=(s:Store)=>s.adminStatus==='ATIVA'&&s.isOpen&&s.deliveryAvailable
+export function calculateTotals(items:{product:Product;quantity:number}[],fee:number){const subtotalCents=items.reduce((sum,i)=>sum+i.product.priceCents*i.quantity,0);const volumeMl=items.reduce((sum,i)=>sum+i.product.volumeMl*i.quantity,0);return{subtotalCents,deliveryFeeCents:fee,totalCents:subtotalCents+fee,volumeMl}}
+export const cents=(value:number)=>(value/100).toFixed(2).replace('.',',');export const isAddressCovered=(a:{neighborhood:string})=>a.neighborhood.trim().toLowerCase()==='centro';export const isCashChangeValid=(total:number,change?:number)=>change===undefined||change>=total
+export const createOrderId=()=>`AC-${Math.floor(1000+Math.random()*8999)}`
+export function createOrderSnapshot(items:{product:Product;quantity:number;note?:string}[],store:Store,addressValue:Order['address'],phone:string,payment:PaymentMethod,changeForCents?:number,note?:string):Order{const totals=calculateTotals(items,store.deliveryFeeCents);return{id:createOrderId(),customerId:'customer-001',storeId:store.id,items:items.map(i=>({productId:i.product.id,name:i.product.name,quantity:i.quantity,volumeMl:i.product.volumeMl,unitPriceCents:i.product.priceCents,note:i.note})),subtotalCents:totals.subtotalCents,deliveryFeeCents:totals.deliveryFeeCents,totalCents:totals.totalCents,address:addressValue,phone,payment,changeForCents,note,status:'AGUARDANDO_ACEITE',createdAt:new Date().toISOString(),estimatedRange:store.estimatedRange,acceptedDeadline:new Date(Date.now()+300000).toISOString(),timeline:[{to:'AGUARDANDO_ACEITE',at:new Date().toISOString(),author:'cliente'}]}}
+export function applyTransition(order:Order,to:OrderStatus,author:string,reason?:string):Order{return{...order,status:to,timeline:[...order.timeline,{from:order.status,to,at:new Date().toISOString(),author,reason}]}}
+export const canTransition=(from:OrderStatus,to:OrderStatus)=>({AGUARDANDO_ACEITE:['ACEITO','RECUSADO','EXPIRADO','CANCELADO'],ACEITO:['EM_PREPARO','CANCELADO'],EM_PREPARO:['PRONTO','CANCELADO'],PRONTO:['SAIU_PARA_ENTREGA','CANCELADO'],SAIU_PARA_ENTREGA:['ENTREGUE','FALHA_NA_ENTREGA']} as Record<string,string[]>)[from]?.includes(to)??false
+export const getStoreStatusColor=(s:AdminStatus)=>s==='ATIVA'?'text-secondary':s==='SUSPENSA'?'text-accent-foreground':'text-muted-foreground';export const adminStatusLabel=(s:AdminStatus)=>({EM_ANALISE:'Em análise',ATIVA:'Ativa',SUSPENSA:'Suspensa',DESATIVADA:'Desativada'}[s])
+export const mockStore=mockStores[0];export const mockProduct=mockProducts[0];export const mockStoreIds=mockStores.map(s=>s.id);export const mockProductIds=mockProducts.map(p=>p.id);export const mockOrderIds=mockOrders.map(o=>o.id);export const allTraditionalImages=Object.values(traditionalAcaiImages);export const appName='AçaíConecta';export const cityLabel='Cametá, PA';export const version='2.5';export const sourceOfTruth='PRD 2.5';export const buildTarget='Fase 2 — Definição e Prototipação';export const noFavorites=true;export const noReviews=true;export const noPromotions=true;export const demoCustomer={id:'customer-001',name:'João da Silva',phone:'(91) 98888-0000',email:'joao@email.com'};export const paymentLabels={DINHEIRO:'Dinheiro na entrega',PIX:'Pix na entrega'};export type CartItem={product:Product;quantity:number;note?:string}
+export function formatOrderDate(value:string){return new Date(value).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}
+export function formatTime(value:string){return new Date(value).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}
+export const mockAudit=[{at:iso(3),author:'admin',action:'Consulta de indicadores',reason:'Rotina do piloto'}]
+export const mockExternalDiaryNote='Incidentes do piloto devem ser registrados no diário operacional externo.'
+export const getOrderVolume=(o:Order)=>o.items.reduce((s,i)=>s+i.volumeMl*i.quantity,0)
+export const getOrderById=(id:string)=>mockOrders.find(o=>o.id===id)
+export const storeAdminStatusLabels:Record<AdminStatus,string>={EM_ANALISE:'Em análise',ATIVA:'Ativa',SUSPENSA:'Suspensa',DESATIVADA:'Desativada'}
+export const orderStatusLabels=Object.fromEntries((Object.keys({AGUARDANDO_ACEITE:1,ACEITO:1,EM_PREPARO:1,PRONTO:1,SAIU_PARA_ENTREGA:1,ENTREGUE:1,RECUSADO:1,EXPIRADO:1,CANCELADO:1,FALHA_NA_ENTREGA:1}) as OrderStatus[]).map(s=>[s,getOrderStatusLabel(s)]))
+export const mockStoresById=mockStores;export const getOrders=getOrdersByCustomerId;export const calculateOrderTotal=(items:OrderItem[])=>items.reduce((s,i)=>s+i.unitPriceCents*i.quantity,0);export const formatMoney=cents;export const getStoreStatusLabel=adminStatusLabel;export const getNotifications=()=>mockNotifications
+export default {mockStores,mockProducts,mockOrders}

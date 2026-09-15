@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Bell, ChevronDown, MapPin, ShoppingBag, Store, LayoutDashboard, Users, Package, LogOut, Menu, X } from 'lucide-react'
-import { useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 
 const profileConfig = {
   cliente: { label: 'Área do cliente', href: '/cliente', icon: ShoppingBag },
@@ -12,6 +12,28 @@ const profileConfig = {
 }
 
 type Profile = keyof typeof profileConfig
+type ToastKind = 'success' | 'error' | 'info'
+type ToastItem = { id: number; message: string; kind: ToastKind }
+
+const ToastContext = createContext<(message: string, kind?: ToastKind) => void>(() => undefined)
+
+export function useToast() {
+  return useContext(ToastContext)
+}
+
+function ToastViewport({ toasts, dismiss }: { toasts: ToastItem[]; dismiss: (id: number) => void }) {
+  return <div className="pointer-events-none fixed right-4 top-20 z-50 flex w-[min(92vw,24rem)] flex-col gap-3" aria-live="polite" aria-atomic="true">{toasts.map(toast => <div key={toast.id} className={`pointer-events-auto flex items-start gap-3 rounded-2xl border p-4 shadow-xl backdrop-blur ${toast.kind === 'error' ? 'border-destructive/30 bg-destructive/10' : toast.kind === 'success' ? 'border-secondary/30 bg-secondary/10' : 'border-border bg-card'}`} role={toast.kind === 'error' ? 'alert' : 'status'}><span className="flex-1 text-sm font-semibold">{toast.message}</span><button onClick={() => dismiss(toast.id)} aria-label="Fechar mensagem" className="text-muted-foreground transition hover:text-foreground">×</button></div>)}</div>
+}
+
+function ToastProvider({ children }: { children: React.ReactNode }) {
+  const [toasts, setToasts] = useState<ToastItem[]>([])
+  const notify = useCallback((message: string, kind: ToastKind = 'success') => {
+    const id = Date.now() + Math.random()
+    setToasts(items => [...items.slice(-3), { id, message, kind }])
+    window.setTimeout(() => setToasts(items => items.filter(item => item.id !== id)), 3600)
+  }, [])
+  return <ToastContext.Provider value={notify}>{children}<ToastViewport toasts={toasts} dismiss={id => setToasts(items => items.filter(item => item.id !== id))} /></ToastContext.Provider>
+}
 
 export function Brand({ light = false }: { light?: boolean }) {
   return (
@@ -51,23 +73,25 @@ export function Topbar({ profile, notificationCount = 2 }: { profile: Profile; n
           {open ? <X className="size-5" /> : <Menu className="size-5" />}
         </button>
       </div>
-      {open && <div className="border-t border-border bg-card px-4 py-4 md:hidden"><div className="flex flex-col gap-2"><Link href={config.href} className="rounded-xl bg-muted px-4 py-3 text-sm font-semibold">{config.label}</Link><Link href="/" className="rounded-xl px-4 py-3 text-sm text-muted-foreground">Sair da demonstração</Link></div></div>}
+      {open && <div className="border-t border-border bg-card px-4 py-4 md:hidden"><div className="flex flex-col gap-2"><Link href={config.href} className="rounded-xl bg-muted px-4 py-3 text-sm font-semibold">{config.label}</Link>{(profile==='cliente'?[['/cliente','Descobrir'],['/cliente?view=pedidos','Meus pedidos']]:profile==='operador'?[['/operador','Visão geral'],['/operador?view=pedidos','Pedidos'],['/operador?view=produtos','Razas e custos']]:[['/admin','Visão geral'],['/admin?view=usuarios','Usuários'],['/admin?view=lojas','Batedeiras']]).map(([href,label])=><Link key={href} href={href} onClick={()=>setOpen(false)} className="rounded-xl px-4 py-3 text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground">{label}</Link>)}<Link href="/" className="rounded-xl px-4 py-3 text-sm text-muted-foreground">Voltar ao início</Link></div></div>}
     </header>
   )
 }
 
 export function SideNav({ profile }: { profile: Profile }) {
   const pathname = usePathname()
+  const [activeView, setActiveView] = useState<string | null>(null)
+  useEffect(() => { const updateView = () => setActiveView(new URLSearchParams(window.location.search).get('view')); updateView(); window.addEventListener('popstate', updateView); return () => window.removeEventListener('popstate', updateView) }, [])
   const links = profile === 'cliente'
     ? [{ href: '/cliente', label: 'Descobrir', icon: MapPin }, { href: '/cliente?view=pedidos', label: 'Meus pedidos', icon: Package }]
     : profile === 'operador'
-      ? [{ href: '/operador', label: 'Visão geral', icon: LayoutDashboard }, { href: '/operador?view=pedidos', label: 'Pedidos', icon: Package }, { href: '/operador?view=produtos', label: 'Produtos', icon: Store }]
+      ? [{ href: '/operador', label: 'Visão geral', icon: LayoutDashboard }, { href: '/operador?view=pedidos', label: 'Pedidos', icon: Package }, { href: '/operador?view=produtos', label: 'Razas e custos', icon: Store }]
       : [{ href: '/admin', label: 'Visão geral', icon: LayoutDashboard }, { href: '/admin?view=usuarios', label: 'Usuários', icon: Users }, { href: '/admin?view=lojas', label: 'Batedeiras', icon: Store }]
-  return <aside className="hidden w-56 shrink-0 border-r border-border bg-card/60 lg:block"><nav className="sticky top-18 flex flex-col gap-1 p-4">{links.map(({ href, label, icon: Icon }) => { const active = pathname === href.split('?')[0] && (!href.includes('?') || typeof window !== 'undefined' && window.location.search.includes(href.split('?')[1])); return <Link key={href} href={href} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition ${active ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}><Icon className="size-4" />{label}</Link> })}<div className="my-4 h-px bg-border" /><Link href="/" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"><LogOut className="size-4" />Voltar ao início</Link></nav></aside>
+  return <aside className="hidden w-56 shrink-0 border-r border-border bg-card/60 lg:block"><nav className="sticky top-18 flex flex-col gap-1 p-4" aria-label="Navegação principal">{links.map(({ href, label, icon: Icon }) => { const targetPath = href.split('?')[0]; const targetView = new URLSearchParams(href.split('?')[1] || '').get('view'); const active = pathname === targetPath && (targetView ? activeView === targetView : !activeView); return <Link key={href} href={href} onClick={() => { setActiveView(targetView); window.dispatchEvent(new CustomEvent('acai-view-change',{detail:targetView})) }} aria-current={active ? 'page' : undefined} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition ${active ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}><Icon className="size-4" />{label}</Link> })}<div className="my-4 h-px bg-border" /><Link href="/" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"><LogOut className="size-4" />Voltar ao início</Link></nav></aside>
 }
 
 export function AppFrame({ profile, children }: { profile: Profile; children: React.ReactNode }) {
-  return <div className="min-h-screen bg-background"><Topbar profile={profile} /><div className="mx-auto flex max-w-7xl"><SideNav profile={profile} /><main className="min-w-0 flex-1 px-4 py-8 sm:px-6 lg:px-10">{children}</main></div></div>
+  return <ToastProvider><div className="min-h-screen bg-background"><Topbar profile={profile} /><div className="mx-auto flex max-w-7xl"><SideNav profile={profile} /><main className="min-w-0 flex-1 px-4 py-8 sm:px-6 lg:px-10">{children}</main></div></div></ToastProvider>
 }
 
 export function StatusPill({ status, label }: { status: 'open' | 'closed' | 'busy' | 'ready' | 'preparing' | 'delivered' | 'confirmed' | 'pending'; label?: string }) {
