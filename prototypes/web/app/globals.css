@@ -161,3 +161,25 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  .demo-field { @apply min-h-11 mt-1 block w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground; }
+  .demo-button { @apply min-h-11 rounded-full border border-border bg-card px-4 py-2 text-sm font-bold; }
+  .demo-primary { @apply min-h-11 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground; }
+}
+@layer base {
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  button, a, input, textarea, select, summary { @apply focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary; }
+  form > label { display: block; }
+}
+
+@layer components {
+  .quantity-button { @apply grid size-11 shrink-0 place-items-center rounded-full border bg-background; }
+  .compact-metrics { @apply grid grid-cols-3 gap-2; }
+  .compact-metrics > div { @apply rounded-xl border bg-card p-3; }
+  .compact-metrics dt { @apply text-xs text-muted-foreground; }
+  .compact-metrics dd { @apply mt-1 text-xl font-bold; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}

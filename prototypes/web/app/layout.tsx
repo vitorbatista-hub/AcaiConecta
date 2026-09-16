@@ -1,9 +1,10 @@
-import { Analytics } from '@vercel/analytics/next'
+import { PrototypeProvider } from '@/components/prototype-provider'
+import { ToastProvider } from '@/components/app-shell'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'AçaíConecta - Marketplace de Açaí Tradicional',
+  title: 'AçaíConecta - Açaí tradicional em Cametá/PA',
   description: 'Conectando consumidores a batedeiras de açaí tradicional de Cametá',
   generator: 'v0.app',
   icons: {
@@ -41,8 +42,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" className="bg-background">
       <body className="antialiased">
-        {children}
-        {process.env.NODE_ENV === 'production' && <Analytics />}
+        <ToastProvider><PrototypeProvider>{children}</PrototypeProvider></ToastProvider>
       </body>
     </html>
   )

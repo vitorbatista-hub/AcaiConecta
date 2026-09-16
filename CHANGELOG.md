@@ -8,6 +8,8 @@ O formato é inspirado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.
 
 ### Adicionado
 
+- Backlog priorizado do MVP (`docs/product/backlog-mvp.md`), com épicos derivados do PRD 2.5 e das histórias de usuário, priorização P0/P1/P2 por dependência técnica e rastreabilidade até o MER e a arquitetura técnica propostos; rascunho para revisão humana, sem aprovação de escopo. Roadmap da Fase 2 passou a linkar os quatro rascunhos (MER, dicionário de dados, arquitetura e backlog) e a registrar que a validação com participantes continua pendente.
+- Login e cadastro simulados do cliente no protótipo web, com bloqueio/reativação de conta auditados pelo administrador, endereços salvos com endereço principal, foto ilustrativa de produto e de batedeira (upload local, sem armazenamento real) e painel de ajuda com código do pedido e contato de suporte opcional; 5 novos testes de sessão do cliente (total de 20). Feito após a verificação e a sincronização com o v0 de 16/09, sem verificação em navegador nem reenvio ao v0 (ver `VERIFICATION.md`).
 - Referência do protótipo no v0 nos READMEs principal e do protótipo, com distinção entre o espaço de trabalho on-line e a exportação versionada; correspondência entre as versões ainda não verificada.
 - Protótipo web inicial dos três perfis organizado em `prototypes/web/`, identificado como em elaboração e ainda não validado, com instruções de execução e divergências conhecidas em relação ao PRD 2.5.
 - Fluxos operacionais do cliente, da batedeira e do administrador, incluindo exceções e matriz de transições do pedido.
@@ -22,6 +24,13 @@ O formato é inspirado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.
 - Arquivo histórico do PRD 1.0.
 
 ### Alterado
+
+- Imagem ilustrativa `acai-tradicional.webp` recomprimida com `sharp` (qualidade 80, mesma resolução 370×450), reduzindo de 24,7 KB para 19,8 KB sem perda visível perceptível; `sharp` adicionado como devDependency do protótipo para habilitar a otimização de imagens do `next/image` em produção self-hosted, ausente até então.
+- Corrigidas três divergências entre a documentação vigente e o protótipo web: título e rodapé deixaram de descrever o produto como "marketplace" (termo do PRD v1 arquivado, incompatível com a ausência de comissão e processamento de pagamento no MVP reduzido); `next.config.mjs` deixou de referenciar o host de imagem externo herdado da versão anterior, sem uso ativo no código; e `VERIFICATION.md` passou a usar os comandos `pnpm`, alinhados ao gerenciador oficial do projeto. Tipos, 20 testes e build revalidados; sem mudança de regra de negócio. Os três arquivos corrigidos (`next.config.mjs`, `app/layout.tsx`, `app/page.tsx`) foram reenviados ao chat existente do v0 via MCP, com hashes SHA-256 conferidos e `pnpm typecheck` aprovado no ambiente remoto; os demais arquivos alterados desde a sincronização anterior continuam pendentes de reenvio (ver `VERIFICATION.md`).
+- Documentação do protótipo (`README.md` e `VERIFICATION.md`) atualizada para registrar que as adições acima são posteriores à verificação e à sincronização com o v0 de 16/09/2026: tipos, build e os 20 testes foram revalidados localmente, mas a verificação em navegador e o reenvio ao v0 permanecem pendentes para as telas novas; a correspondência de hashes do envio anterior não vale mais para os arquivos alterados depois dele.
+- Protótipo atualizado no chat existente do v0 via MCP, com 15 arquivos transferidos e hashes SHA-256 conferidos; tipos, 15 testes e build aprovados no ambiente remoto. Sincronização pontual registrada, sem conclusão da Fase 2.
+
+- Correções do protótipo concluídas com estado compartilhado na sessão, validações e transições de pedidos, expiração, catálogo, controles independentes de disponibilidade, auditoria simulada e acessibilidade dos modais; 15 testes, tipos, build e fluxo principal no navegador verificados. Documentação e matriz de verificação atualizadas, mantendo a Fase 2 e a validação com usuários pendente.
 
 - Protótipo anterior substituído pela exportação mais recente em `prototypes/web/`, preservando o código recebido; referência do v0 atualizada e limitações da nova versão documentadas, sem aprovação de mudanças de escopo ou conclusão da Fase 2.
 

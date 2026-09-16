@@ -33,7 +33,9 @@ Confirmar que o problema é relevante e que existe disposição real de batedeir
 
 **Situação:** Em andamento
 
-**Protótipo:** versão atualizada em elaboração, ainda não validada, disponível em [`../../prototypes/web/`](../../prototypes/web/README.md). A revisão de aderência ao PRD e os testes de usabilidade permanecem pendentes; sua inclusão no repositório não conclui a fase.
+**Protótipo:** versão atualizada em elaboração, ainda não validada, disponível em [`../../prototypes/web/`](../../prototypes/web/README.md). As correções do fluxo principal passaram por verificação técnica documentada no protótipo. A cobertura restante do PRD e os testes de usabilidade permanecem pendentes; esta revisão não conclui a fase.
+
+**Modelo de dados, arquitetura e backlog:** [modelo conceitual e MER inicial](mer-eer-inicial.md), [dicionário de dados](../database/data-dictionary.md), [arquitetura técnica proposta](arquitetura-tecnica.md) e [backlog priorizado do MVP](backlog-mvp.md) existem como rascunhos para revisão humana, ainda não aprovados nem revisados em conjunto. A validação com participantes, exigida pelos critérios de conclusão, continua pendente.
 
 ### Objetivo
 

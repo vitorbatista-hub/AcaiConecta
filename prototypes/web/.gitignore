@@ -11,5 +11,8 @@ __v0_jsx-dev-runtime.ts
 
 # Common ignores
 node_modules
-.next/
+.next
 .DS_Store
+# Generated TypeScript files
+*.tsbuildinfo
+next-env.d.ts

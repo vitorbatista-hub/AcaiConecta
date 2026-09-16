@@ -8,7 +8,9 @@ Esta versão mais recente substitui a exportação anterior e foi fornecida para
 
 [Projeto do protótipo no v0](https://v0.app/vitors-projects-edcbface/chat/acaiconecta-jAWnqGHlb8w), informado pelo responsável pelo projeto.
 
-O endereço aponta para o espaço de trabalho do protótipo no v0 e não comprova uma publicação de produção ou validação com usuários. Seu conteúdo não pôde ser inspecionado pela ferramenta de consulta nesta atualização; a correspondência entre a versão on-line e esta exportação permanece não verificada. Alterações no v0 não atualizam automaticamente os arquivos versionados neste repositório.
+Em 16/09/2026, 15 arquivos de código, configuração e testes foram enviados a este chat pelo MCP do v0. Os hashes SHA-256 retornados pelo v0 coincidiram com o manifesto local dos arquivos enviados. Tipos, 15 testes e build passaram também no ambiente remoto. Veja o [registro da sincronização](VERIFICATION.md#sincronização-com-o-v0).
+
+[Preview do protótipo](https://acaiconecta.v0.build). O chat e o preview não representam publicação de produção ou validação com usuários. A correspondência foi conferida somente para os 15 arquivos enviados; alterações futuras no v0 ou no repositório não se sincronizam automaticamente — como já ocorreu com as adições descritas em [Adições posteriores à verificação de 16/09](#adições-posteriores-à-verificação-de-1609-pendentes-de-verificação-em-navegador-e-no-v0), feitas horas depois deste envio e nunca reenviadas ao v0.
 
 ## Localização e fontes de verdade
 
@@ -37,31 +39,67 @@ pnpm exec tsc --noEmit
 pnpm build
 ```
 
-O projeto importado não define scripts de teste ou lint. `next.config.mjs` contém `ignoreBuildErrors: true`, portanto um build bem-sucedido não comprova a correção dos tipos.
+Para executar as verificações automatizadas (Node.js 24, validado com 24.15.0):
 
-## Pendências conhecidas
+```sh
+pnpm typecheck
+pnpm test
+pnpm build
+```
 
-Esta é uma revisão estática inicial, não uma validação completa do protótipo.
+Não há script de lint configurado. O build não ignora erros de TypeScript.
 
-| Fonte no protótipo | Divergência ou limitação | Referência e impacto |
-|---|---|---|
-| `app/cliente/page.tsx` | O envio depende do catálogo selecionado, que é limpo ao fechá-lo; a batedeira deve ser obtida da sacola. | O fluxo pode terminar sem resposta ou associar itens ao estabelecimento incorreto. |
-| Páginas dos três perfis | Pedidos e disponibilidade ficam em estados locais separados. | A simulação ainda não permite validar o ciclo completo entre cliente, operador e administrador. |
-| `lib/mock-data.ts`, `app/operador/page.tsx` | `applyTransition` não aplica a matriz de transições, o prazo ou motivos obrigatórios; não há expiração automática. | PRD, seção 12: aceite vencido, recusa e falha sem motivo foram reproduzidos em verificações pontuais das funções. |
-| `app/cliente/page.tsx`, `components/app-shell.tsx` | Cancelamento sem ação, navegação incompleta após envio e chamadas de `useToast` fora do provedor correspondente. | Ações essenciais e feedback ainda precisam de correção. Navegação móvel e histórico também precisam de validação. |
-| `app/operador/page.tsx` | Gestão de catálogo substituída por “Razas e custos”; compras tratadas como produção, conversão fixa para litros e períodos sem filtragem. | Módulo sem decisão registrada no PRD vigente; não representa ampliação aprovada do MVP. Gestão de catálogo permanece pendente. |
-| `app/operador/page.tsx` | Abertura e entrega vinculadas automaticamente; pedidos aceitos apresentados como “Entrada no caixa”. | PRD, seções 10 e 14: controles independentes e ausência de confirmação financeira pela plataforma. |
-| `app/cliente/page.tsx` | Entrega gratuita e faixa estimada fixadas na apresentação; observação de portaria inserida automaticamente; troco pode acompanhar Pix. | Revisar transparência dos valores, instruções do cliente e regras de pagamento antes de validar o fluxo. |
-| `app/admin/page.tsx` | Mudanças administrativas apenas locais, sem inclusão de eventos de auditoria; cadastro e intervenções incompletos. | PRD, seções 8, 16 e 19: a simulação administrativa ainda não cobre os fluxos exigidos. |
-| `app/cliente/page.tsx` | Modais sem gestão de foco, fechamento por Escape ou nome acessível associado. | Revisão de acessibilidade e teste por teclado pendentes. |
-| `lib/mock-data.ts`, `app/layout.tsx`, `next.config.mjs` | Imagens externas, Analytics herdado e build configurado para ignorar erros de tipos. | Não estabelecem infraestrutura aprovada; build isolado não comprova correção dos tipos. |
+## Correções concluídas nesta revisão
 
-Esta versão avança em volumes explícitos, valores em centavos, endereço, pagamento na entrega, mínimo de um litro e estados completos declarados. Esses avanços não eliminam as limitações acima.
+- Estado compartilhado entre cliente, operador e administrador, restaurado por `sessionStorage` na mesma aba.
+- Envio associado à batedeira da sacola, validação de catálogo e taxa no envio, mínimo de um litro, observações e troco somente em dinheiro.
+- Matriz de transições, restrições por perfil na simulação, motivos obrigatórios, expiração em cinco minutos e proteção contra reenvio duplicado.
+- Linha do tempo compartilhada, mensagens operacionais e intervenções com auditoria simulada.
+- Gestão de catálogo e arquivamento, substituindo o módulo não aprovado de “Razas e custos”.
+- Abertura e entrega independentes, taxa e estimativa configuráveis e horários semanais no fuso de Cametá.
+- Modais nativos com nome acessível, Escape e restauração de foco; feedback de adição somente quando a ação é concluída.
+- Analytics removido da renderização e verificação de tipos habilitada no build.
 
-Não há integração com MySQL/Prisma, persistência de pedidos ou operação real. Indicadores e mensagens das telas são demonstrativos, não evidências do piloto.
+## Adições posteriores à verificação de 16/09 (pendentes de verificação em navegador e no v0)
+
+Entre 14h11 e 14h32 de 16/09/2026, depois da revisão registrada abaixo, o código recebeu funcionalidades novas que ainda não foram exercitadas pelo navegador automatizado nem reenviadas ao v0:
+
+- Login e cadastro simulados do cliente, com bloqueio e reativação de conta auditados pelo administrador (`components/customer-account.tsx`, `app/admin/page.tsx`).
+- Endereços salvos do cliente, com endereço principal único (`lib/customer-session.ts`).
+- Foto ilustrativa de produto e de batedeira, com upload local em JPEG/PNG/WebP até 500 KB, preservada somente na sessão (`components/photo-field.tsx`).
+- Painel de ajuda com código do pedido copiável e contato de suporte opcional por e-mail, configurável pelo administrador (`components/support-panel.tsx`).
+
+Tipos, build e os testes automatizados (agora 20, com 5 novos sobre sessão do cliente em `tests/customer-session.test.mjs`) foram revalidados localmente em 16/09/2026 após essas adições. Veja [Revalidação local](VERIFICATION.md#revalidação-local-em-16092026-tarde) em VERIFICATION.md. A verificação em navegador e uma nova sincronização com o v0 continuam pendentes para essas telas.
+
+## Verificação técnica
+
+Revisão executada em 16/09/2026: 15 testes de domínio, checagem de tipos e build padrão com Turbopack aprovados. O build com Webpack também foi aprovado durante o diagnóstico do ambiente. O erro inicial de Turbopack deixou de ocorrer após substituir o link de `.next` para cache temporário por uma pasta local limpa; nenhuma mudança de bundler foi necessária no projeto. Esta contagem de testes e a navegação automatizada abaixo antecedem as adições descritas na seção anterior.
+
+O navegador automatizado verificou descoberta, bloqueio abaixo de um litro, envio com taxa positiva, acompanhamento entre perfis até entrega, intervenção e cancelamento administrativo com auditoria, além de Escape e foco dos modais. Veja a [matriz de verificação](VERIFICATION.md) para evidências e limites.
+
+## Limitações e próximos trabalhos da Fase 2
+
+- Protótipo ainda não validado com usuários; esta revisão técnica não conclui a fase.
+- Não há backend, MySQL/Prisma, autenticação, autorização real ou processamento de pagamentos. Os perfis são demonstrativos.
+- A sessão é isolada por aba; não existe sincronização entre dispositivos. A expiração ocorre com a aplicação aberta e é reconciliada ao restaurar a sessão. Fechar a aba pode descartar os dados. Armazenamento indisponível mantém a simulação somente em memória.
+- Login, cadastro, bloqueio e reativação do cliente agora são simulados no protótipo, com endereços salvos e um endereço principal (ver adições acima). Falta desenho/validação própria para recuperação de acesso — hoje apenas assistida via suporte, sem fluxo dedicado — e verificação em navegador e com usuários.
+- O operador demonstrativo está vinculado à primeira batedeira; cadastros administrativos adicionais não criam contas autenticáveis.
+- Cobertura fixa no Centro; configuração administrativa detalhada da cobertura e conjunto completo das métricas do piloto não estão representados. Indicadores existentes são calculados sobre a sessão e não comprovam resultados reais. Um campo de foto ilustrativa para produtos e batedeiras foi adicionado (upload local, sem armazenamento real fora da sessão), mas ainda não passou por verificação em navegador.
+- Todas as imagens já são locais (`public/images/acai-tradicional.webp` e `public/placeholder.svg`); a configuração de host externo herdada da versão anterior foi removida de `next.config.mjs` em 16/09/2026. Em 16/09/2026 (noite), `acai-tradicional.webp` foi recomprimido com `sharp` (qualidade 80, mesma resolução 370×450), reduzindo de 24,7 KB para 19,8 KB sem perda visível, e `sharp` passou a ser devDependency para habilitar a otimização de imagens do Next.js em produção self-hosted; `next/image` já está em uso nos três locais que exibem a foto. Testes completos de acessibilidade, conexão instável e múltiplos navegadores permanecem pendentes.
+- Os tipos da simulação não substituem o schema SQL: identificadores, nomes de campos e estruturas serão alinhados na implementação real.
+
+## Correções de alinhamento com a documentação (16/09/2026, noite)
+
+Após a revalidação registrada acima, uma revisão de coerência entre a documentação vigente e o protótipo identificou e corrigiu três divergências, sem alterar comportamento de negócio:
+
+- Título da página e rodapé (`app/layout.tsx`, `app/page.tsx`) descreviam o produto como "marketplace", termo do PRD v1 (arquivado) que a Fase 2 abandonou junto com comissão, carteira e processamento de pagamento. Os textos foram ajustados para o enquadramento vigente de descoberta e pedidos.
+- `next.config.mjs` mantinha um `remotePatterns` para o host de imagens da versão anterior, sem uso ativo no código atual (a única referência restante é uma migração defensiva de sessões antigas em `components/prototype-provider.tsx`). A configuração foi removida.
+- `VERIFICATION.md` registrava os comandos de verificação com `npm`, divergindo do gerenciador oficial do projeto (pnpm, conforme `pnpm-lock.yaml` e as instruções acima). Os comandos foram corrigidos para `pnpm`.
+
+Tipos, os 20 testes automatizados e o build (Turbopack, mesmas quatro rotas) foram revalidados localmente após as correções. Verificação em navegador e nova sincronização com o v0 seguem os mesmos limites já registrados nas seções anteriores.
 
 ## Revisão e integração
 
 Esta versão deve ser registrada na branch de trabalho. A integração à `main` depende da revisão do conjunto completo de alterações que será incorporado. Versionar o rascunho não equivale a validar usabilidade, aprovar sua aderência ao PRD ou concluir a Fase 2.
 
-Nesta substituição foram revisados estaticamente o código e a consistência documental, e executadas verificações pontuais das funções de domínio com Node.js. Build, verificação completa de tipos e navegação no navegador não foram executados: as dependências, pnpm e agent-browser não estão disponíveis neste ambiente. As falhas conhecidas foram preservadas nesta importação e precisam ser corrigidas antes da validação do protótipo.
+As correções e a verificação desta revisão estão registradas no `CHANGELOG.md` e em `VERIFICATION.md`. Não foram criados commits, branches ou integrações nesta tarefa.

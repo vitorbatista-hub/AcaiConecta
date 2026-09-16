@@ -2,8 +2,9 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Bell, ChevronDown, MapPin, ShoppingBag, Store, LayoutDashboard, Users, Package, LogOut, Menu, X } from 'lucide-react'
-import { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import { useView } from '@/lib/use-view'
+import { MapPin, ShoppingBag, Store, LayoutDashboard, Users, Package, LogOut, Menu, X } from 'lucide-react'
+import { createContext, useCallback, useContext, useState } from 'react'
 
 const profileConfig = {
   cliente: { label: 'Área do cliente', href: '/cliente', icon: ShoppingBag },
@@ -25,7 +26,7 @@ function ToastViewport({ toasts, dismiss }: { toasts: ToastItem[]; dismiss: (id:
   return <div className="pointer-events-none fixed right-4 top-20 z-50 flex w-[min(92vw,24rem)] flex-col gap-3" aria-live="polite" aria-atomic="true">{toasts.map(toast => <div key={toast.id} className={`pointer-events-auto flex items-start gap-3 rounded-2xl border p-4 shadow-xl backdrop-blur ${toast.kind === 'error' ? 'border-destructive/30 bg-destructive/10' : toast.kind === 'success' ? 'border-secondary/30 bg-secondary/10' : 'border-border bg-card'}`} role={toast.kind === 'error' ? 'alert' : 'status'}><span className="flex-1 text-sm font-semibold">{toast.message}</span><button onClick={() => dismiss(toast.id)} aria-label="Fechar mensagem" className="text-muted-foreground transition hover:text-foreground">×</button></div>)}</div>
 }
 
-function ToastProvider({ children }: { children: React.ReactNode }) {
+export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([])
   const notify = useCallback((message: string, kind: ToastKind = 'success') => {
     const id = Date.now() + Math.random()
@@ -47,7 +48,7 @@ export function Brand({ light = false }: { light?: boolean }) {
   )
 }
 
-export function Topbar({ profile, notificationCount = 2 }: { profile: Profile; notificationCount?: number }) {
+export function Topbar({ profile }: { profile: Profile }) {
   const [open, setOpen] = useState(false)
   const config = profileConfig[profile]
   const Icon = config.icon
@@ -55,7 +56,7 @@ export function Topbar({ profile, notificationCount = 2 }: { profile: Profile; n
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/95 backdrop-blur">
       <div className="mx-auto flex h-18 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Brand />
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-2 lg:flex">
           <div className="flex items-center gap-2 rounded-full bg-muted px-3 py-2 text-xs text-muted-foreground">
             <MapPin className="size-3.5 text-secondary" />
             Cametá, PA
@@ -63,50 +64,45 @@ export function Topbar({ profile, notificationCount = 2 }: { profile: Profile; n
           <Link href={config.href} className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground transition hover:border-primary/40">
             <Icon className="size-3.5 text-primary" /> {config.label}
           </Link>
-          <button aria-label="Notificações" className="relative grid size-10 place-items-center rounded-full border border-border bg-card text-muted-foreground transition hover:text-primary">
-            <Bell className="size-4" />
-            {notificationCount > 0 && <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-accent ring-2 ring-background" />}
-          </button>
-          <button className="flex items-center gap-2 rounded-full pl-1 text-sm font-semibold"><span className="grid size-9 place-items-center rounded-full bg-secondary/15 text-secondary">JS</span><ChevronDown className="size-4 text-muted-foreground" /></button>
+
         </div>
-        <button onClick={() => setOpen(!open)} aria-label="Abrir menu" className="grid size-10 place-items-center rounded-full border border-border md:hidden">
+        <button onClick={() => setOpen(!open)} aria-label={open ? "Fechar menu" : "Abrir menu"} aria-expanded={open} className="grid size-10 place-items-center rounded-full border border-border lg:hidden">
           {open ? <X className="size-5" /> : <Menu className="size-5" />}
         </button>
       </div>
-      {open && <div className="border-t border-border bg-card px-4 py-4 md:hidden"><div className="flex flex-col gap-2"><Link href={config.href} className="rounded-xl bg-muted px-4 py-3 text-sm font-semibold">{config.label}</Link>{(profile==='cliente'?[['/cliente','Descobrir'],['/cliente?view=pedidos','Meus pedidos']]:profile==='operador'?[['/operador','Visão geral'],['/operador?view=pedidos','Pedidos'],['/operador?view=produtos','Razas e custos']]:[['/admin','Visão geral'],['/admin?view=usuarios','Usuários'],['/admin?view=lojas','Batedeiras']]).map(([href,label])=><Link key={href} href={href} onClick={()=>setOpen(false)} className="rounded-xl px-4 py-3 text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground">{label}</Link>)}<Link href="/" className="rounded-xl px-4 py-3 text-sm text-muted-foreground">Voltar ao início</Link></div></div>}
+      {open && <div className="border-t border-border bg-card px-4 py-4 lg:hidden"><div className="flex flex-col gap-2"><Link href={config.href} className="rounded-xl bg-muted px-4 py-3 text-sm font-semibold">{config.label}</Link>{(profile==='cliente'?[['/cliente','Descobrir'],['/cliente?view=pedidos','Meus pedidos'],['/cliente?view=conta','Minha conta']]:profile==='operador'?[['/operador','Visão geral'],['/operador?view=pedidos','Pedidos'],['/operador?view=produtos','Catálogo'],['/operador?view=config','Configurações']]:[['/admin','Visão geral'],['/admin?view=usuarios','Usuários'],['/admin?view=lojas','Batedeiras'],['/admin?view=pedidos','Pedidos e auditoria'],['/admin?view=suporte','Suporte e cobertura']]).map(([href,label])=><Link key={href} href={href} onClick={()=>setOpen(false)} className="rounded-xl px-4 py-3 text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground">{label}</Link>)}<Link href="/" className="rounded-xl px-4 py-3 text-sm text-muted-foreground">Voltar ao início</Link></div></div>}
     </header>
   )
 }
 
 export function SideNav({ profile }: { profile: Profile }) {
   const pathname = usePathname()
-  const [activeView, setActiveView] = useState<string | null>(null)
-  useEffect(() => { const updateView = () => setActiveView(new URLSearchParams(window.location.search).get('view')); updateView(); window.addEventListener('popstate', updateView); return () => window.removeEventListener('popstate', updateView) }, [])
+  const [activeView] = useView('')
   const links = profile === 'cliente'
-    ? [{ href: '/cliente', label: 'Descobrir', icon: MapPin }, { href: '/cliente?view=pedidos', label: 'Meus pedidos', icon: Package }]
+    ? [{ href: '/cliente', label: 'Descobrir', icon: MapPin }, { href: '/cliente?view=pedidos', label: 'Meus pedidos', icon: Package }, { href: '/cliente?view=conta', label: 'Minha conta', icon: Users }]
     : profile === 'operador'
-      ? [{ href: '/operador', label: 'Visão geral', icon: LayoutDashboard }, { href: '/operador?view=pedidos', label: 'Pedidos', icon: Package }, { href: '/operador?view=produtos', label: 'Razas e custos', icon: Store }]
-      : [{ href: '/admin', label: 'Visão geral', icon: LayoutDashboard }, { href: '/admin?view=usuarios', label: 'Usuários', icon: Users }, { href: '/admin?view=lojas', label: 'Batedeiras', icon: Store }]
-  return <aside className="hidden w-56 shrink-0 border-r border-border bg-card/60 lg:block"><nav className="sticky top-18 flex flex-col gap-1 p-4" aria-label="Navegação principal">{links.map(({ href, label, icon: Icon }) => { const targetPath = href.split('?')[0]; const targetView = new URLSearchParams(href.split('?')[1] || '').get('view'); const active = pathname === targetPath && (targetView ? activeView === targetView : !activeView); return <Link key={href} href={href} onClick={() => { setActiveView(targetView); window.dispatchEvent(new CustomEvent('acai-view-change',{detail:targetView})) }} aria-current={active ? 'page' : undefined} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition ${active ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}><Icon className="size-4" />{label}</Link> })}<div className="my-4 h-px bg-border" /><Link href="/" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"><LogOut className="size-4" />Voltar ao início</Link></nav></aside>
+      ? [{ href: '/operador', label: 'Visão geral', icon: LayoutDashboard }, { href: '/operador?view=pedidos', label: 'Pedidos', icon: Package }, { href: '/operador?view=produtos', label: 'Catálogo', icon: Store }, { href: '/operador?view=config', label: 'Configurações', icon: Store }]
+      : [{ href: '/admin', label: 'Visão geral', icon: LayoutDashboard }, { href: '/admin?view=usuarios', label: 'Usuários', icon: Users }, { href: '/admin?view=lojas', label: 'Batedeiras', icon: Store }, { href: '/admin?view=pedidos', label: 'Pedidos e auditoria', icon: Package }, { href: '/admin?view=suporte', label: 'Suporte e cobertura', icon: Users }]
+  return <aside className="hidden w-56 shrink-0 border-r border-border bg-card/60 lg:block"><nav className="sticky top-18 flex flex-col gap-1 p-4" aria-label="Navegação principal">{links.map(({ href, label, icon: Icon }) => { const targetPath = href.split('?')[0]; const targetView = new URLSearchParams(href.split('?')[1] || '').get('view'); const active = pathname === targetPath && (targetView ? activeView === targetView : !activeView); return <Link key={href} href={href}  aria-current={active ? 'page' : undefined} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition ${active ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}><Icon className="size-4" />{label}</Link> })}<div className="my-4 h-px bg-border" /><Link href="/" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"><LogOut className="size-4" />Voltar ao início</Link></nav></aside>
 }
 
 export function AppFrame({ profile, children }: { profile: Profile; children: React.ReactNode }) {
-  return <ToastProvider><div className="min-h-screen bg-background"><Topbar profile={profile} /><div className="mx-auto flex max-w-7xl"><SideNav profile={profile} /><main className="min-w-0 flex-1 px-4 py-8 sm:px-6 lg:px-10">{children}</main></div></div></ToastProvider>
+  return <div className="min-h-screen bg-background"><a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:z-50 focus:bg-card focus:p-3">Pular para o conteúdo</a><Topbar profile={profile} /><div className="mx-auto flex max-w-7xl"><SideNav profile={profile} /><main id="main-content" tabIndex={-1} className="min-w-0 flex-1 px-4 py-4 sm:px-6 sm:py-6 lg:px-10">{children}</main></div></div>
 }
 
-export function StatusPill({ status, label }: { status: 'open' | 'closed' | 'busy' | 'ready' | 'preparing' | 'delivered' | 'confirmed' | 'pending'; label?: string }) {
-  const labels = { open: 'Aberto agora', closed: 'Fechado', busy: 'Movimento alto', ready: 'Pronto', preparing: 'Preparando', delivered: 'Entregue', confirmed: 'Confirmado', pending: 'Pendente' }
-  const colors = { open: 'bg-secondary/15 text-secondary', closed: 'bg-muted text-muted-foreground', busy: 'bg-accent/20 text-accent-foreground', ready: 'bg-secondary/15 text-secondary', preparing: 'bg-accent/20 text-accent-foreground', delivered: 'bg-muted text-muted-foreground', confirmed: 'bg-primary/10 text-primary', pending: 'bg-accent/20 text-accent-foreground' }
+export function StatusPill({ status, label }: { status: 'open' | 'closed' | 'busy' | 'ready' | 'preparing' | 'delivered' | 'confirmed' | 'pending' | 'negative'; label?: string }) {
+  const labels = { open: 'Aberto agora', closed: 'Fechado', busy: 'Movimento alto', ready: 'Pronto', preparing: 'Preparando', delivered: 'Entregue', confirmed: 'Confirmado', pending: 'Pendente', negative: 'Não concluído' }
+  const colors = { open: 'bg-secondary/15 text-secondary', closed: 'bg-muted text-muted-foreground', busy: 'bg-accent/20 text-accent-foreground', ready: 'bg-secondary/15 text-secondary', preparing: 'bg-accent/20 text-accent-foreground', delivered: 'bg-muted text-muted-foreground', confirmed: 'bg-primary/10 text-primary', pending: 'bg-accent/20 text-accent-foreground', negative: 'bg-destructive/10 text-destructive' }
   return <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${colors[status]}`}><span className="size-1.5 rounded-full bg-current" />{label || labels[status]}</span>
 }
 
 export function SectionHeading({ eyebrow, title, description, action }: { eyebrow?: string; title: string; description?: string; action?: React.ReactNode }) {
-  return <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div>{eyebrow && <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-secondary">{eyebrow}</p>}<h1 className="text-balance text-3xl font-black tracking-tight text-foreground sm:text-4xl">{title}</h1>{description && <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{description}</p>}</div>{action}</div>
+  return <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-end"><div>{eyebrow && <p className="mb-2 text-xs font-bold uppercase tracking-[0.18em] text-secondary">{eyebrow}</p>}<h1 className="text-balance text-2xl font-black tracking-tight text-foreground sm:text-3xl">{title}</h1>{description && <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{description}</p>}</div>{action}</div>
 }
 
 export function Money({ value }: { value: number }) { return <span>R$ {value.toFixed(2).replace('.', ',')}</span> }
 
-export function DemoNotice({ children }: { children: React.ReactNode }) { return <div className="mb-6 flex items-center gap-3 rounded-2xl border border-accent/25 bg-accent/10 px-4 py-3 text-sm text-foreground"><span className="grid size-7 shrink-0 place-items-center rounded-lg bg-accent/20 text-accent-foreground">i</span><span>{children}</span></div> }
+export function DemoNotice({ children }: { children: React.ReactNode }) { return <div className="mb-4 flex items-center gap-2 rounded-xl border border-accent/25 bg-accent/10 px-3 py-2 text-xs text-foreground"><span className="grid size-5 shrink-0 place-items-center rounded-lg bg-accent/20 text-accent-foreground">i</span><span>{children}</span></div> }
 
 export function StatCard({ label, value, detail, icon: Icon, tone = 'primary' }: { label: string; value: string; detail: string; icon: React.ElementType; tone?: 'primary' | 'secondary' | 'accent' }) { return <div className="rounded-2xl border border-border bg-card p-5 shadow-sm"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-black tracking-tight">{value}</p></div><span className={`grid size-10 place-items-center rounded-xl ${tone === 'primary' ? 'bg-primary/10 text-primary' : tone === 'secondary' ? 'bg-secondary/15 text-secondary' : 'bg-accent/20 text-accent-foreground'}`}><Icon className="size-5" /></span></div><p className="mt-3 text-xs text-muted-foreground">{detail}</p></div> }
 
