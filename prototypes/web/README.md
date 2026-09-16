@@ -10,7 +10,9 @@ Esta versão mais recente substitui a exportação anterior e foi fornecida para
 
 Em 16/09/2026, 15 arquivos de código, configuração e testes foram enviados a este chat pelo MCP do v0. Os hashes SHA-256 retornados pelo v0 coincidiram com o manifesto local dos arquivos enviados. Tipos, 15 testes e build passaram também no ambiente remoto. Veja o [registro da sincronização](VERIFICATION.md#sincronização-com-o-v0).
 
-[Preview do protótipo](https://acaiconecta.v0.build). O chat e o preview não representam publicação de produção ou validação com usuários. A correspondência foi conferida somente para os 15 arquivos enviados; alterações futuras no v0 ou no repositório não se sincronizam automaticamente — como já ocorreu com as adições descritas em [Adições posteriores à verificação de 16/09](#adições-posteriores-à-verificação-de-1609-pendentes-de-verificação-em-navegador-e-no-v0), feitas horas depois deste envio e nunca reenviadas ao v0.
+Em 16/09/2026 (noite), os 23 arquivos de código alterados ou criados desde então — incluindo as adições descritas abaixo — foram reenviados ao mesmo chat em 11 lotes. O v0 aplicou todos nos caminhos correspondentes, `pnpm typecheck` foi aprovado no ambiente remoto e os hashes SHA-256 retornados coincidiram exatamente com os calculados localmente. Veja o [registro desta sincronização](VERIFICATION.md#reenvio-completo-ao-v0-em-16092026-noite).
+
+[Preview do protótipo](https://acaiconecta.v0.build). O chat e o preview não representam publicação de produção ou validação com usuários. Alterações futuras no v0 ou no repositório não se sincronizam automaticamente — como já ocorreu antes com adições feitas após um envio e reenviadas apenas depois.
 
 ## Localização e fontes de verdade
 
@@ -69,7 +71,7 @@ Entre 14h11 e 14h32 de 16/09/2026, depois da revisão registrada abaixo, o códi
 - Foto ilustrativa de produto e de batedeira, com upload local em JPEG/PNG/WebP até 500 KB, preservada somente na sessão (`components/photo-field.tsx`).
 - Painel de ajuda com código do pedido copiável e contato de suporte opcional por e-mail, configurável pelo administrador (`components/support-panel.tsx`).
 
-Tipos, build e os testes automatizados (agora 20, com 5 novos sobre sessão do cliente em `tests/customer-session.test.mjs`) foram revalidados localmente em 16/09/2026 após essas adições. Veja [Revalidação local](VERIFICATION.md#revalidação-local-em-16092026-tarde) em VERIFICATION.md. A verificação em navegador e uma nova sincronização com o v0 continuam pendentes para essas telas.
+Tipos, build e os testes automatizados (agora 20, com 5 novos sobre sessão do cliente em `tests/customer-session.test.mjs`) foram revalidados localmente em 16/09/2026 após essas adições. Veja [Revalidação local](VERIFICATION.md#revalidação-local-em-16092026-tarde) em VERIFICATION.md. Essas telas já foram reenviadas ao v0 (ver seção acima); a verificação em navegador continua pendente — uma tentativa nesta sessão foi bloqueada pela ausência da extensão Claude in Chrome (ver [Tentativa de verificação em navegador](VERIFICATION.md#tentativa-de-verificação-em-navegador-em-16092026)).
 
 ## Verificação técnica
 
