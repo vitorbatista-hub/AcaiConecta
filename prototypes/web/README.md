@@ -10,6 +10,8 @@ Esta versão mais recente substitui a exportação anterior e foi fornecida para
 
 Em 16/09/2026, 15 arquivos de código, configuração e testes foram enviados a este chat pelo MCP do v0. Os hashes SHA-256 retornados pelo v0 coincidiram com o manifesto local dos arquivos enviados. Tipos, 15 testes e build passaram também no ambiente remoto. Veja o [registro da sincronização](VERIFICATION.md#sincronização-com-o-v0).
 
+Em 17/09/2026, o login simulado de operador e administrador e o ajuste de texto alternativo do cliente foram enviados em uma nova mensagem ao mesmo chat; os hashes SHA-256 retornados coincidiram com os calculados localmente. Veja o [registro desta sincronização](VERIFICATION.md#login-simulado-de-operador-e-administrador-em-17092026).
+
 Em 16/09/2026 (noite), os 23 arquivos de código alterados ou criados desde então — incluindo as adições descritas abaixo — foram reenviados ao mesmo chat em 11 lotes. O v0 aplicou todos nos caminhos correspondentes, `pnpm typecheck` foi aprovado no ambiente remoto e os hashes SHA-256 retornados coincidiram exatamente com os calculados localmente. Veja o [registro desta sincronização](VERIFICATION.md#reenvio-completo-ao-v0-em-16092026-noite).
 
 [Preview do protótipo](https://acaiconecta.v0.build). O chat e o preview não representam publicação de produção ou validação com usuários. Alterações futuras no v0 ou no repositório não se sincronizam automaticamente — como já ocorreu antes com adições feitas após um envio e reenviadas apenas depois.
@@ -32,7 +34,7 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Abra o endereço informado pelo servidor. As rotas disponíveis são `/`, `/cliente`, `/operador` e `/admin`. Os perfis são acessados diretamente para demonstração, sem autenticação ou autorização reais. Use somente dados fictícios.
+Abra o endereço informado pelo servidor. As rotas disponíveis são `/`, `/cliente`, `/operador` e `/admin`. `/operador` e `/admin` pedem um login simulado antes de exibir o painel; `/cliente` permite navegar pelo catálogo sem conta e pede login simulado apenas ao enviar o pedido. Nenhum dos três perfis usa autenticação ou autorização reais. Use somente dados fictícios.
 
 Para verificar tipos e gerar o build:
 
@@ -85,8 +87,8 @@ O navegador automatizado verificou descoberta, bloqueio abaixo de um litro, envi
 - Não há backend, MySQL/Prisma, autenticação, autorização real ou processamento de pagamentos. Os perfis são demonstrativos.
 - A sessão é isolada por aba; não existe sincronização entre dispositivos. A expiração ocorre com a aplicação aberta e é reconciliada ao restaurar a sessão. Fechar a aba pode descartar os dados. Armazenamento indisponível mantém a simulação somente em memória.
 - Login, cadastro, bloqueio e reativação do cliente agora são simulados no protótipo, com endereços salvos e um endereço principal (ver adições acima). Falta desenho/validação própria para recuperação de acesso — hoje apenas assistida via suporte, sem fluxo dedicado — e verificação em navegador e com usuários.
-- O operador demonstrativo está vinculado à primeira batedeira; cadastros administrativos adicionais não criam contas autenticáveis.
-- Cobertura fixa no Centro; configuração administrativa detalhada da cobertura e conjunto completo das métricas do piloto não estão representados. Indicadores existentes são calculados sobre a sessão e não comprovam resultados reais. Um campo de foto ilustrativa para produtos e batedeiras foi adicionado (upload local, sem armazenamento real fora da sessão), mas ainda não passou por verificação em navegador.
+- Login simulado de operador e de administrador adicionado em `/operador` e `/admin` (`components/role-login.tsx`): o operador entra com e-mail e senha fictícios (não mais escolhendo a batedeira em uma lista), e o sistema identifica a batedeira pelo e-mail de login cadastrado (`store.operatorEmail`, único por batedeira, definido pelo administrador no cadastro assistido). Ambos os perfis podem sair pelo botão "Sair". Continua sem verificação real de senha ou de servidor — qualquer senha não vazia permite o acesso, como no login do cliente — e um mesmo navegador pode reentrar como qualquer operador cujo e-mail seja conhecido, o que uma implementação real não permitiria.
+- Cobertura fixa no Centro; a tela administrativa de cobertura de bairros é somente leitura, já que ativar um novo bairro depende de decisão registrada em `decisions.md`. As métricas de apoio da seção 5.4 do PRD (resposta em 5 minutos, tempos médios de resposta/despacho/entrega, cancelamento pós-aceite, recompra em 30 dias, motivos de recusa/cancelamento/falha, batedeiras ativas na semana) estão implementadas em `lib/order-presentation.ts` (`pilotMetrics`) e exibidas em `/admin`, mas são calculadas sobre a sessão simulada e não comprovam resultados reais. Um campo de foto ilustrativa para produtos e batedeiras foi adicionado (upload local, sem armazenamento real fora da sessão), mas ainda não passou por verificação em navegador.
 - Todas as imagens já são locais (`public/images/acai-tradicional.webp` e `public/placeholder.svg`); a configuração de host externo herdada da versão anterior foi removida de `next.config.mjs` em 16/09/2026. Em 16/09/2026 (noite), `acai-tradicional.webp` foi recomprimido com `sharp` (qualidade 80, mesma resolução 370×450), reduzindo de 24,7 KB para 19,8 KB sem perda visível, e `sharp` passou a ser devDependency para habilitar a otimização de imagens do Next.js em produção self-hosted; `next/image` já está em uso nos três locais que exibem a foto. Testes completos de acessibilidade, conexão instável e múltiplos navegadores permanecem pendentes.
 - Os tipos da simulação não substituem o schema SQL: identificadores, nomes de campos e estruturas serão alinhados na implementação real.
 

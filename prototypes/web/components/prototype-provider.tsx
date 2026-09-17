@@ -47,7 +47,7 @@ export function PrototypeProvider({children}:{children:React.ReactNode}) {
         if(saved.version!==1 || !Array.isArray(saved.stores) || !Array.isArray(saved.products) || !Array.isArray(saved.orders) || !Array.isArray(saved.audit)) throw new Error('Sessão inválida')
         current.current={...initialState(),...saved,customer:restoreCustomerSession(saved.customer),orders:expireOrders(saved.orders)}
         const migrateImage=(image?:string)=>image?.startsWith('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/')?'/images/acai-tradicional.webp':image
-        current.current={...current.current,stores:current.current.stores.map(store=>({...store,image:migrateImage(store.image)??'/placeholder.svg'})),products:current.current.products.map(product=>({...product,image:migrateImage(product.image)}))}
+        current.current={...current.current,stores:current.current.stores.map(store=>({...store,image:migrateImage(store.image)??'/placeholder.svg',operatorEmail:store.operatorEmail??''})),products:current.current.products.map(product=>({...product,image:migrateImage(product.image)}))}
         commit(current.current)
       }
     } catch { setStorageWarning('A sessão anterior não pôde ser restaurada. Usando os dados fictícios iniciais.') }
@@ -106,11 +106,14 @@ export function PrototypeProvider({children}:{children:React.ReactNode}) {
     const data=current.current
     const existing=data.stores.find(s=>s.id===store.id)
     if(!store.name.trim()||!store.operator.trim()||!store.address.trim()) throw new Error('Informe nome, endereço e operador responsável.')
+    if(!store.operatorEmail?.trim()||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(store.operatorEmail.trim())) throw new Error('Informe um e-mail válido para o login do operador.')
+    if(data.stores.some(s=>s.id!==store.id&&s.operatorEmail.toLowerCase()===store.operatorEmail.trim().toLowerCase())) throw new Error('Já existe um operador cadastrado com este e-mail.')
     if(store.schedule?.some(h=>!Number.isInteger(h.day)||h.day<0||h.day>6||!/^([01]\d|2[0-3]):[0-5]\d$/.test(h.opens)||!/^([01]\d|2[0-3]):[0-5]\d$/.test(h.closes)||h.opens>=h.closes)) throw new Error('Revise os horários: o fechamento deve ser após a abertura, no mesmo dia.')
     if(!Number.isSafeInteger(store.deliveryFeeCents)||store.deliveryFeeCents<0) throw new Error('Informe uma taxa válida em centavos.')
     if((!existing||existing.adminStatus!==store.adminStatus)&&!reason?.trim()) throw new Error('Informe o motivo administrativo.')
     const audit=reason?[...data.audit,{id:crypto.randomUUID(),at:new Date().toISOString(),author:'Administrador da demonstração',entityId:store.id,action:existing?'Alteração da batedeira':'Cadastro assistido',reason}]:data.audit
-    commit({...data,audit,stores:existing?data.stores.map(s=>s.id===store.id?{...store}:s):[...data.stores,{...store}]})
+    const normalized={...store,operatorEmail:store.operatorEmail.trim()}
+    commit({...data,audit,stores:existing?data.stores.map(s=>s.id===store.id?normalized:s):[...data.stores,normalized]})
   }
   function saveProduct(product:Product) {
     if(!product.name.trim()||product.name.length>150||!Number.isSafeInteger(product.volumeMl)||product.volumeMl<1||product.volumeMl>65535||!Number.isSafeInteger(product.priceCents)||product.priceCents<1) throw new Error('Informe nome, volume inteiro positivo e preço maior que zero.')

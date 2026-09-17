@@ -6,6 +6,7 @@ import { usePrototype } from '@/components/prototype-provider'
 import { OrderPanel } from '@/components/order-panel'
 import { PhotoField } from '@/components/photo-field'
 import { Modal } from '@/components/modal'
+import { RoleLogin, RoleSignedInBar, useRoleSignIn } from '@/components/role-login'
 import { useView } from '@/lib/use-view'
 import { getSchedule, cents, isStoreOpenNow, operatorStoreId, parseMoney, type Product, type Store } from '@/lib/mock-data'
 
@@ -17,18 +18,36 @@ function useOperatorStore(stores:Store[]) {
   return [stores.find(s=>s.id===id)??stores[0],setStoreId] as const
 }
 
+function OperatorLogin({stores,onSignIn}:{stores:Store[];onSignIn:(storeId:string)=>void}) {
+  const [email,setEmail]=useState('')
+  const [password,setPassword]=useState('')
+  const [error,setError]=useState('')
+  return <RoleLogin title="Entrar no painel da batedeira" description="Simule o acesso de um operador com e-mail e senha fictícios. Este formulário não autentica pessoas de verdade nem guarda a senha; a implementação real exigirá autenticação própria por operador, verificada no servidor." error={error} onSubmit={event=>{
+    event.preventDefault()
+    const store=stores.find(s=>s.operatorEmail.toLowerCase()===email.trim().toLowerCase())
+    if(!store){setError('E-mail não encontrado entre os operadores cadastrados.');return}
+    setError('');onSignIn(store.id)
+  }}>
+    <label>E-mail do operador<input className="demo-field" required type="email" maxLength={254} autoComplete="off" value={email} onChange={event=>setEmail(event.target.value)} /></label>
+    <label>Senha fictícia<input className="demo-field" required type="password" autoComplete="off" value={password} onChange={event=>setPassword(event.target.value)} /><span className="text-xs text-muted-foreground">Qualquer senha não vazia permite simular o acesso. Não use uma senha real.</span></label>
+    <details className="text-xs text-muted-foreground"><summary>E-mails de demonstração cadastrados</summary><ul className="mt-2 space-y-1">{stores.map(s=><li key={s.id}>{s.operatorEmail} · {s.name}</li>)}</ul></details>
+  </RoleLogin>
+}
+
 export default function OperadorPage() {
   const demo=usePrototype()
   const notify=useToast()
   const [view,setView]=useView()
   const [store,setStoreId]=useOperatorStore(demo.stores)
+  const [signedIn,setSignedIn]=useRoleSignIn('acaiconecta-operator-signed-in')
   const orders=demo.orders.filter(o=>o.storeId===store.id).sort((a,b)=>Date.parse(a.createdAt)-Date.parse(b.createdAt))
   const pending=orders.filter(o=>o.status==='AGUARDANDO_ACEITE')
   const active=orders.filter(o=>['ACEITO','EM_PREPARO','PRONTO','SAIU_PARA_ENTREGA'].includes(o.status))
   const actor={role:'operador' as const,name:store.operator,storeId:store.id}
   function toggle(key:'isOpen'|'deliveryAvailable') {try{demo.updateStore({...store,[key]:!store[key]});notify('Disponibilidade atualizada.')}catch(error){notify(String(error),'error')}}
+  if(!signedIn) return <AppFrame profile="operador"><OperatorLogin stores={demo.stores} onSignIn={id=>{setStoreId(id);setSignedIn(true)}} /></AppFrame>
   return <AppFrame profile="operador"><div className="mx-auto max-w-6xl"><DemoNotice>Operação simulada · {store.name}.</DemoNotice>
-    <label className="mb-4 block max-w-sm text-sm">Operando como (simulação de acesso; a implementação real exige autenticação própria por operador)<select className="demo-field" value={store.id} onChange={event=>setStoreId(event.target.value)}>{demo.stores.map(s=><option key={s.id} value={s.id}>{s.operator} · {s.name}</option>)}</select></label>
+    <RoleSignedInBar onSignOut={()=>setSignedIn(false)}>Operando como <b>{store.operator}</b> · {store.name}</RoleSignedInBar>
     <SectionHeading eyebrow="Painel da batedeira" title={view==='produtos'?'Catálogo':view==='config'?'Configurações':'Pedidos e operação'} />
     {store.adminStatus!=='ATIVA'&&<p role="alert" className="mb-4 rounded-xl bg-accent/20 p-4">Batedeira {store.adminStatus.toLowerCase()}: novos pedidos bloqueados. O histórico e os pedidos existentes permanecem disponíveis.</p>}
     <nav aria-label="Seções da batedeira" className="mb-4 flex flex-wrap gap-2">{[['overview','Visão geral'],['pedidos','Pedidos'],['produtos','Catálogo'],['config','Configurações']].map(([key,label])=><button key={key} className="demo-button" aria-pressed={view===key} onClick={()=>setView(key)}>{label}</button>)}</nav>

@@ -119,6 +119,66 @@ Preview retornado pelo MCP: https://acaiconecta.v0.build. Não foi solicitada pu
 
 Tentativa de verificar em navegador real login/cadastro simulado, bloqueio/reativação de conta, endereços salvos, foto ilustrativa e painel de ajuda. O servidor (`pnpm start`, porta 3100) subiu e respondeu HTTP 200 em `/`, mas a extensão Claude in Chrome não está configurada nesta sessão, então nenhuma navegação ou interação real foi possível. Nenhum dos cinco itens foi exercitado; permanecem pendentes de verificação em navegador, como já registrado nas seções anteriores.
 
+## Revalidação local em 17/09/2026
+
+Levantamento de cobertura do PRD 2.5 no protótipo identificou duas divergências, sem regra de negócio envolvida: o texto alternativo das fotos de batedeira na listagem do cliente era idêntico para todas ("Açaí tradicional; imagem ilustrativa"), sem nomear o estabelecimento; e o README descrevia as métricas de apoio do piloto (seção 5.4 do PRD) como não representadas, quando já estão implementadas em `lib/order-presentation.ts` (`pilotMetrics`) e exibidas em `/admin` desde a sincronização anterior.
+
+`app/cliente/page.tsx` foi ajustado para que o texto alternativo nomeie cada batedeira (`Foto ilustrativa de açaí tradicional da {batedeira}`); o README foi corrigido quanto às métricas.
+
+| Verificação | Resultado |
+|---|---|
+| `pnpm typecheck` | Aprovada, sem erros. |
+| `pnpm test` | 22 testes aprovados (mesma suíte da sincronização anterior; a contagem de 20 registrada nas seções acima já estava desatualizada antes desta revisão). |
+| `pnpm build` | Aprovado com Turbopack, mesmas quatro rotas. |
+
+Verificação em navegador não foi possível nesta sessão (extensão Claude in Chrome não conectada). O reenvio de `app/cliente/page.tsx` ao v0 está registrado abaixo, junto com o login simulado de operador e administrador. A Fase 2 e suas pendências de validação com participantes permanecem inalteradas.
+
+## Login simulado de operador e administrador em 17/09/2026
+
+A pedido do responsável pelo projeto, `/operador` e `/admin` passaram a exigir um login simulado antes de exibir o painel, seguindo o mesmo padrão já usado no login do cliente (qualquer senha não vazia simula o acesso; nenhuma senha é persistida). Novo componente `components/role-login.tsx` (`useRoleSignIn`, `RoleLogin`, `RoleSignedInBar`), reaproveitado pelos dois perfis. No login do operador, a lista de batedeiras vem do estado compartilhado da demonstração, incluindo cadastros administrativos adicionados durante a sessão. `app/operador/page.tsx` e `app/admin/page.tsx` foram alterados; o fluxo do cliente não foi tocado.
+
+| Verificação | Resultado |
+|---|---|
+| `pnpm typecheck` | Aprovada, sem erros. |
+| `pnpm test` | 22 testes aprovados (suíte inalterada; login simulado não tem cobertura de teste de domínio própria, por não introduzir regra de negócio nova). |
+| `pnpm build` | Aprovado com Turbopack, mesmas quatro rotas. |
+
+Verificação em navegador não realizada nesta sessão (extensão Claude in Chrome não conectada) — o fluxo de login/logout de operador e administrador ainda não foi exercitado num navegador real.
+
+`app/operador/page.tsx`, `app/admin/page.tsx`, `components/role-login.tsx` e `app/cliente/page.tsx` (pendente desde a [revalidação acima](#revalidação-local-em-17092026)) foram enviados em uma única mensagem ao [chat existente do v0](https://v0.app/vitors-projects-edcbface/chat/acaiconecta-jAWnqGHlb8w) via `sendChatMessage` do MCP, com autorização explícita do responsável pelo projeto. O v0 aplicou os quatro arquivos nos caminhos correspondentes, rodou `pnpm typecheck` (aprovado, sem erros) e retornou o SHA-256 de cada arquivo aplicado:
+
+| Arquivo relativo a `prototypes/web/` | SHA-256 confirmado |
+|---|---|
+| `app/operador/page.tsx` | `af84eb29722ee7c5d06ace825a2342d92731abc7a41568ccfe36adf215214198` |
+| `app/admin/page.tsx` | `848cc0af308473cb3f12b8425050d1aa3df83b0fa371cff1b7d84bb9bcca49ea` |
+| `components/role-login.tsx` | `8843c8414b5245ae1c762db66513190ac0b1d33713e3523b91035b6e2f085584` |
+| `app/cliente/page.tsx` | `ee9320598899f6ee4af3857820585fa94c0e24bbcf4e0cf2a0a9dd7047d64bd9` |
+
+Os quatro hashes coincidem exatamente com os calculados localmente antes do envio — nenhuma divergência. Não foi solicitada nova publicação em produção. A verificação em navegador destas telas continua pendente.
+
+## Correção do login de operador em 17/09/2026
+
+O responsável pelo projeto apontou que o login de operador acima (seleção da batedeira em uma lista suspensa) não seguia boas práticas de login, mesmo sendo simulação. Corrigido para pedir e-mail e senha fictícios, como os logins de cliente e administrador; a batedeira é identificada pelo e-mail cadastrado (`store.operatorEmail`, novo campo obrigatório e único por batedeira, definido pelo administrador em `/admin?view=lojas`). `lib/mock-data.ts`, `components/prototype-provider.tsx`, `app/operador/page.tsx` e `app/admin/page.tsx` foram alterados.
+
+| Verificação | Resultado |
+|---|---|
+| `pnpm typecheck` | Aprovada, sem erros. |
+| `pnpm test` | 22 testes aprovados (suíte inalterada). |
+| `pnpm build` | Aprovado com Turbopack, mesmas quatro rotas. |
+
+Verificação em navegador não realizada nesta sessão (extensão Claude in Chrome não conectada).
+
+Os quatro arquivos alterados foram enviados ao [chat existente do v0](https://v0.app/vitors-projects-edcbface/chat/acaiconecta-jAWnqGHlb8w) via `sendChatMessage` do MCP. O v0 aplicou os arquivos, rodou `pnpm typecheck` (aprovado) e retornou os hashes SHA-256:
+
+| Arquivo relativo a `prototypes/web/` | SHA-256 confirmado |
+|---|---|
+| `lib/mock-data.ts` | `59c8b91fba7c5c642ab74e123eb47bbc4fd69ab9d70a0b6a5850c13b015d84eb` |
+| `components/prototype-provider.tsx` | `0f00c3153985df502b0b2d7e9b0a664306303037aafcf38bb110655948cc5081` |
+| `app/operador/page.tsx` | `1fb447c9399a6860600f46d120bec151a9b535d980cea3127deaf53d6b00f8a3` |
+| `app/admin/page.tsx` | `250272736e8c80cf82e3f5b5542cf08475b7bb9b01fef8cf503e334d0a12aa09` |
+
+Hashes coincidem exatamente com os calculados localmente — nenhuma divergência. Não foi solicitada nova publicação em produção.
+
 ## Reenvio completo ao v0 em 16/09/2026 (noite)
 
 Com autorização explícita do responsável pelo projeto, os 23 arquivos de código, configuração e testes alterados ou criados desde a sincronização anterior — incluindo as adições descritas em [Adições posteriores à verificação de 16/09](README.md#adições-posteriores-à-verificação-de-1609-pendentes-de-verificação-em-navegador-e-no-v0) (login/cadastro, endereços salvos, foto ilustrativa, painel de ajuda) e a recompressão da imagem com `sharp` — foram enviados ao [chat existente do v0](https://v0.app/vitors-projects-edcbface/chat/acaiconecta-jAWnqGHlb8w) via `sendChatMessage` do MCP, em 11 lotes (limitação de tamanho por mensagem, não do conteúdo).
