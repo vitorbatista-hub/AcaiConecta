@@ -85,6 +85,21 @@ Os três arquivos corrigidos foram enviados ao [chat existente do v0](https://v0
 
 Esta sincronização cobre somente os três arquivos corrigidos, não o conjunto completo listado na sincronização de 16/09/2026 (tarde) abaixo — os demais arquivos alterados desde então (login/cadastro, endereços salvos, foto ilustrativa, painel de ajuda) continuam pendentes de reenvio ao v0. Não foi solicitada nova publicação em produção; a Fase 2 e suas pendências de validação com usuários permanecem inalteradas.
 
+## Substituição da foto ilustrativa, feita diretamente no v0 (17/09/2026)
+
+Diferentemente das sincronizações anteriores (sempre local → v0), desta vez o responsável pelo projeto interagiu diretamente com o chat do v0, sem passar por esta sessão, pedindo a substituição da foto ilustrativa única do protótipo (`acai-tradicional.webp`) e o envio de outras quatro fotos (`acai1.webp`, `acai2.jpeg`, `acai3.jpeg`, `acai4.jpeg`) para "espalhar pelos 3 acessos" (cliente, operador, admin).
+
+Ao investigar o pedido de sincronização de volta para este repositório, foi constatado que:
+
+- `lib/mock-data.ts`, `components/prototype-provider.tsx`, `components/photo-field.tsx`, `app/cliente/page.tsx`, `app/operador/page.tsx` e `app/admin/page.tsx` permaneceram com os mesmos hashes SHA-256 da sincronização anterior — nenhum código foi alterado para referenciar as quatro fotos novas em nenhum dos três acessos, apesar do pedido.
+- Somente `public/images/acai-tradicional.webp` foi de fato substituído (hash mudou) e continua em uso, pois todo o mapeamento `traditionalAcaiImages` do `mock-data.ts` aponta para esse único arquivo, como antes.
+- As quatro fotos novas (mais três outras — `acai-bowl.png`, `acai-cup.png`, `acai-family.png` — encontradas no mesmo lote) não são referenciadas por nenhum arquivo de código: ficaram órfãs no projeto do v0.
+- Pelo menos três das fotos enviadas pelo responsável do projeto ao v0 (usadas para gerar `acai4.jpeg` e duas das fotos órfãs) trazem marca d'água visível de um negócio de terceiro ("Açaí no Ponto") e indícios de terem sido capturadas de um carrossel do Instagram — não são fotos originais nem das batedeiras parceiras da Fase 1. A foto que efetivamente ficou em uso (`acai-tradicional.webp`, uma tigela com a marca genérica "AÇAÍ") também aparenta ser de origem semelhante (mesmos indícios de carrossel), embora sem a marca do terceiro identificado.
+
+Como o v0 atingiu o limite diário de mensagens da conta antes de fornecer uma forma de baixar os bytes exatos dos arquivos alterados, o responsável pelo projeto baixou o projeto completo pela própria interface do v0 e adicionou a pasta `prototypes/acai-conecta/` (fora do controle de versão) para viabilizar a sincronização. O arquivo `public/images/acai-tradicional.webp` foi conferido por hash SHA-256 contra o valor informado pelo v0 (`811dfdc51a1acc4bb25af4d7b62db9437e889d70c4bf6a1abccc7003f16708e3`) e aplicado em `prototypes/web/public/images/acai-tradicional.webp`. Tipos, 22 testes e build foram revalidados com sucesso após a troca.
+
+As demais seis fotos (as quatro pedidas mais as três órfãs) não foram trazidas para este repositório: além de não estarem em uso em nenhum código, ao menos parte delas carrega marca d'água de terceiro, o que pede decisão do responsável pelo projeto antes de qualquer uso — substituí-las por fotos originais/licenciadas (idealmente das próprias batedeiras parceiras) ou obter autorização, conforme o caso. Isso fica registrado como pendência.
+
 ## Sincronização com o v0
 
 **Nota:** 10 dos 15 arquivos abaixo foram alterados após este envio; ver [Revalidação local](#revalidação-local-em-16092026-tarde) para o que deixou de corresponder.
