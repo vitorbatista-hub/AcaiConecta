@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
-import { appendOrder, applyTransition, createOrderSnapshot, expireOrders, mockOrders, mockProducts, mockStores, predefinedMessages, type Actor, type CartItem, type Order, type OrderStatus, type PaymentMethod, type Product, type Store } from '@/lib/mock-data'
+import { adminActorName, allowedProductVolumesMl, appendOrder, applyTransition, createOrderSnapshot, expireOrders, mockOrders, mockProducts, mockStores, predefinedMessages, type Actor, type CartItem, type Order, type OrderStatus, type PaymentMethod, type Product, type Store } from '@/lib/mock-data'
 
 import { emptyCustomerSession, restoreCustomerSession, type AccessRequest, type CustomerSession } from '@/lib/customer-session'
 
@@ -111,12 +111,12 @@ export function PrototypeProvider({children}:{children:React.ReactNode}) {
     if(store.schedule?.some(h=>!Number.isInteger(h.day)||h.day<0||h.day>6||!/^([01]\d|2[0-3]):[0-5]\d$/.test(h.opens)||!/^([01]\d|2[0-3]):[0-5]\d$/.test(h.closes)||h.opens>=h.closes)) throw new Error('Revise os horários: o fechamento deve ser após a abertura, no mesmo dia.')
     if(!Number.isSafeInteger(store.deliveryFeeCents)||store.deliveryFeeCents<0) throw new Error('Informe uma taxa válida em centavos.')
     if((!existing||existing.adminStatus!==store.adminStatus)&&!reason?.trim()) throw new Error('Informe o motivo administrativo.')
-    const audit=reason?[...data.audit,{id:crypto.randomUUID(),at:new Date().toISOString(),author:'Administrador da demonstração',entityId:store.id,action:existing?'Alteração da batedeira':'Cadastro assistido',reason}]:data.audit
+    const audit=reason?[...data.audit,{id:crypto.randomUUID(),at:new Date().toISOString(),author:adminActorName,entityId:store.id,action:existing?'Alteração da batedeira':'Cadastro assistido',reason}]:data.audit
     const normalized={...store,operatorEmail:store.operatorEmail.trim()}
     commit({...data,audit,stores:existing?data.stores.map(s=>s.id===store.id?normalized:s):[...data.stores,normalized]})
   }
   function saveProduct(product:Product) {
-    if(!product.name.trim()||product.name.length>150||!Number.isSafeInteger(product.volumeMl)||product.volumeMl<1||product.volumeMl>65535||!Number.isSafeInteger(product.priceCents)||product.priceCents<1) throw new Error('Informe nome, volume inteiro positivo e preço maior que zero.')
+    if(!product.name.trim()||product.name.length>150||!(allowedProductVolumesMl as readonly number[]).includes(product.volumeMl)||!Number.isSafeInteger(product.priceCents)||product.priceCents<1) throw new Error('Informe nome, um dos tamanhos padrão (500 ml ou 1.000 ml) e preço maior que zero.')
     const data=current.current
     const updated={...product,updatedAt:new Date().toISOString()}
     commit({...data,products:data.products.some(p=>p.id===product.id)?data.products.map(p=>p.id===product.id?updated:p):[...data.products,updated]})
@@ -128,12 +128,12 @@ export function PrototypeProvider({children}:{children:React.ReactNode}) {
   function configureSupport(email:string) {
     const value=email.trim()
     if(value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) throw new Error('Informe um e-mail válido para o suporte.')
-    const event={id:crypto.randomUUID(),at:new Date().toISOString(),author:'Administrador da demonstração',entityId:'pilot',action:'Contato de suporte atualizado',reason:value?'Canal de atendimento configurado':'Canal removido'}
+    const event={id:crypto.randomUUID(),at:new Date().toISOString(),author:adminActorName,entityId:'pilot',action:'Contato de suporte atualizado',reason:value?'Canal de atendimento configurado':'Canal removido'}
     commit({...current.current,supportEmail:value,audit:[...current.current.audit,event]})
   }
   function setCustomerBlocked(blocked:boolean,reason:string) {
     if(!reason.trim()) throw new Error('Informe o motivo administrativo.')
-    const event={id:crypto.randomUUID(),at:new Date().toISOString(),author:'Administrador da demonstração',entityId:'customer-001',action:blocked?'Bloqueio de conta':'Reativação de conta',reason:reason.trim()}
+    const event={id:crypto.randomUUID(),at:new Date().toISOString(),author:adminActorName,entityId:'customer-001',action:blocked?'Bloqueio de conta':'Reativação de conta',reason:reason.trim()}
     commit({...current.current,customerBlocked:blocked,customer:{...current.current.customer,signedIn:blocked?false:current.current.customer.signedIn},audit:[...current.current.audit,event]})
   }
   function requestAccessRecovery(contact:string,reason:string) {
@@ -148,7 +148,7 @@ export function PrototypeProvider({children}:{children:React.ReactNode}) {
     if(!request) throw new Error('Solicitação não encontrada.')
     if(request.resolved) throw new Error('Solicitação já concluída.')
     const at=new Date().toISOString()
-    const event={id:crypto.randomUUID(),at,author:'Administrador da demonstração',entityId:'customer-001',action:'Recuperação de acesso concedida',reason:`Solicitação de ${request.contact}: ${request.reason}`}
+    const event={id:crypto.randomUUID(),at,author:adminActorName,entityId:'customer-001',action:'Recuperação de acesso concedida',reason:`Solicitação de ${request.contact}: ${request.reason}`}
     commit({...data,customerBlocked:false,accessRequests:data.accessRequests.map(item=>item.id===id?{...item,resolved:true,resolvedAt:at}:item),audit:[...data.audit,event]})
   }
   function trackCartStarted() {

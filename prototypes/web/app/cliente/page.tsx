@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import { useState } from 'react'
 import { Minus, Plus, Search, ShoppingBag } from 'lucide-react'
-import { AppFrame, DemoNotice, SectionHeading, StatusPill, useToast } from '@/components/app-shell'
+import { AppFrame, SectionHeading, StatusPill, useToast } from '@/components/app-shell'
 import { usePrototype } from '@/components/prototype-provider'
 import { Modal } from '@/components/modal'
 import { CustomerAccount } from '@/components/customer-account'
@@ -64,7 +64,6 @@ export default function ClientePage() {
   }
   const openCart = () => { setStoreId(null); setError(''); setStep('cart') }
   return <AppFrame profile="cliente"><div className="mx-auto max-w-6xl">
-    <DemoNotice>Dados fictícios · Pedidos e acesso simulados.</DemoNotice>
     {view === 'conta' ? <><SectionHeading title="Minha conta" /><CustomerAccount /></> : view === 'pedidos' || view.startsWith('pedido:') ? <>
       <SectionHeading title={selectedOrder ? 'Acompanhe seu pedido' : 'Meus pedidos'} action={<button className="demo-button" onClick={() => setView('stores')}>Ver batedeiras</button>} />
       {selectedOrder ? <><CustomerOrder order={selectedOrder} /><button className="demo-button mt-4" onClick={() => setView('pedidos')}>Todos os pedidos</button></> : <div className="grid gap-4">{orders.length ? orders.map(order => <CustomerOrder key={order.id} order={order} />) : <p className="rounded-2xl border p-6">Você ainda não enviou pedidos. Escolha uma batedeira para começar.</p>}</div>}
@@ -78,7 +77,7 @@ export default function ClientePage() {
       <p className="mt-4 text-sm text-muted-foreground">Pagamento em dinheiro ou Pix na entrega, diretamente à batedeira. Fotografias ilustrativas.</p>
     </>}
     {customer.cart.length > 0 && !step && !selectedStore && view !== 'conta' && <div className="sticky bottom-3 z-20 mt-5"><button className="demo-primary flex w-full items-center justify-between gap-3 shadow-lg" onClick={openCart}><span>Ver sacola · {totals.volumeMl} ml</span><span>R$ {cents(totals.totalCents)}</span></button></div>}
-    <div className="mt-6"><SupportButton /></div>
+    <div className="mt-6"><SupportButton orderId={selectedOrder?.id} /></div>
   </div>
   {selectedStore && <Modal title={selectedStore.name} onClose={() => setStoreId(null)}><div className="mb-4 space-y-2 text-sm"><p>{getStoreAvailabilityText(selectedStore)}</p><p>{selectedStore.address} · Centro, Cametá/PA</p><p>{getFeeText(selectedStore)} · Estimativa {selectedStore.estimatedRange}</p><p>Mínimo de 1 litro por pedido. Você pode combinar volumes.</p><details><summary>Horários de funcionamento</summary>{getSchedule(selectedStore).map((hours, index) => <p key={`${hours.day}-${index}`}>{['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'][hours.day]}: {hours.active ? `${hours.opens}–${hours.closes}` : 'Fechada'}</p>)}</details></div>
     {!isStoreOrderable(selectedStore) && <p className="mb-4 rounded-xl bg-muted p-3 text-sm">Catálogo disponível para consulta. Novos pedidos estão indisponíveis.</p>}
@@ -102,11 +101,11 @@ export default function ClientePage() {
     <div className="grid grid-cols-2 gap-3"><label>Número<input className="demo-field" required maxLength={20} value={customer.address.number} onChange={event => demo.updateCustomer({ address: { ...customer.address, number: event.target.value } })} /></label><label>Bairro<input className="demo-field" readOnly value="Centro" /></label></div>
     <label>Complemento (opcional)<input className="demo-field" maxLength={100} value={customer.address.complement ?? ''} onChange={event => demo.updateCustomer({ address: { ...customer.address, complement: event.target.value } })} /></label>
     <label>Ponto de referência (opcional)<input className="demo-field" maxLength={255} value={customer.address.reference ?? ''} onChange={event => demo.updateCustomer({ address: { ...customer.address, reference: event.target.value } })} /></label>
-    <label className="flex items-center gap-2"><input type="checkbox" checked={saveDelivery} onChange={event => setSaveDelivery(event.target.checked)} />Salvar este endereço nesta demonstração</label>
+    <label className="flex items-center gap-2"><input type="checkbox" checked={saveDelivery} onChange={event => setSaveDelivery(event.target.checked)} />Salvar este endereço para os próximos pedidos</label>
     <label>Telefone com DDD<input className="demo-field" required type="tel" maxLength={20} autoComplete="tel" value={customer.phone} onChange={event => demo.updateCustomer({ phone: event.target.value })} /></label>
     <label>Forma de pagamento<select className="demo-field" value={customer.payment} onChange={event => demo.updateCustomer({ payment: event.target.value === 'PIX' ? 'PIX' : 'DINHEIRO', change: '' })}><option value="PIX">Pix na entrega</option><option value="DINHEIRO">Dinheiro na entrega</option></select></label>
     {customer.payment === 'DINHEIRO' && <label>Troco para (opcional)<input className="demo-field" inputMode="decimal" maxLength={11} value={customer.change} onChange={event => demo.updateCustomer({ change: event.target.value })} placeholder={`Total R$ ${cents(totals.totalCents)}`} /></label>}
-    <p className="text-sm text-muted-foreground">{customer.payment === 'PIX' ? 'Transfira o Pix diretamente à batedeira na entrega. Não pague antecipadamente pelo protótipo.' : 'Pague em dinheiro na entrega. Informe o valor da nota se precisar de troco.'}</p>
+    <p className="text-sm text-muted-foreground">{customer.payment === 'PIX' ? 'Transfira o Pix diretamente à batedeira, somente no momento da entrega.' : 'Pague em dinheiro na entrega. Informe o valor da nota se precisar de troco.'}</p>
     <label>Observação do pedido (opcional)<textarea className="demo-field" maxLength={500} value={customer.note} onChange={event => demo.updateCustomer({ note: event.target.value })} /></label>
     {error && <p role="alert" className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
     <div className="flex flex-wrap gap-2"><button type="button" className="demo-button" onClick={() => setStep('cart')}>Revisar sacola</button><button disabled={sending} className="demo-primary">{sending ? 'Enviando…' : `Enviar pedido · R$ ${cents(totals.totalCents)}`}</button></div>

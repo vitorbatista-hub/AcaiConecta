@@ -102,8 +102,6 @@ export function SectionHeading({ eyebrow, title, description, action }: { eyebro
 
 export function Money({ value }: { value: number }) { return <span>R$ {value.toFixed(2).replace('.', ',')}</span> }
 
-export function DemoNotice({ children }: { children: React.ReactNode }) { return <div className="mb-4 flex items-center gap-2 rounded-xl border border-accent/25 bg-accent/10 px-3 py-2 text-xs text-foreground"><span className="grid size-5 shrink-0 place-items-center rounded-lg bg-accent/20 text-accent-foreground">i</span><span>{children}</span></div> }
-
 export function StatCard({ label, value, detail, icon: Icon, tone = 'primary' }: { label: string; value: string; detail: string; icon: React.ElementType; tone?: 'primary' | 'secondary' | 'accent' }) { return <div className="rounded-2xl border border-border bg-card p-5 shadow-sm"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-black tracking-tight">{value}</p></div><span className={`grid size-10 place-items-center rounded-xl ${tone === 'primary' ? 'bg-primary/10 text-primary' : tone === 'secondary' ? 'bg-secondary/15 text-secondary' : 'bg-accent/20 text-accent-foreground'}`}><Icon className="size-5" /></span></div><p className="mt-3 text-xs text-muted-foreground">{detail}</p></div> }
 
 export const navIcons = { ShoppingBag, Store, LayoutDashboard, Users, Package }

@@ -164,8 +164,11 @@
 
 @layer components {
   .demo-field { @apply min-h-11 mt-1 block w-full rounded-xl border border-border bg-background px-3 py-2 text-foreground; }
-  .demo-button { @apply min-h-11 rounded-full border border-border bg-card px-4 py-2 text-sm font-bold; }
+  .demo-button { @apply min-h-11 rounded-full border border-border bg-card px-4 py-2 text-sm font-bold transition-colors; }
+  .demo-button[aria-pressed="true"] { @apply border-primary bg-primary/10 text-primary; }
   .demo-primary { @apply min-h-11 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground; }
+  .status-toggle-open { @apply min-h-11 rounded-full border border-secondary/40 bg-secondary/15 px-4 py-2 text-sm font-bold text-secondary transition-colors; }
+  .status-toggle-closed { @apply min-h-11 rounded-full border border-destructive/40 bg-destructive/10 px-4 py-2 text-sm font-bold text-destructive transition-colors; }
 }
 @layer base {
   button:disabled { opacity: .45; cursor: not-allowed; }

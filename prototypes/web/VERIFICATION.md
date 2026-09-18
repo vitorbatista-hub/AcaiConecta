@@ -205,3 +205,59 @@ O v0 aplicou cada lote nos caminhos correspondentes, confirmando por escrito qua
 Arquivos sincronizados: `.gitignore`, `package.json`, `next.config.mjs`, `app/layout.tsx`, `app/page.tsx`, `app/globals.css`, `app/cliente/page.tsx`, `app/operador/page.tsx`, `app/admin/page.tsx`, `components/app-shell.tsx`, `components/modal.tsx`, `components/support-panel.tsx`, `components/photo-field.tsx`, `components/prototype-provider.tsx`, `components/customer-account.tsx`, `components/customer-order.tsx`, `components/order-panel.tsx`, `lib/mock-data.ts`, `lib/customer-session.ts`, `lib/order-presentation.ts`, `lib/use-view.ts`, `tests/customer-session.test.mjs`, `tests/orders.test.mjs`.
 
 Este reenvio cobre a totalidade do código do protótipo desta revisão; a tabela de hashes da [sincronização original](#sincronização-com-o-v0) e do [reenvio parcial de 16/09 à noite](#correção-de-alinhamento-com-a-documentação-e-nova-sincronização-16092026-noite) fica substituída por este registro para fins de correspondência atual. Documentação local e a imagem binária não foram incluídas no envio, seguindo a prática já adotada nas sincronizações anteriores. Não foi solicitada nova publicação em produção; a Fase 2, a verificação em navegador destas telas e a validação com participantes permanecem pendentes.
+
+## Feedback de usabilidade e ajustes de interface em 17/09/2026
+
+O responsável pelo projeto testou o protótipo publicado e registrou feedback de usabilidade no Notion (página "Protótipo Açaí Conecta", 17/09/2026 19h43), pedindo alterações válidas para os 3 níveis de acesso. A decisão correspondente está registrada como [DEC-039](../../docs/product/decisions.md) em `decisions.md`. Mudanças aplicadas nesta rodada:
+
+- **Login por tela dedicada (operador e administrador):** já estava implementado antes deste feedback (commit `034bd5b`, 17/09/2026 13h06); apenas confirmado, sem alteração de código.
+- **Catálogo com dois tamanhos padrão:** `lib/mock-data.ts` não tem mais nenhum produto abaixo de 500 ml; o formulário de produto do operador (`app/operador/page.tsx`) trocou o campo livre de volume por uma seleção fixa entre 500 ml e 1.000 ml; `saveProduct` em `components/prototype-provider.tsx` valida o volume contra essa lista (`allowedProductVolumesMl`), não apenas na interface.
+- **"Preciso de ajuda" sem repetição:** `components/customer-order.tsx` e `components/customer-account.tsx` deixaram de renderizar `SupportButton` próprio; `app/cliente/page.tsx` mantém um único ponto de entrada por página, com o código do pedido preenchido automaticamente quando há um pedido selecionado.
+- **Abrir/fechar batedeira intuitivo:** o botão em `app/operador/page.tsx` agora usa cor de status (verde quando aberta, vermelho quando fechada — classes `status-toggle-open`/`status-toggle-closed` em `app/globals.css`) e abre uma confirmação antes de efetivar a mudança. Botões de navegação por seção (`Visão geral`/`Pedidos`/`Catálogo`/`Configurações` no operador e no administrador) ganharam destaque visual de estado ativo via `.demo-button[aria-pressed="true"]`.
+- **Visão geral com métricas de negócio:** nova função `storeDailyMetrics` em `lib/order-presentation.ts` calcula lucro do dia (soma do total dos pedidos entregues hoje, fuso America/Belem), entregas hoje e pedidos aceitos hoje; exibidos na aba Visão geral do operador junto aos indicadores já existentes.
+- **Produto tratado como algo íntegro:** os três banners de rodapé "Dados fictícios/Operação simulada/Administração simulada" (`DemoNotice`, usado em `app/cliente/page.tsx`, `app/operador/page.tsx` e `app/admin/page.tsx`) foram removidos, junto com o componente em `components/app-shell.tsx`. Rótulos como "E-mail fictício"/"Senha fictícia" viraram "E-mail"/"Senha"; textos de cabeçalho e descrição que diziam "simule o acesso"/"nesta demonstração"/"protótipo navegável" foram reescritos como comportamento real do produto. O aviso de pagamento no checkout do cliente deixou de mencionar "protótipo" e passou a descrever a regra real (Pix somente no momento da entrega, diretamente à batedeira). **Escopo mantido fora desta rodada, deliberadamente:** identificadores internos de ator usados em regra de negócio e trilha de auditoria — `"Administrador da demonstração"` e `"Cliente da demonstração"` (usados como nome padrão de ator e em filtros de eventos, ex. `app/operador/page.tsx` linha do `details` de "Cancelamentos e intervenções administrativas") — não foram renomeados nesta rodada, para não arriscar regressão em lógica de auditoria fora do pedido original; fica como pendência para uma revisão dedicada.
+
+| Verificação | Resultado |
+|---|---|
+| `pnpm typecheck` | Aprovada, sem erros. |
+| `pnpm test` | 22 testes aprovados (suíte inalterada). |
+| `pnpm build` | Aprovado com Turbopack, mesmas quatro rotas (`/`, `/cliente`, `/operador`, `/admin`). |
+
+Verificação em navegador não realizada nesta sessão (extensão Claude in Chrome não conectada) — o botão de confirmação de abrir/fechar batedeira, o seletor de tamanho do catálogo e a ausência de duplicidade do "Preciso de ajuda" ainda não foram exercitados visualmente.
+
+### Sincronização com o v0 concluída em 18/09/2026
+
+Com autorização do responsável pelo projeto, a sincronização dos 12 arquivos alterados na rodada de feedback de usabilidade (`lib/mock-data.ts`, `components/support-panel.tsx`, `app/cliente/page.tsx`, `lib/order-presentation.ts`, `app/admin/page.tsx`, `components/customer-order.tsx`, `app/operador/page.tsx`, `components/customer-account.tsx`, `components/app-shell.tsx`, `app/globals.css`, `app/page.tsx`, `components/prototype-provider.tsx`) foi retomada em 18/09/2026 após o reset do limite diário de mensagens do v0 (bloqueio original em 17/09/2026, registrado abaixo). Enviada ao [chat existente do v0](https://v0.app/vitors-projects-edcbface/chat/acaiconecta-jAWnqGHlb8w) via `sendChatMessage` do MCP, em 6 lotes de 2 arquivos.
+
+O primeiro envio do lote 1 foi feito por engano com um anexo placeholder sem conteúdo real (erro operacional desta sessão, não do v0); identificado imediatamente pela falha de `pnpm typecheck` reportada pelo v0, e corrigido no envio seguinte com o conteúdo real. Os demais 5 lotes foram enviados sem esse problema.
+
+O v0 aplicou cada lote no caminho correspondente e, ao final de cada um, rodou `pnpm typecheck` (aprovado em todos) e calculou o SHA-256 de cada arquivo aplicado. Os 12 hashes retornados coincidem exatamente com os hashes calculados localmente antes do envio — nenhuma divergência. No último lote, o v0 também rodou `pnpm test` (22 aprovados, 0 falhas) e `pnpm build` (aprovado, Turbopack, mesmas quatro rotas `/`, `/cliente`, `/operador`, `/admin`). Não foi solicitada publicação em produção.
+
+A verificação em navegador destas telas (botão de confirmação de abrir/fechar batedeira, seletor de tamanho do catálogo, ausência de duplicidade do "Preciso de ajuda") e a validação com participantes continuam pendentes.
+
+## Correção de dois gaps contra a anotação original do Notion em 18/09/2026
+
+Nova comparação da implementação da rodada de 17/09/2026 contra o texto original registrado no Notion (não apenas o resumo em DEC-039) identificou dois pontos não totalmente atendidos:
+
+- **Botão "Pausar entregas" sem o mesmo tratamento intuitivo:** o Notion cita "fechar batedeira" e "pausar entregas" juntos como exemplos de botão não intuitivo, mas só o primeiro recebeu cor de estado e confirmação na rodada anterior. Corrigido: `app/operador/page.tsx` agora usa um único estado `confirmToggle:'isOpen'|'deliveryAvailable'|null` para os dois botões, ambos com classes `status-toggle-open`/`status-toggle-closed` (verde/vermelho) e modal de confirmação antes de efetivar a mudança.
+- **Nomes padrão ainda expunham "demonstração" ao usuário:** o DEC-039 tratou `"Administrador da demonstração"`/`"Cliente da demonstração"` como identificadores internos de auditoria, mas na prática apareciam como texto visível — barra "Conectado como" do admin (`app/admin/page.tsx`), painel "Acesso de clientes" do admin, e "Sua conta" do próprio cliente (`components/customer-account.tsx`) quando o nome não é informado. Corrigido: duas constantes centralizadas em `lib/mock-data.ts` (`adminActorName='Administrador do piloto'`, `guestCustomerName='Cliente'`), substituindo o literal antigo em `app/admin/page.tsx`, `app/operador/page.tsx` (inclusive no filtro de "Cancelamentos e intervenções administrativas", que dependia do mesmo literal para casar eventos), `components/prototype-provider.tsx` (4 pontos de geração de trilha de auditoria), `components/customer-account.tsx` e `components/customer-order.tsx`.
+
+| Verificação | Resultado |
+|---|---|
+| `pnpm typecheck` | Aprovada, sem erros. |
+| `pnpm test` | 22 testes aprovados (suíte inalterada). |
+| `pnpm build` | Aprovado com Turbopack, mesmas quatro rotas (`/`, `/cliente`, `/operador`, `/admin`). |
+
+Verificação em navegador não realizada nesta sessão (extensão Claude in Chrome não conectada).
+
+### Tentativa de sincronização com o v0 bloqueada pelo limite diário (18/09/2026)
+
+Com autorização do responsável pelo projeto, o envio dos 6 arquivos desta correção (`lib/mock-data.ts`, `app/admin/page.tsx`, `app/operador/page.tsx`, `components/prototype-provider.tsx`, `components/customer-account.tsx`, `components/customer-order.tsx`) ao [chat existente do v0](https://v0.app/vitors-projects-edcbface/chat/acaiconecta-jAWnqGHlb8w) via `sendChatMessage` do MCP foi tentado logo após a sincronização anterior (mesmo dia), mas retornou erro 403 "You have reached your daily message limit" já na primeira mensagem (lote 1 de 3, com `lib/mock-data.ts` e `app/admin/page.tsx`). Nenhum arquivo foi aplicado no v0 nesta tentativa. A sincronização remota desta correção permanece pendente até o reset do limite diário.
+
+#### Tentativa bloqueada pelo limite diário em 17/09/2026 (histórico da rodada anterior)
+
+A primeira tentativa desta sincronização, em 17/09/2026, foi iniciada via `sendChatMessage` do MCP, mas a primeira mensagem (lote 1 de 6, com `lib/mock-data.ts` e `components/support-panel.tsx`) retornou erro 403 "You have reached your daily message limit" — mesmo limite diário já registrado em [Substituição da foto ilustrativa, feita diretamente no v0](#substituição-da-foto-ilustrativa-feita-diretamente-no-v0-17092026). Nenhum arquivo foi aplicado no v0 nesta tentativa. O responsável pelo projeto optou por aguardar o reset do limite diário, retomado com sucesso em 18/09/2026 (acima).
+
+#### Nova tentativa bloqueada pelo limite diário em 19/09/2026
+
+Nova tentativa de reenvio do lote 1 de 3 (`lib/mock-data.ts` e `app/admin/page.tsx`), retomando a correção dos dois gaps acima, retornou novamente erro 403 "You have reached your daily message limit" — o limite diário de 18/09/2026 ainda não havia resetado neste horário. Nenhum arquivo foi aplicado no v0 nesta tentativa. A sincronização remota dos 6 arquivos desta correção permanece pendente.

@@ -42,6 +42,22 @@ export function reasonCounts(orders: Order[], status: OrderStatus) {
   return [...counts.entries()].map(([reason, count]) => ({ reason, count })).sort((a, b) => b.count - a.count)
 }
 
+function dayKey(ms: number, timeZone = 'America/Belem') {
+  return new Intl.DateTimeFormat('en-CA', { timeZone }).format(new Date(ms))
+}
+
+export function storeDailyMetrics(orders: Order[], storeId: string, now = Date.now()) {
+  const today = dayKey(now)
+  const storeOrders = orders.filter(order => order.storeId === storeId)
+  const deliveredToday = storeOrders.filter(order => order.status === 'ENTREGUE' && order.timeline.some(event => event.to === 'ENTREGUE' && dayKey(Date.parse(event.at)) === today))
+  const acceptedToday = storeOrders.filter(order => order.timeline.some(event => event.to === 'ACEITO' && dayKey(Date.parse(event.at)) === today))
+  return {
+    revenueCents: deliveredToday.reduce((sum, order) => sum + order.totalCents, 0),
+    deliveredToday: deliveredToday.length,
+    acceptedToday: acceptedToday.length,
+  }
+}
+
 export function pilotMetrics(orders: Order[], now = Date.now()) {
   const accepted = orders.filter(order => order.timeline.some(event => event.to === 'ACEITO'))
   const responded = orders.filter(order => order.timeline.some(event => event.to === 'ACEITO' || event.to === 'RECUSADO'))
