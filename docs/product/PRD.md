@@ -4,9 +4,9 @@
 
 **Autor:** Vitor Benedito Ribeiro Batista  
 **Local inicial:** Cametá/PA  
-**Versão:** 2.5
+**Versão:** 2.6
 **Data:** Setembro de 2026  
-**Status:** Fase 2 — Definição e Prototipação
+**Status:** Aprovado em 28/09/2026 (DEC-044) — Fase 2, Definição e Prototipação
 **Documento anterior:** [`archive/PRD-v1.md`](archive/PRD-v1.md) (versão 1.0)
 
 ---
@@ -171,7 +171,7 @@ Responsável por cadastrar ou aprovar batedeiras, revisar informações, prestar
 - buscar por nome e filtrar por bairro atendido;
 - consultar perfil, catálogo, preços, horário e estimativa;
 - criar conta com nome, telefone, e-mail e senha;
-- cadastrar endereço de entrega;
+- cadastrar até dois endereços de entrega, um principal e um secundário, podendo editá-los, removê-los e alternar o principal (DEC-040);
 - adicionar produtos e quantidades ao pedido;
 - incluir observações limitadas por item ou pedido;
 - informar necessidade de troco;
@@ -188,14 +188,14 @@ Responsável por cadastrar ou aprovar batedeiras, revisar informações, prestar
 - atualizar estado do estabelecimento: aberto ou fechado;
 - atualizar disponibilidade de entrega separadamente;
 - gerenciar produtos e disponibilidade;
-- configurar bairros atendidos e faixa estimada;
+- escolher os bairros atendidos entre os habilitados pelo administrador e configurar a faixa estimada;
 - configurar taxa de entrega por bairro, inclusive gratuita;
 - receber alerta visual de novo pedido enquanto o painel estiver aberto;
 - aceitar ou recusar com motivo;
 - acompanhar fila de pedidos;
 - atualizar estados permitidos;
 - registrar falha de entrega;
-- consultar resumo operacional básico.
+- consultar resumo operacional básico, incluindo o faturamento do dia (DEC-043).
 
 ### 8.3 Administrador
 
@@ -204,7 +204,7 @@ Responsável por cadastrar ou aprovar batedeiras, revisar informações, prestar
 - consultar pedidos e histórico de estados;
 - prestar suporte e registrar intervenções;
 - moderar imagens e informações públicas;
-- configurar os bairros atendidos;
+- manter a lista oficial de bairros e definir quais estão habilitados para pedidos;
 - consultar métricas do piloto;
 - acessar trilha de auditoria.
 
@@ -284,7 +284,7 @@ Cada produto deverá possuir:
 - descrição opcional;
 - foto opcional;
 - preço;
-- unidade ou volume;
+- unidade e volume, limitado a 500 ml ou 1 L (DEC-042);
 - estado ativo/inativo;
 - disponibilidade atual;
 - data da última alteração.
@@ -498,7 +498,7 @@ No MVP, cada usuário possuirá um único papel e cada batedeira terá um operad
 - acesso do operador limitado à sua batedeira;
 - acesso do cliente limitado aos próprios dados e pedidos.
 
-Login social ficará fora do MVP.
+A estratégia de sessões e de limitação de tentativas está registrada na [ADR-001](../architecture/ADRs/ADR-001-sessoes-e-tentativas-de-login.md). Login social ficará fora do MVP.
 
 ---
 
@@ -802,7 +802,7 @@ Este documento adota oficialmente as seis fases descritas em [`roadmap.md`](road
 
 - confirmar as exigências jurídicas e administrativas aplicáveis às participantes em Cametá;
 - concluir a revisão de privacidade e termos do piloto;
-- escolher infraestrutura de hospedagem, banco, autenticação, arquivos e observabilidade durante a especificação de engenharia.
+- escolher infraestrutura de hospedagem, banco, arquivos e observabilidade durante a especificação de engenharia; a estratégia de autenticação já foi definida na ADR-001.
 
 Os gates externos não serão preenchidos por suposição. Eles não impedem o protótipo, mas os dois primeiros impedem o piloto e a escolha de infraestrutura impede o início da construção.
 
@@ -848,13 +848,11 @@ O MVP estará pronto para implementação quando:
 
 ## 27. Próximos passos
 
-1. Transformar os fluxos documentados em um protótipo navegável do escopo reduzido.
-2. Executar testes de usabilidade e ajustar os fluxos conforme as evidências.
-3. Revisar o modelo EER a partir do schema SQL e consolidar os dicionários de dados e de métricas.
-4. Definir e registrar a arquitetura técnica e as escolhas de infraestrutura.
-5. Converter histórias do MVP em backlog priorizado.
-6. Obter encaminhamento jurídico e detalhar a preparação do piloto com as 3 batedeiras.
-7. Iniciar a implementação somente após os critérios de prontidão.
+1. Revisar em conjunto o modelo de dados (schema SQL, modelo EER, MER e dicionário de dados), a arquitetura técnica e o backlog priorizado, que já existem em rascunho.
+2. Consolidar o dicionário de métricas do piloto.
+3. Definir as escolhas de infraestrutura e registrá-las como ADRs.
+4. Obter encaminhamento jurídico, concluir privacidade, termos e política de retenção (§17) e detalhar a preparação do piloto com as 3 batedeiras.
+5. Iniciar a implementação somente após os critérios de prontidão.
 
 ---
 
@@ -869,3 +867,4 @@ O MVP estará pronto para implementação quando:
 | 2.3 | Setembro de 2026 | Operação somente por entrega, regras de cancelamento e contestação, cadastro documental, monetização, área piloto e stack consolidados. |
 | 2.4 | Setembro de 2026 | Pix on-line incorporado ao MVP com expiração, renovação, crédito direto, devolução integral e prazos de contestação. |
 | 2.5 | Setembro de 2026 | MVP reduzido ao núcleo de descoberta e pedidos; pagamentos passam a ocorrer na entrega e integrações financeiras, documentação, fotografia e contestação saem do escopo. |
+| 2.6 | Setembro de 2026 | Incorporadas a DEC-040 (até dois endereços), a DEC-042 (tamanhos de 500 ml e 1 L), a DEC-043 (faturamento do dia) e a ADR-001 (sessões e tentativas de login); papéis de administrador e batedeira na configuração de bairros esclarecidos; próximos passos atualizados. Aprovada em 28/09/2026, depois dos testes de usabilidade (DEC-044, DEC-045). |

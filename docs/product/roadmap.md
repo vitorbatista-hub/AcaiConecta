@@ -33,9 +33,11 @@ Confirmar que o problema é relevante e que existe disposição real de batedeir
 
 **Situação:** Em andamento
 
-**Protótipo:** versão atualizada em elaboração, ainda não validada, disponível em [`../../prototypes/web/`](../../prototypes/web/README.md). As correções do fluxo principal passaram por verificação técnica documentada no protótipo. A cobertura restante do PRD e os testes de usabilidade permanecem pendentes; esta revisão não conclui a fase.
+**Protótipo:** disponível em [`../../prototypes/web/`](../../prototypes/web/README.md), com verificação técnica documentada. Testes de usabilidade considerados satisfatórios pelo responsável pelo projeto em 28/09/2026 (DEC-045); o resumo dos resultados ainda não foi anexado ao repositório.
 
-**Modelo de dados, arquitetura e backlog:** [modelo conceitual e MER inicial](mer-eer-inicial.md), [dicionário de dados](../database/data-dictionary.md), [arquitetura técnica proposta](arquitetura-tecnica.md) e [backlog priorizado do MVP](backlog-mvp.md) existem como rascunhos para revisão humana, ainda não aprovados nem revisados em conjunto. A validação com participantes, exigida pelos critérios de conclusão, continua pendente.
+**Modelo de dados, arquitetura e backlog:** [modelo conceitual e MER inicial](mer-eer-inicial.md), [dicionário de dados](../database/data-dictionary.md), [arquitetura técnica proposta](arquitetura-tecnica.md) e [backlog priorizado do MVP](backlog-mvp.md) existem como rascunhos para revisão humana, ainda não aprovados nem revisados em conjunto. Essa revisão é o critério de conclusão da fase que continua em aberto.
+
+**PRD:** versão 2.6 aprovada em 28/09/2026 (DEC-044).
 
 ### Objetivo
 

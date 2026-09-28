@@ -1,7 +1,7 @@
 # Arquitetura técnica proposta — AçaíConecta
 
 **Status:** Rascunho para revisão humana. Não representa decisão de arquitetura encerrada nem conclusão da Fase 2. As escolhas de infraestrutura concreta (provedor de hospedagem, banco gerenciado, e-mail, etc.) são gates externos da Fase 3 (PRD §24.2) e não são fixadas aqui.
-**Base:** [PRD 2.5](PRD.md) §18 (requisitos não funcionais), §24.3 (baseline tecnológica: DEC-023), [decisions.md](decisions.md), [roadmap.md](roadmap.md) (entregáveis e critérios de conclusão da Fase 3), e o protótipo em `prototypes/web/`.
+**Base:** [PRD 2.6](PRD.md) §18 (requisitos não funcionais), §24.3 (baseline tecnológica: DEC-023), [decisions.md](decisions.md), [roadmap.md](roadmap.md) (entregáveis e critérios de conclusão da Fase 3), e o protótipo em `prototypes/web/`.
 
 Escopo desta proposta: arquitetura para a Fase 3 (construção do MVP), dimensionada para um piloto de 3 a 5 batedeiras em um único bairro, sem processamento de pagamento pela plataforma. Não é uma arquitetura para escala regional (Fase 6).
 
@@ -37,15 +37,16 @@ Escopo desta proposta: arquitetura para a Fase 3 (construção do MVP), dimensio
 
 Componentes de apoio (fora do monólito, mas necessários):
 - Armazenamento de arquivos para fotos de produto/batedeira.
-- Autenticação (sessão do usuário).
 - Observabilidade (logs, erros, métricas).
+
+A autenticação fica dentro do monólito, com sessões e tentativas de login no MySQL (ADR-001).
 ```
 
 Não há necessidade de um backend separado nem de comunicação entre serviços: Next.js com Route Handlers/Server Actions atende "monólito modular" (DEC-023) mantendo frontend e API na mesma base.
 
 ## 3. Frontend
 
-- **Next.js (App Router) + React + TypeScript + Tailwind CSS**, como já validado no protótipo (`prototypes/web/`). Reaproveitar componentes e lógica de domínio já escritos ali sempre que a regra de negócio coincidir com o PRD vigente (o protótipo tem extensões — login/cadastro, endereços salvos — ainda não formalizadas em `decisions.md`; ver [mer-eer-inicial.md §5](mer-eer-inicial.md#5-decisões-e-suposições-assumidas-neste-rascunho)).
+- **Next.js (App Router) + React + TypeScript + Tailwind CSS**, como já validado no protótipo (`prototypes/web/`). Reaproveitar componentes e lógica de domínio já escritos ali sempre que a regra de negócio coincidir com o PRD vigente (endereços salvos seguem a DEC-040, com no máximo dois por cliente; ver [mer-eer-inicial.md §3](mer-eer-inicial.md#3-decisões-e-suposições-de-modelagem)).
 - **PWA instalável**: manifest + service worker mínimo para instalação em tela inicial (PRD exige "web responsiva e instalável", sem exigir app nativo). Não usar o service worker para funcionamento offline completo no MVP — pedidos exigem conectividade; o objetivo é só a instalabilidade e um retorno gracioso em conexão instável (PRD §18.2, §23 "Internet instável").
 - **Três áreas por papel** (`/cliente`, `/operador`, `/admin`), como já estruturado no protótipo, cada uma atrás de verificação de sessão e papel no servidor.
 - **Acessibilidade** (PRD §18.4): manter os padrões já aplicados no protótipo (foco em modais, navegação por teclado, rótulos) como parte do Definition of Done de cada tela nova, não como revisão isolada ao final.
@@ -69,14 +70,14 @@ O PRD exige alerta visual de novo pedido enquanto o painel do operador estiver a
 ## 6. Banco de dados
 
 - **MySQL gerenciado + Prisma** (DEC-023). Prisma cobre migrações versionadas, o que atende ao requisito de manter histórico de alterações estruturado (PRD §18.3).
-- Modelo inicial: ver [mer-eer-inicial.md](mer-eer-inicial.md). Pontos que a especificação de engenharia deve fechar antes da Fase 3: tipos de coluna, índices (em especial a constraint de idempotência do pedido e um índice em `status` para a fila do operador) e política de exclusão lógica vs física de dados pessoais (PRD §17).
+- Estrutura oficial em [`database/schema.sql`](../../database/schema.sql) (versão 0.7), que já define tipos de coluna, índices (inclusive a constraint de idempotência do pedido e o índice da fila do operador) e exclusão lógica; modelo conceitual em [mer-eer-inicial.md](mer-eer-inicial.md). Ponto que a especificação de engenharia ainda deve fechar antes da Fase 3: política de retenção e anonimização de dados pessoais (PRD §17). Sessões e tentativas de login já foram decididas na [ADR-001](../architecture/ADRs/ADR-001-sessoes-e-tentativas-de-login.md).
 - **Preços e taxas em centavos como inteiro** (PRD §11.1), nunca ponto flutuante, para evitar erro de arredondamento em somas de pedido.
 
 ## 7. Autenticação e autorização
 
-- Sessão de servidor (cookie de sessão httpOnly), sem login social (fora do escopo, PRD §16.2).
-- Cadastro do cliente com e-mail e senha; senha sempre armazenada como hash (nunca texto puro) com algoritmo lento (ex. argon2/bcrypt).
-- Limitação de tentativas de login e encerramento de sessão (PRD §16.2) implementados na camada de domínio, não em serviço terceirizado — volume do piloto não justifica um provedor de identidade externo.
+- Sessão de servidor opaca (cookie `httpOnly`), persistida no banco, com token novo a cada login e duração de 30 dias renováveis para cliente e 12 horas para operador e administrador (ADR-001), sem login social (fora do escopo, PRD §16.2).
+- Cadastro do cliente com e-mail e senha; senha sempre armazenada como hash (nunca texto puro) com algoritmo lento (argon2id ou bcrypt), mínimo de 8 caracteres e recusa de senhas comuns ou vazadas (ADR-001).
+- Limitação de tentativas de login e encerramento de sessão (PRD §16.2) implementados na camada de domínio, não em serviço terceirizado — volume do piloto não justifica um provedor de identidade externo. Sessões e tentativas ficam no banco, com o token armazenado somente como hash, conforme a [ADR-001](../architecture/ADRs/ADR-001-sessoes-e-tentativas-de-login.md) (tabelas `sessoes` e `tentativas_login`, schema 0.7), com limitação por e-mail e por origem.
 - Recuperação de acesso assistida pelo administrador durante o piloto (PRD §16.2), sem fluxo de "esqueci minha senha" automatizado por e-mail — coerente com a exclusão de e-mail transacional do MVP (DEC-035).
 
 ## 8. Armazenamento de arquivos (fotos)
@@ -111,7 +112,7 @@ Exigidos como critério de conclusão da Fase 3 (roadmap) e como requisito do PR
 
 - Provedor de hospedagem, banco gerenciado e serviço de armazenamento de arquivos concretos (gate externo, PRD §24.2).
 - Serviço de observabilidade/erro específico.
-- Detalhes de schema (tipos de coluna, índices) — ver [mer-eer-inicial.md §6](mer-eer-inicial.md#6-pendências-para-a-revisão-eer).
+- Detalhes de schema (tipos de coluna, índices) — definidos em [`database/schema.sql`](../../database/schema.sql); pendências em [mer-eer-inicial.md §4](mer-eer-inicial.md#4-pendências-para-a-revisão).
 - Mecanismo exato de agendamento da expiração automática de pedidos.
 
-Essas decisões pertencem à especificação de engenharia da Fase 3 e devem ser registradas em `decisions.md` quando tomadas.
+Essas decisões pertencem à especificação de engenharia da Fase 3 e devem ser registradas como ADRs em `docs/architecture/ADRs/` quando tomadas; somente decisões de produto e negócio vão para `decisions.md`.
