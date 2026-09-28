@@ -1,6 +1,6 @@
 -- AçaíConecta
 -- Schema inicial do MVP reduzido para MySQL 8+
--- Versão: 0.4
+-- Versão: 0.7
 -- Atualização: setembro de 2026
 --
 -- Convenções:
@@ -13,9 +13,14 @@
 --   - dias da semana numerados de 0 (domingo) a 6 (sábado).
 --
 -- Invariantes que deverão ser validadas também pela aplicação:
---   - responsavel_id referencia um usuário do tipo BATEDEIRA;
+--   - responsavel_id referencia um usuário do tipo OPERADOR;
 --   - cliente_id referencia um usuário do tipo CLIENTE;
 --   - usuario_id de ações administrativas referencia um ADMINISTRADOR;
+--   - bloqueio e reativação de conta registram o motivo em eventos_auditoria;
+--   - cada cliente tem no máximo 2 endereços ativos, com exatamente um principal
+--     quando houver algum (DEC-040);
+--   - sessões guardam somente o hash do token; tentativas de login guardam a origem
+--     apenas como HMAC do IP e são expurgadas após 24 horas (ADR-001);
 --   - estados de pedido seguem exclusivamente as transições definidas no PRD;
 --   - subtotal, volume e snapshots do pedido são calculados em uma transação única.
 
@@ -29,16 +34,53 @@ CREATE TABLE usuarios (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     nome VARCHAR(150) NOT NULL,
     email VARCHAR(254) NOT NULL,
-    telefone VARCHAR(20) NOT NULL,
+    telefone VARCHAR(20) NULL,
     senha_hash VARCHAR(255) NOT NULL,
-    tipo ENUM('CLIENTE', 'BATEDEIRA', 'ADMINISTRADOR') NOT NULL,
+    tipo ENUM('CLIENTE', 'OPERADOR', 'ADMINISTRADOR') NOT NULL,
     status ENUM('ATIVO', 'BLOQUEADO', 'DESATIVADO') NOT NULL DEFAULT 'ATIVO',
     criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     atualizado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     CONSTRAINT pk_usuarios PRIMARY KEY (id),
-    CONSTRAINT uq_usuarios_email UNIQUE (email)
+    CONSTRAINT uq_usuarios_email UNIQUE (email),
+    CONSTRAINT ck_usuarios_telefone_cliente CHECK (
+        tipo <> 'CLIENTE' OR telefone IS NOT NULL
+    )
 ) ENGINE = InnoDB;
+
+CREATE TABLE sessoes (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    usuario_id BIGINT UNSIGNED NOT NULL,
+    token_hash CHAR(64) NOT NULL,
+    criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expira_em TIMESTAMP NOT NULL,
+    encerrada_em TIMESTAMP NULL,
+
+    CONSTRAINT pk_sessoes PRIMARY KEY (id),
+    CONSTRAINT uq_sessoes_token UNIQUE (token_hash),
+    CONSTRAINT fk_sessoes_usuario FOREIGN KEY (usuario_id)
+        REFERENCES usuarios (id) ON UPDATE RESTRICT ON DELETE CASCADE,
+    CONSTRAINT ck_sessoes_expiracao CHECK (expira_em > criado_em)
+) ENGINE = InnoDB;
+
+CREATE INDEX idx_sessoes_usuario_ativas
+    ON sessoes (usuario_id, encerrada_em, expira_em);
+
+CREATE TABLE tentativas_login (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    email VARCHAR(254) NOT NULL,
+    origem_hash CHAR(64) NOT NULL,
+    sucesso BOOLEAN NOT NULL,
+    criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT pk_tentativas_login PRIMARY KEY (id)
+) ENGINE = InnoDB;
+
+CREATE INDEX idx_tentativas_login_email_janela
+    ON tentativas_login (email, criado_em);
+
+CREATE INDEX idx_tentativas_login_origem_janela
+    ON tentativas_login (origem_hash, criado_em);
 
 CREATE TABLE bairros (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -127,7 +169,6 @@ CREATE TABLE produtos (
     batedeira_id BIGINT UNSIGNED NOT NULL,
     nome VARCHAR(150) NOT NULL,
     descricao VARCHAR(500) NULL,
-    tipo ENUM('GROSSO', 'FINO', 'OUTRO') NULL,
     unidade VARCHAR(50) NOT NULL,
     volume_ml SMALLINT UNSIGNED NOT NULL,
     preco_centavos INT UNSIGNED NOT NULL,
