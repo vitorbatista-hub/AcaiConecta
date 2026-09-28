@@ -51,8 +51,8 @@ Este documento transforma as regras do [PRD vigente](PRD.md) e do [registro de d
 
 1. O operador responsável acessa o painel com uma conta ativa.
 2. O sistema confirma que a batedeira está administrativamente `ATIVA`.
-3. O operador mantém catálogo, preços e disponibilidade dos produtos atualizados e decide se cada produto temporariamente indisponível continua visível para consulta.
-4. O operador configura horários, estado aberto ou fechado e disponibilidade de entrega.
+3. O operador mantém catálogo (produtos de 500 ml ou 1 L, DEC-042), preços e disponibilidade dos produtos atualizados e decide se cada produto temporariamente indisponível continua visível para consulta.
+4. O operador configura horários, estado aberto ou fechado, disponibilidade de entrega e, entre os bairros habilitados pelo administrador, os bairros atendidos, com taxa e faixa estimada.
 5. O operador mantém o painel aberto durante o horário do piloto para receber alertas visuais.
 
 ### Atendimento do pedido
@@ -82,7 +82,7 @@ Este documento transforma as regras do [PRD vigente](PRD.md) e do [registro de d
 
 1. O administrador confirma externamente a elegibilidade de uma batedeira previamente selecionada.
 2. Cadastra de forma assistida a batedeira e seu único operador responsável, sem copiar documentos para o sistema.
-3. Configura ou revisa perfil, localização, cobertura e taxa de entrega.
+3. Mantém a lista oficial de bairros habilitados e configura ou revisa perfil, localização, cobertura e taxa de entrega da batedeira.
 4. Ativa a batedeira quando os requisitos aplicáveis estiverem atendidos.
 5. Registra em auditoria as ações de ativação, suspensão, reativação e alterações administrativas relevantes.
 
