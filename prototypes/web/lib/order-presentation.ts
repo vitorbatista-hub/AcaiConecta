@@ -46,13 +46,17 @@ function dayKey(ms: number, timeZone = 'America/Belem') {
   return new Intl.DateTimeFormat('en-CA', { timeZone }).format(new Date(ms))
 }
 
+// Faturamento do dia: total, com taxa de entrega, dos pedidos criados hoje que não terminaram sem venda.
+const unbilledStatuses = new Set<OrderStatus>(['RECUSADO', 'EXPIRADO', 'CANCELADO', 'FALHA_NA_ENTREGA'])
+
 export function storeDailyMetrics(orders: Order[], storeId: string, now = Date.now()) {
   const today = dayKey(now)
   const storeOrders = orders.filter(order => order.storeId === storeId)
   const deliveredToday = storeOrders.filter(order => order.status === 'ENTREGUE' && order.timeline.some(event => event.to === 'ENTREGUE' && dayKey(Date.parse(event.at)) === today))
   const acceptedToday = storeOrders.filter(order => order.timeline.some(event => event.to === 'ACEITO' && dayKey(Date.parse(event.at)) === today))
+  const billedToday = storeOrders.filter(order => !unbilledStatuses.has(order.status) && dayKey(Date.parse(order.createdAt)) === today)
   return {
-    revenueCents: deliveredToday.reduce((sum, order) => sum + order.totalCents, 0),
+    revenueCents: billedToday.reduce((sum, order) => sum + order.totalCents, 0),
     deliveredToday: deliveredToday.length,
     acceptedToday: acceptedToday.length,
   }

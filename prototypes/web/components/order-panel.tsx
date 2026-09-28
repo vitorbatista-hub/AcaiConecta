@@ -35,7 +35,7 @@ export function OrderPanel({order,actor}:{order:Order;actor:Actor}) {
     <ul className="mt-3 text-sm">{order.items.map(i=><li key={i.productId}>{i.quantity} × {i.name} · {i.volumeMl} ml · R$ {cents(i.unitPriceCents)}{i.note&&<p>Observação: {i.note}</p>}</li>)}</ul>
     <p className="mt-2 text-sm">Subtotal R$ {cents(order.subtotalCents)} · Entrega R$ {cents(order.deliveryFeeCents)} · Total R$ {cents(order.totalCents)}</p>
     <p className="mt-2 text-sm">{order.address.street}, {order.address.number} · {order.address.neighborhood} · {order.address.complement} · {order.address.reference}</p>
-    <p className="text-sm">Contato: {order.phone} · {order.payment==='PIX'?'Pix na entrega':'Dinheiro na entrega'}{order.changeForCents!==undefined&&` · Troco para R$ ${cents(order.changeForCents)}`}</p>
+    <p className="text-sm">Contato: {order.phone} · {order.payment==='PIX_NA_ENTREGA'?'Pix na entrega':'Dinheiro na entrega'}{order.changeForCents!==undefined&&` · Troco para R$ ${cents(order.changeForCents)}`}</p>
     <p className="text-sm">Faixa informada: {order.estimatedRange}{order.note&&` · Observação: ${order.note}`}</p>
     <div className="mt-4 flex flex-wrap gap-2">
       {actor.role==='operador'&&next&&<button className="demo-primary" disabled={order.status==='AGUARDANDO_ACEITE'&&remaining===0} onClick={()=>next==='ENTREGUE'?setConfirmDelivery(true):transition(next)}>{actionLabel[next]}</button>}

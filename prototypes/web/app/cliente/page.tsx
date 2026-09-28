@@ -10,7 +10,7 @@ import { CustomerAccount } from '@/components/customer-account'
 import { CustomerOrder } from '@/components/customer-order'
 import { SupportButton } from '@/components/support-panel'
 import { useView } from '@/lib/use-view'
-import { saveAddress } from '@/lib/customer-session'
+import { maxSavedAddresses, saveAddress } from '@/lib/customer-session'
 import { calculateTotals, cents, getFeeText, getSchedule, getStoreAvailabilityText, isStoreOpenNow, isStoreOrderable, parseMoney, type CartItem, type Product } from '@/lib/mock-data'
 
 type Step = 'cart' | 'account' | 'checkout' | null
@@ -55,9 +55,10 @@ export default function ClientePage() {
       const requestId = customer.requestId || crypto.randomUUID()
       demo.updateCustomer({ requestId })
       // Validate saved-address data before the order is committed.
-      const addresses = saveDelivery ? saveAddress(customer.addresses, { ...customer.address, id: crypto.randomUUID(), primary: customer.addresses.length === 0 }) : customer.addresses
+      const storeAddress = saveDelivery && customer.addresses.length < maxSavedAddresses
+      const addresses = storeAddress ? saveAddress(customer.addresses, { ...customer.address, id: crypto.randomUUID(), primary: customer.addresses.length === 0 }) : customer.addresses
       const order = demo.submitOrder({ items: customer.cart, storeId: owner.id, address: customer.address, phone: customer.phone, payment: customer.payment, change: customer.payment === 'DINHEIRO' && customer.change ? parseMoney(customer.change) : undefined, note: customer.note, requestId, fee: totals.deliveryFeeCents })
-      if (saveDelivery) demo.updateCustomer({ addresses })
+      if (storeAddress) demo.updateCustomer({ addresses })
       setSaveDelivery(false); setStep(null); setStoreId(null); setView(`pedido:${order.id}`); notify(`Pedido enviado para ${owner.name}.`)
     } catch (error) { setError(error instanceof Error ? error.message : 'Não foi possível enviar. Revise o pedido.') }
     finally { setSending(false) }
@@ -96,16 +97,16 @@ export default function ClientePage() {
   {step === 'account' && <Modal title="Acesso para enviar o pedido" onClose={() => setStep('cart')}><CustomerAccount onDone={() => setStep('checkout')} /></Modal>}
   {step === 'checkout' && <Modal title="Revisar e enviar pedido" onClose={() => setStep('cart')}><form className="space-y-4" onSubmit={event => { event.preventDefault(); submit() }}>
     <section className="rounded-xl bg-muted p-4 text-sm"><h3 className="font-bold">{owner?.name}</h3><ul className="mt-2 space-y-1">{customer.cart.map(item => <li key={item.product.id}>{item.quantity} × {item.product.name} · R$ {cents(item.quantity * item.product.priceCents)}{item.note && <p>Observação: {item.note}</p>}</li>)}</ul><p className="mt-3">{totals.volumeMl} ml · Subtotal R$ {cents(totals.subtotalCents)} · Entrega R$ {cents(totals.deliveryFeeCents)}</p><p className="mt-1 text-lg font-bold">Total R$ {cents(totals.totalCents)}</p><p>Estimativa: {owner?.estimatedRange}</p></section>
-    {customer.addresses.length > 0 && <label>Usar endereço salvo<select className="demo-field" value="" onChange={event => { const address = customer.addresses.find(item => item.id === event.target.value); if (address) demo.updateCustomer({ address }) }}><option value="">Escolha um endereço</option>{customer.addresses.map(address => <option key={address.id} value={address.id}>{address.street}, {address.number}{address.primary ? ' · Principal' : ''}</option>)}</select></label>}
+    {customer.addresses.length > 0 && <label>Usar endereço salvo<select className="demo-field" value="" onChange={event => { const address = customer.addresses.find(item => item.id === event.target.value); if (address) demo.updateCustomer({ address }) }}><option value="">Escolha um endereço</option>{customer.addresses.map(address => <option key={address.id} value={address.id}>{address.street}, {address.number} · {address.primary ? 'Principal' : 'Secundário'}</option>)}</select></label>}
     <label>Rua<input className="demo-field" required maxLength={180} autoComplete="street-address" value={customer.address.street} onChange={event => demo.updateCustomer({ address: { ...customer.address, street: event.target.value } })} /></label>
     <div className="grid grid-cols-2 gap-3"><label>Número<input className="demo-field" required maxLength={20} value={customer.address.number} onChange={event => demo.updateCustomer({ address: { ...customer.address, number: event.target.value } })} /></label><label>Bairro<input className="demo-field" readOnly value="Centro" /></label></div>
     <label>Complemento (opcional)<input className="demo-field" maxLength={100} value={customer.address.complement ?? ''} onChange={event => demo.updateCustomer({ address: { ...customer.address, complement: event.target.value } })} /></label>
     <label>Ponto de referência (opcional)<input className="demo-field" maxLength={255} value={customer.address.reference ?? ''} onChange={event => demo.updateCustomer({ address: { ...customer.address, reference: event.target.value } })} /></label>
-    <label className="flex items-center gap-2"><input type="checkbox" checked={saveDelivery} onChange={event => setSaveDelivery(event.target.checked)} />Salvar este endereço para os próximos pedidos</label>
+    {customer.addresses.length < maxSavedAddresses ? <label className="flex items-center gap-2"><input type="checkbox" checked={saveDelivery} onChange={event => setSaveDelivery(event.target.checked)} />Salvar este endereço para os próximos pedidos</label> : <p className="text-sm text-muted-foreground">Você já tem 2 endereços salvos. Para trocar um deles, edite-o em Minha conta.</p>}
     <label>Telefone com DDD<input className="demo-field" required type="tel" maxLength={20} autoComplete="tel" value={customer.phone} onChange={event => demo.updateCustomer({ phone: event.target.value })} /></label>
-    <label>Forma de pagamento<select className="demo-field" value={customer.payment} onChange={event => demo.updateCustomer({ payment: event.target.value === 'PIX' ? 'PIX' : 'DINHEIRO', change: '' })}><option value="PIX">Pix na entrega</option><option value="DINHEIRO">Dinheiro na entrega</option></select></label>
+    <label>Forma de pagamento<select className="demo-field" value={customer.payment} onChange={event => demo.updateCustomer({ payment: event.target.value === 'PIX_NA_ENTREGA' ? 'PIX_NA_ENTREGA' : 'DINHEIRO', change: '' })}><option value="PIX_NA_ENTREGA">Pix na entrega</option><option value="DINHEIRO">Dinheiro na entrega</option></select></label>
     {customer.payment === 'DINHEIRO' && <label>Troco para (opcional)<input className="demo-field" inputMode="decimal" maxLength={11} value={customer.change} onChange={event => demo.updateCustomer({ change: event.target.value })} placeholder={`Total R$ ${cents(totals.totalCents)}`} /></label>}
-    <p className="text-sm text-muted-foreground">{customer.payment === 'PIX' ? 'Transfira o Pix diretamente à batedeira, somente no momento da entrega.' : 'Pague em dinheiro na entrega. Informe o valor da nota se precisar de troco.'}</p>
+    <p className="text-sm text-muted-foreground">{customer.payment === 'PIX_NA_ENTREGA' ? 'Transfira o Pix diretamente à batedeira, somente no momento da entrega.' : 'Pague em dinheiro na entrega. Informe o valor da nota se precisar de troco.'}</p>
     <label>Observação do pedido (opcional)<textarea className="demo-field" maxLength={500} value={customer.note} onChange={event => demo.updateCustomer({ note: event.target.value })} /></label>
     {error && <p role="alert" className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
     <div className="flex flex-wrap gap-2"><button type="button" className="demo-button" onClick={() => setStep('cart')}>Revisar sacola</button><button disabled={sending} className="demo-primary">{sending ? 'Enviando…' : `Enviar pedido · R$ ${cents(totals.totalCents)}`}</button></div>

@@ -5,7 +5,7 @@ const address={street:'Rua de teste',number:'10',neighborhood:'Centro'}
 const phone='91900000000'
 const store={...mockStores[0],deliveryFeeCents:250,schedule:Array.from({length:7},(_,day)=>({day,active:true,opens:'00:00',closes:'23:59'}))}
 const items=[{product:mockProducts[1],quantity:1}]
-const create=(entries=items,s=store,a=address,payment='PIX',change,note)=>createOrderSnapshot(entries,s,a,phone,payment,change,note)
+const create=(entries=items,s=store,a=address,payment='PIX_NA_ENTREGA',change,note)=>createOrderSnapshot(entries,s,a,phone,payment,change,note)
 const operator={role:'operador',name:'Operador',storeId:store.id}
 const customer={role:'cliente',name:'Cliente',customerId:'customer-001'}
 const admin={role:'admin',name:'Administrador'}
@@ -17,7 +17,7 @@ test('total em centavos, taxa e snapshot independente do endereço original',()=
   assert.equal(Date.parse(o.acceptedDeadline)-Date.parse(o.createdAt),300000)
 })
 test('Pix não leva troco; dinheiro exige valor suficiente e inteiro',()=>{
-  assert.equal(create(items,store,address,'PIX',5000).changeForCents,undefined)
+  assert.equal(create(items,store,address,'PIX_NA_ENTREGA',5000).changeForCents,undefined)
   assert.throws(()=>create(items,store,address,'DINHEIRO',3000))
   assert.throws(()=>create(items,store,address,'DINHEIRO',NaN))
   assert.equal(create(items,store,address,'DINHEIRO',5000).changeForCents,5000)
@@ -35,7 +35,7 @@ test('disponibilidade e bairro são revalidados',()=>{
   assert.throws(()=>create(items,store,{...address,neighborhood:'Outro'}))
 })
 test('limites de observações e campos obrigatórios',()=>{
-  assert.throws(()=>create(items,store,address,'PIX',undefined,'x'.repeat(501)))
+  assert.throws(()=>create(items,store,address,'PIX_NA_ENTREGA',undefined,'x'.repeat(501)))
   assert.throws(()=>create([{...items[0],note:'x'.repeat(301)}]))
   assert.throws(()=>create(items,store,{...address,street:' '}))
 })

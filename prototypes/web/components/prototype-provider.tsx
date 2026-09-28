@@ -50,7 +50,7 @@ export function PrototypeProvider({children}:{children:React.ReactNode}) {
         current.current={...current.current,stores:current.current.stores.map(store=>({...store,image:migrateImage(store.image)??'/placeholder.svg',operatorEmail:store.operatorEmail??''})),products:current.current.products.map(product=>({...product,image:migrateImage(product.image)}))}
         commit(current.current)
       }
-    } catch { setStorageWarning('A sessão anterior não pôde ser restaurada. Usando os dados fictícios iniciais.') }
+    } catch { setStorageWarning('A sessão anterior não pôde ser restaurada. Os dados iniciais foram carregados novamente.') }
     setReady(true)
     setNow(Date.now())
     const timer=window.setInterval(()=>{
@@ -66,7 +66,7 @@ export function PrototypeProvider({children}:{children:React.ReactNode}) {
   function submitOrder(input:Checkout) {
     const data=current.current
     if(data.customerBlocked) throw new Error('Conta bloqueada. Acesse Ajuda para orientação de recuperação.')
-    if(!data.customer.signedIn) throw new Error('Entre na conta de demonstração antes de enviar.')
+    if(!data.customer.signedIn) throw new Error('Entre na sua conta antes de enviar o pedido.')
     const previous=data.orders.find(o=>o.requestId===input.requestId&&o.customerId==='customer-001')
     if(previous) return previous
     const store=data.stores.find(s=>s.id===input.storeId)
@@ -155,7 +155,7 @@ export function PrototypeProvider({children}:{children:React.ReactNode}) {
     if(!current.current.customer.cart.length) commit({...current.current,cartsStarted:current.current.cartsStarted+1})
   }
   const value={...state,now,updateCustomer,configureSupport,setCustomerBlocked,requestAccessRecovery,resolveAccessRequest,trackCartStarted,submitOrder,transition,message,updateStore,saveProduct,reset:()=>commit(initialState())}
-  return <Context.Provider value={value}>{storageWarning&&<p role="alert" className="bg-accent/20 p-3 text-sm">{storageWarning}</p>}{ready?children:<p role="status" className="p-8">Carregando demonstração…</p>}</Context.Provider>
+  return <Context.Provider value={value}>{storageWarning&&<p role="alert" className="bg-accent/20 p-3 text-sm">{storageWarning}</p>}{ready?children:<p role="status" className="p-8">Carregando…</p>}</Context.Provider>
 }
 export function usePrototype() {
   const context=useContext(Context)

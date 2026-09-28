@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { usePrototype } from './prototype-provider'
-import { removeAddress, saveAddress } from '@/lib/customer-session'
+import { maxSavedAddresses, removeAddress, saveAddress, type SavedAddress } from '@/lib/customer-session'
 import { guestCustomerName } from '@/lib/mock-data'
 
 export function CustomerAccount({ onDone }: { onDone?: () => void }) {
@@ -25,7 +25,8 @@ export function CustomerAccount({ onDone }: { onDone?: () => void }) {
     <button className="demo-button" onClick={() => demo.updateCustomer({ signedIn: false })}>Sair da conta</button>
     <h3 className="font-bold">Endereços salvos</h3>
     {customer.addresses.length === 0 && <p className="text-sm">Salve um endereço ao confirmar seu próximo pedido.</p>}
-    {customer.addresses.map(address => <div key={address.id} className="rounded-xl border p-3"><p>{address.street}, {address.number} · Centro {address.primary && '· Principal'}</p><div className="mt-2 flex flex-wrap gap-2"><button className="demo-button" onClick={() => demo.updateCustomer({ addresses: saveAddress(customer.addresses, { ...address, primary: true }), address })} disabled={address.primary}>Tornar principal</button><button className="demo-button" onClick={() => demo.updateCustomer({ addresses: removeAddress(customer.addresses, address.id) })}>Remover endereço</button></div></div>)}
+    <p className="text-sm text-muted-foreground">Até {maxSavedAddresses} endereços: um principal e um secundário.</p>
+    {customer.addresses.map(address => <AddressCard key={address.id} address={address} />)}
     {onDone && <button className="demo-primary" onClick={onDone}>Continuar pedido</button>}
   </section>
   return <section className="rounded-2xl border bg-card p-5">
@@ -60,4 +61,30 @@ export function CustomerAccount({ onDone }: { onDone?: () => void }) {
         <button className="demo-primary">Enviar solicitação</button>
       </form>)}
   </section>
+}
+
+function AddressCard({ address }: { address: SavedAddress }) {
+  const demo = usePrototype()
+  const addresses = demo.customer.addresses
+  const [draft, setDraft] = useState<SavedAddress | null>(null)
+  const [error, setError] = useState('')
+  const label = address.primary ? 'Principal' : 'Secundário'
+  if (draft) return <form className="space-y-3 rounded-xl border p-3" onSubmit={event => {
+    event.preventDefault()
+    try { demo.updateCustomer({ addresses: saveAddress(addresses, draft) }); setDraft(null); setError('') }
+    catch (error) { setError(error instanceof Error ? error.message : 'Revise o endereço.') }
+  }}>
+    <p className="font-bold">Editar endereço {label.toLowerCase()}</p>
+    <label>Rua<input className="demo-field" required maxLength={180} value={draft.street} onChange={event => setDraft({ ...draft, street: event.target.value })} /></label>
+    <label>Número<input className="demo-field" required maxLength={20} value={draft.number} onChange={event => setDraft({ ...draft, number: event.target.value })} /></label>
+    <label>Complemento (opcional)<input className="demo-field" maxLength={100} value={draft.complement ?? ''} onChange={event => setDraft({ ...draft, complement: event.target.value })} /></label>
+    <label>Ponto de referência (opcional)<input className="demo-field" maxLength={255} value={draft.reference ?? ''} onChange={event => setDraft({ ...draft, reference: event.target.value })} /></label>
+    {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+    <div className="flex flex-wrap gap-2"><button className="demo-primary">Salvar endereço</button><button type="button" className="demo-button" onClick={() => { setDraft(null); setError('') }}>Cancelar</button></div>
+  </form>
+  return <div className="rounded-xl border p-3"><p>{address.street}, {address.number} · Centro · {label}</p><div className="mt-2 flex flex-wrap gap-2">
+    <button className="demo-button" onClick={() => setDraft(address)}>Editar</button>
+    <button className="demo-button" onClick={() => demo.updateCustomer({ addresses: saveAddress(addresses, { ...address, primary: true }), address })} disabled={address.primary}>Tornar principal</button>
+    <button className="demo-button" onClick={() => demo.updateCustomer({ addresses: removeAddress(addresses, address.id) })}>Remover endereço</button>
+  </div></div>
 }

@@ -1,8 +1,8 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { emptyCustomerSession, restoreCustomerSession, saveAddress, removeAddress } from '../lib/customer-session.ts'
+import { emptyCustomerSession, restoreCustomerSession, saveAddress, removeAddress, maxSavedAddresses } from '../lib/customer-session.ts'
 import { mockProducts, createOrderId, mockOrders } from '../lib/mock-data.ts'
-import { formatDuration, orderGuidance, orderTone, pilotMetrics } from '../lib/order-presentation.ts'
+import { formatDuration, orderGuidance, orderTone, pilotMetrics, storeDailyMetrics } from '../lib/order-presentation.ts'
 
 test('restaura sacola e preenchimento sem guardar senha', () => {
   const session = { ...emptyCustomerSession(), cart: [{ product: mockProducts[0], quantity: 2, note: 'Sem açúcar' }], storeId: mockProducts[0].storeId, phone: '91900000000', payment: 'DINHEIRO', change: '50', note: 'Casa azul' }
@@ -23,6 +23,22 @@ test('endereços têm no máximo um principal e mantêm alternativa após remoç
   assert.equal(removeAddress(addresses, 'b')[0].primary, true)
   assert.equal(addresses.find(address => address.id === 'a').primary, false)
   assert.throws(() => saveAddress(addresses, { ...first, neighborhood: 'Outro' }))
+})
+
+test('cliente mantém no máximo dois endereços, alterna o principal e edita sem ultrapassar o limite', () => {
+  const primary = { id: 'a', street: 'Rua um', number: '1', neighborhood: 'Centro', primary: true }
+  const secondary = { ...primary, id: 'b', number: '2', primary: false }
+  const addresses = saveAddress(saveAddress([], primary), secondary)
+  assert.equal(maxSavedAddresses, 2)
+  assert.throws(() => saveAddress(addresses, { ...primary, id: 'c', number: '3', primary: false }), /2 endereços/)
+  const swapped = saveAddress(addresses, { ...secondary, primary: true })
+  assert.equal(swapped.length, 2)
+  assert.equal(swapped.find(address => address.primary).id, 'b')
+  const edited = saveAddress(swapped, { ...swapped.find(address => address.id === 'a'), street: 'Rua editada' })
+  assert.equal(edited.length, 2)
+  assert.equal(edited.find(address => address.id === 'a').street, 'Rua editada')
+  assert.equal(edited.find(address => address.primary).id, 'b')
+  assert.throws(() => restoreCustomerSession({ ...emptyCustomerSession(), addresses: [primary, secondary, { ...secondary, id: 'c' }] }))
 })
 
 test('mensagens de estados terminais não orientam aguardar aceite', () => {
@@ -72,6 +88,22 @@ test('métricas de apoio calculam tempos médios, motivos e recorrência', () =>
   assert.equal(metrics.recurrenceRate, 1)
   assert.equal(metrics.activeStoresLastWeek, 1)
   assert.equal(pilotMetrics([]).avgResponseMs, null)
+})
+
+test('faturamento do dia soma pedidos criados hoje, com taxa, exceto os que terminaram sem venda', () => {
+  const base = structuredClone(mockOrders[0])
+  const now = Date.parse('2026-09-28T15:00:00Z')
+  const today = new Date(now - 60 * 60_000).toISOString()
+  const yesterday = new Date(now - 24 * 60 * 60_000).toISOString()
+  const order = (id, status, createdAt, totalCents) => ({ ...base, id, status, createdAt, totalCents, timeline: [{ to: 'AGUARDANDO_ACEITE', at: createdAt, author: 'cliente' }] })
+  const orders = [
+    order('AC-1', 'AGUARDANDO_ACEITE', today, 3450),
+    order('AC-2', 'ENTREGUE', today, 4000),
+    ...['RECUSADO', 'EXPIRADO', 'CANCELADO', 'FALHA_NA_ENTREGA'].map((status, i) => order(`AC-X${i}`, status, today, 9999)),
+    order('AC-3', 'ENTREGUE', yesterday, 5000),
+    { ...order('AC-4', 'ACEITO', today, 7000), storeId: 'outra-batedeira' },
+  ]
+  assert.equal(storeDailyMetrics(orders, base.storeId, now).revenueCents, 7450)
 })
 
 test('formatDuration indica ausência de dados e formata minutos e segundos', () => {

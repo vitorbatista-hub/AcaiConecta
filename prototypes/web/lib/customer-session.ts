@@ -1,6 +1,9 @@
 import type { CartItem, Order, PaymentMethod } from './mock-data'
 
 export type SavedAddress = Order['address'] & { id: string; primary: boolean }
+// DEC-040: one primary and at most one secondary address per customer.
+export const maxSavedAddresses = 2
+export const savedAddressLimitMessage = 'Você já tem 2 endereços salvos (principal e secundário). Edite ou remova um deles.'
 export type AccessRequest = { id: string; contact: string; reason: string; createdAt: string; resolved: boolean; resolvedAt?: string }
 export type CustomerSession = {
   cart: CartItem[]
@@ -19,7 +22,7 @@ export type CustomerSession = {
 
 export function emptyCustomerSession(): CustomerSession {
   return {
-    cart: [], storeId: null, note: '', payment: 'PIX', change: '',
+    cart: [], storeId: null, note: '', payment: 'PIX_NA_ENTREGA', change: '',
     address: { street: '', number: '', neighborhood: 'Centro', complement: '', reference: '' },
     addresses: [], phone: '', name: '', email: '', signedIn: false, requestId: '',
   }
@@ -33,6 +36,7 @@ export function saveAddress(addresses: SavedAddress[], address: SavedAddress): S
     throw new Error('Revise o tamanho dos campos do endereço.')
   }
   const next = addresses.filter(item => item.id !== address.id)
+  if (next.length >= maxSavedAddresses) throw new Error(savedAddressLimitMessage)
   const primary = address.primary || next.length === 0
   return [...next.map(item => ({ ...item, primary: primary ? false : item.primary })), { ...address, primary }]
 }
@@ -46,8 +50,8 @@ export function removeAddress(addresses: SavedAddress[], id: string): SavedAddre
 export function restoreCustomerSession(value: unknown): CustomerSession {
   if (!value || typeof value !== 'object') return emptyCustomerSession()
   const candidate = value as Partial<CustomerSession>
-  if (!Array.isArray(candidate.cart) || !Array.isArray(candidate.addresses) || !candidate.address ||
-    !['PIX', 'DINHEIRO'].includes(candidate.payment ?? '') ||
+  if (!Array.isArray(candidate.cart) || !Array.isArray(candidate.addresses) || candidate.addresses.length > maxSavedAddresses || !candidate.address ||
+    !['PIX_NA_ENTREGA', 'DINHEIRO'].includes(candidate.payment ?? '') ||
     ['note', 'change', 'phone', 'name', 'email', 'requestId'].some(key => typeof candidate[key as keyof CustomerSession] !== 'string') ||
     typeof candidate.signedIn !== 'boolean' ||
     (candidate.storeId !== null && typeof candidate.storeId !== 'string') ||
