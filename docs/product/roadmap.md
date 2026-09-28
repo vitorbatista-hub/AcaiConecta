@@ -1,6 +1,6 @@
 # Roadmap do AçaíConecta
 
-**Status:** Fase 2 em andamento
+**Status:** Fase 3 em andamento
 **Última atualização:** Setembro de 2026
 
 Este roadmap organiza o projeto em seis fases. As datas serão definidas somente após a validação do escopo e da capacidade de execução. A passagem entre fases depende dos critérios de conclusão, e não apenas do tempo transcorrido.
@@ -31,11 +31,11 @@ Confirmar que o problema é relevante e que existe disposição real de batedeir
 
 ## Fase 2 — Definição e Prototipação do Produto
 
-**Situação:** Em andamento
+**Situação:** Concluída em 28/09/2026 (DEC-049)
 
-**Protótipo:** disponível em [`../../prototypes/web/`](../../prototypes/web/README.md), com verificação técnica documentada. Testes de usabilidade considerados satisfatórios pelo responsável pelo projeto em 28/09/2026 (DEC-045); o resumo dos resultados ainda não foi anexado ao repositório.
+**Protótipo:** disponível em [`../../prototypes/web/`](../../prototypes/web/README.md), com verificação técnica documentada. Testes de usabilidade considerados satisfatórios em 28/09/2026 (DEC-045).
 
-**Modelo de dados, arquitetura e backlog:** [modelo conceitual e MER inicial](mer-eer-inicial.md), [dicionário de dados](../database/data-dictionary.md), [arquitetura técnica proposta](arquitetura-tecnica.md) e [backlog priorizado do MVP](backlog-mvp.md) existem como rascunhos para revisão humana, ainda não aprovados nem revisados em conjunto. Essa revisão é o critério de conclusão da fase que continua em aberto.
+**Modelo de dados, arquitetura e backlog:** [modelo conceitual e MER inicial](mer-eer-inicial.md), [dicionário de dados](../database/data-dictionary.md), [arquitetura técnica proposta](arquitetura-tecnica.md) e [backlog priorizado do MVP](backlog-mvp.md) aprovados em 28/09/2026 (DEC-046), com as decisões de arquitetura ADR-001 e ADR-002.
 
 **PRD:** versão 2.6 aprovada em 28/09/2026 (DEC-044).
 
@@ -64,6 +64,8 @@ Transformar a visão do produto em uma especificação implementável e testada 
 - backlog pronto para implementação.
 
 ## Fase 3 — Construção do MVP
+
+**Situação:** Em andamento desde 28/09/2026 (DEC-049). Primeira tarefa: escolher a infraestrutura e registrá-la em ADR; a hospedagem precisa manter conexões abertas (ADR-002).
 
 ### Objetivo
 

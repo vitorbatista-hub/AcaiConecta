@@ -1,6 +1,7 @@
 # Dicionário de dados — MVP reduzido
 
 **Versão do schema:** 0.7
+**Status:** Aprovado em 28/09/2026 (DEC-046)
 **Banco previsto:** MySQL 8+
 **Fonte estrutural oficial:** [`../../database/schema.sql`](../../database/schema.sql)
 
@@ -233,8 +234,9 @@ Trilha das ações administrativas que não pertencem exclusivamente à linha do
 
 - Usuários, batedeiras, produtos, bairros e endereços devem usar seus estados de desativação sempre que houver histórico relacionado.
 - Pedidos, itens e eventos constituem histórico operacional e não devem ser removidos por fluxos comuns da aplicação.
-- Solicitações legais de exclusão ou anonimização exigirão procedimento específico, com preservação apenas dos dados necessários às obrigações aplicáveis.
-- Prazos definitivos de retenção dependem da revisão jurídica e de privacidade prevista antes do piloto.
+- Política provisória (DEC-047): pedidos, itens e eventos são guardados por 5 anos. Na exclusão da conta, nome, telefone, e-mail e endereços do cliente são removidos da conta e dos pedidos antigos (`usuarios`, `enderecos_clientes` e os campos `_snapshot` de endereço), preservando valores, datas e estados.
+- Tentativas de login são expurgadas após 24 horas e sessões encerradas ou expiradas, por rotina periódica (ADR-001).
+- A revisão jurídica prevista antes do piloto pode ajustar esses prazos.
 
 ## Pontos para a implementação
 

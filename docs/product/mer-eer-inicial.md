@@ -1,8 +1,7 @@
 # Modelo conceitual e MER inicial — AçaíConecta
 
-**Status:** Rascunho para revisão humana. Não representa decisão de arquitetura encerrada nem conclusão da Fase 2.
+**Status:** Aprovado em 28/09/2026 (DEC-046), junto com o schema SQL 0.7, o modelo EER (`database/acai_conecta.mwb`) e o dicionário de dados.
 **Base:** [PRD 2.6](PRD.md), [decisions.md](decisions.md), [flows.md](flows.md), [`database/schema.sql`](../../database/schema.sql) (versão 0.7, fonte oficial da estrutura) e o protótipo (`prototypes/web/lib/mock-data.ts`, `customer-session.ts`, `order-presentation.ts`).
-**Próximo passo previsto:** revisão humana conjunta deste modelo, do [dicionário de dados](../database/data-dictionary.md) e do modelo EER (`database/acai_conecta.mwb`, já correspondente ao schema 0.7), antes da especificação de engenharia da Fase 3, conforme o roadmap.
 
 Este documento descreve entidades, relacionamentos e decisões de modelagem a partir das regras do MVP, alinhado ao schema SQL 0.7. O significado de cada campo e a regra de negócio correspondente ficam somente no [dicionário de dados](../database/data-dictionary.md), para não manter a mesma descrição em dois lugares. Ele não substitui o PRD: qualquer conflito entre este modelo e o PRD ou o `decisions.md` deve ser resolvido nessas fontes; qualquer conflito com o schema deve ser corrigido aqui ou registrado como mudança do schema.
 
@@ -71,7 +70,7 @@ Cardinalidades seguem as regras do MVP: um pedido pertence a exatamente um clien
 
 ---
 
-## 4. Pendências para a revisão
+## 4. Pendências
 
-- Revisar o modelo EER junto com este documento e o dicionário de dados. O `.mwb` não representa as restrições `CHECK` nem o charset do banco; por isso o banco deve ser criado sempre a partir do `schema.sql`, nunca pela engenharia direta do Workbench.
-- Confirmar política de retenção/exclusão de dados pessoais (PRD §17) e seu efeito no modelo (exclusão lógica vs anonimização).
+- O `.mwb` não representa as restrições `CHECK` nem o charset do banco; por isso o banco deve ser criado sempre a partir do `schema.sql`, nunca pela engenharia direta do Workbench.
+- Política de retenção provisória (DEC-047): anonimização dos dados pessoais na exclusão da conta, sem apagar pedidos. A forma de anonimizar `usuarios` (sem violar `uq_usuarios_email` e `ck_usuarios_telefone_cliente`) e os snapshots de endereço de `pedidos` (colunas obrigatórias) deve ser definida na especificação de engenharia.

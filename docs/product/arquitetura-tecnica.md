@@ -1,6 +1,6 @@
 # Arquitetura técnica proposta — AçaíConecta
 
-**Status:** Rascunho para revisão humana. Não representa decisão de arquitetura encerrada nem conclusão da Fase 2. As escolhas de infraestrutura concreta (provedor de hospedagem, banco gerenciado, e-mail, etc.) são gates externos da Fase 3 (PRD §24.2) e não são fixadas aqui.
+**Status:** Aprovada em 28/09/2026 (DEC-046). As escolhas de infraestrutura concreta (provedor de hospedagem, banco gerenciado, e-mail, etc.) são gates externos da Fase 3 (PRD §24.2) e não são fixadas aqui.
 **Base:** [PRD 2.6](PRD.md) §18 (requisitos não funcionais), §24.3 (baseline tecnológica: DEC-023), [decisions.md](decisions.md), [roadmap.md](roadmap.md) (entregáveis e critérios de conclusão da Fase 3), e o protótipo em `prototypes/web/`.
 
 Escopo desta proposta: arquitetura para a Fase 3 (construção do MVP), dimensionada para um piloto de 3 a 5 batedeiras em um único bairro, sem processamento de pagamento pela plataforma. Não é uma arquitetura para escala regional (Fase 6).
@@ -60,17 +60,19 @@ Não há necessidade de um backend separado nem de comunicação entre serviços
 
 ## 5. Dados em tempo real: pedidos e alertas
 
-O PRD exige alerta visual de novo pedido enquanto o painel do operador estiver aberto (§8.2) e linha do tempo/atualizações essenciais para o cliente (§15.2), mas **exclui explicitamente Web Push, SMS e e-mail transacional do MVP** (DEC-035). Isso restringe a decisão a mecanismos dentro da aba aberta:
+O PRD exige alerta visual de novo pedido enquanto o painel do operador estiver aberto (§8.2) e atualização da linha do tempo para o cliente (§15.2), mas **exclui Web Push, SMS e e-mail transacional do MVP** (DEC-035). A atualização acontece somente com a aplicação aberta.
 
-- **Recomendado: polling curto (ex. a cada 5–10 segundos)** nas telas de operador (fila de pedidos) e cliente (acompanhamento do pedido próprio), via Server Actions ou Route Handlers simples.
-  - Justificativa: volume esperado é baixo (piloto de 3–5 batedeiras, dezenas de pedidos/dia), então o custo de polling é desprezível; evita a complexidade operacional de manter conexões WebSocket vivas, reconexão e escala de estado de conexão, que não se paga nesse volume.
-- **Alternativa descartada por ora: WebSocket/SSE.** Traria atualização mais instantânea, mas exige infraestrutura adicional (servidor com conexões persistentes, ou serviço gerenciado de terceiros) — um acoplamento a mais que contraria o princípio de "arquitetura simples" (PRD §23). Reconsiderar somente se o piloto mostrar que o atraso do polling prejudica a operação (ex.: operador perde pedidos por não notar a tela a tempo dentro do prazo de 5 minutos de aceite).
-- O requisito "operador mantém o painel aberto durante o horário do piloto" (PRD §15.2) já assume uma aba ativa, o que torna polling suficiente e evita depender de notificação do sistema operacional.
+Decisão registrada na [ADR-002](../architecture/ADRs/ADR-002-atualizacao-em-tempo-real.md): **atualização em tempo real por Server-Sent Events (SSE)**, por exigência do responsável pelo projeto.
+
+- Fila do operador, acompanhamento do cliente e consulta do administrador recebem os eventos de `eventos_pedido` por uma conexão SSE, com atraso de até cerca de 2 segundos.
+- Ao reconectar, o navegador retoma a partir do último evento recebido, sem perda nem duplicação.
+- Se a conexão SSE falhar repetidamente, a tela passa a consultar o servidor periodicamente e avisa que a atualização pode atrasar.
+- A hospedagem precisa manter conexões abertas por longos períodos (servidor Node.js persistente ou contêiner), o que restringe a escolha de infraestrutura (§9).
 
 ## 6. Banco de dados
 
 - **MySQL gerenciado + Prisma** (DEC-023). Prisma cobre migrações versionadas, o que atende ao requisito de manter histórico de alterações estruturado (PRD §18.3).
-- Estrutura oficial em [`database/schema.sql`](../../database/schema.sql) (versão 0.7), que já define tipos de coluna, índices (inclusive a constraint de idempotência do pedido e o índice da fila do operador) e exclusão lógica; modelo conceitual em [mer-eer-inicial.md](mer-eer-inicial.md). Ponto que a especificação de engenharia ainda deve fechar antes da Fase 3: política de retenção e anonimização de dados pessoais (PRD §17). Sessões e tentativas de login já foram decididas na [ADR-001](../architecture/ADRs/ADR-001-sessoes-e-tentativas-de-login.md).
+- Estrutura oficial em [`database/schema.sql`](../../database/schema.sql) (versão 0.7), que já define tipos de coluna, índices (inclusive a constraint de idempotência do pedido e o índice da fila do operador) e exclusão lógica; modelo conceitual em [mer-eer-inicial.md](mer-eer-inicial.md). A política de retenção e anonimização de dados pessoais está definida provisoriamente na DEC-047. Sessões e tentativas de login já foram decididas na [ADR-001](../architecture/ADRs/ADR-001-sessoes-e-tentativas-de-login.md).
 - **Preços e taxas em centavos como inteiro** (PRD §11.1), nunca ponto flutuante, para evitar erro de arredondamento em somas de pedido.
 
 ## 7. Autenticação e autorização
@@ -88,6 +90,7 @@ O PRD exige alerta visual de novo pedido enquanto o painel do operador estiver a
 
 ## 9. Hospedagem e ambientes
 
+- A atualização em tempo real (ADR-002) exige hospedagem que mantenha conexões abertas por longos períodos; plataformas de funções sem estado com limite curto por requisição não atendem sem ajustes.
 - Dois ambientes mínimos exigidos pelo roadmap da Fase 3: **homologação** e **produção**. Ambiente de desenvolvimento local via `pnpm dev`, como já configurado no protótipo.
 - A escolha do provedor concreto (ex. Vercel para o Next.js, provedor gerenciado de MySQL) é um gate externo da Fase 3 (PRD §24.2) e não é decidida aqui — mas a arquitetura proposta (Next.js + MySQL gerenciado) é compatível com qualquer provedor que ofereça ambos sem exigir infraestrutura própria de servidor (nenhum requisito aqui força um provedor específico).
 - Variáveis de ambiente e segredos (string de conexão do banco, chave de sessão) nunca versionados; seguir o padrão já usado no protótipo (`.gitignore` cobrindo arquivos locais de ambiente).
@@ -112,7 +115,9 @@ Exigidos como critério de conclusão da Fase 3 (roadmap) e como requisito do PR
 
 - Provedor de hospedagem, banco gerenciado e serviço de armazenamento de arquivos concretos (gate externo, PRD §24.2).
 - Serviço de observabilidade/erro específico.
-- Detalhes de schema (tipos de coluna, índices) — definidos em [`database/schema.sql`](../../database/schema.sql); pendências em [mer-eer-inicial.md §4](mer-eer-inicial.md#4-pendências-para-a-revisão).
+- Detalhes de schema (tipos de coluna, índices) — definidos em [`database/schema.sql`](../../database/schema.sql); pendências em [mer-eer-inicial.md §4](mer-eer-inicial.md#4-pendências).
 - Mecanismo exato de agendamento da expiração automática de pedidos.
+
+Sessões e tentativas de login estão decididas na ADR-001, e a atualização em tempo real, na ADR-002.
 
 Essas decisões pertencem à especificação de engenharia da Fase 3 e devem ser registradas como ADRs em `docs/architecture/ADRs/` quando tomadas; somente decisões de produto e negócio vão para `decisions.md`.

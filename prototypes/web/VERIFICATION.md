@@ -51,4 +51,4 @@ Adicionados depois da verificação em navegador de 16/09/2026 e cobertos apenas
 
 ## Validação com participantes
 
-Testes de usabilidade considerados satisfatórios pelo responsável pelo projeto em 28/09/2026, sem ajustes de fluxo exigidos (DEC-045). Participantes, cenários e dificuldades observadas ainda não foram registrados no repositório.
+Testes de usabilidade considerados satisfatórios pelo responsável pelo projeto em 28/09/2026, sem ajustes de fluxo exigidos (DEC-045). Os testes foram feitos por desenvolvedores e por usuários que preferiram não se identificar.
