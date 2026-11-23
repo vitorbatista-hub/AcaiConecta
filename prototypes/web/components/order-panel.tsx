@@ -2,7 +2,8 @@
 import { useState } from 'react'
 import { usePrototype } from './prototype-provider'
 import { Modal } from './modal'
-import { useToast } from './app-shell'
+import { StatusPill, useToast } from './app-shell'
+import { orderTone } from '@/lib/order-presentation'
 import { cents, formatOrderDate, getOrderStatusLabel, predefinedMessages, type Actor, type Order, type OrderStatus } from '@/lib/mock-data'
 
 const nextStatus:Partial<Record<OrderStatus,OrderStatus>>={AGUARDANDO_ACEITE:'ACEITO',ACEITO:'EM_PREPARO',EM_PREPARO:'PRONTO',PRONTO:'SAIU_PARA_ENTREGA',SAIU_PARA_ENTREGA:'ENTREGUE'}
@@ -29,14 +30,11 @@ export function OrderPanel({order,actor}:{order:Order;actor:Actor}) {
   }
   const next=nextStatus[order.status]
   const operational=['ACEITO','EM_PREPARO','PRONTO'].includes(order.status)
-  return <article className={`rounded-2xl border p-5 ${order.status==='AGUARDANDO_ACEITE'?'border-accent bg-accent/10':'border-border bg-card'}`}>
-    <p className="mb-2 font-bold">{order.storeName??demo.stores.find(s=>s.id===order.storeId)?.name}</p><p className="mb-2 text-xs text-muted-foreground">Criado em {formatOrderDate(order.createdAt)}</p><div className="flex flex-wrap justify-between gap-2"><h2 className="break-all font-bold">{order.id}</h2><strong>{getOrderStatusLabel(order.status)}</strong></div>
-    {order.status==='AGUARDANDO_ACEITE'&&<p role="status" className="mt-2 font-bold">{remaining<=60?'Atenção: próximo de expirar. ':''}Resposta em até {Math.floor(remaining/60)}min {remaining%60}s</p>}
-    <ul className="mt-3 text-sm">{order.items.map(i=><li key={i.productId}>{i.quantity} × {i.name} · {i.volumeMl} ml · R$ {cents(i.unitPriceCents)}{i.note&&<p>Observação: {i.note}</p>}</li>)}</ul>
-    <p className="mt-2 text-sm">Subtotal R$ {cents(order.subtotalCents)} · Entrega R$ {cents(order.deliveryFeeCents)} · Total R$ {cents(order.totalCents)}</p>
-    <p className="mt-2 text-sm">{order.address.street}, {order.address.number} · {order.address.neighborhood} · {order.address.complement} · {order.address.reference}</p>
-    <p className="text-sm">Contato: {order.phone} · {order.payment==='PIX_NA_ENTREGA'?'Pix na entrega':'Dinheiro na entrega'}{order.changeForCents!==undefined&&` · Troco para R$ ${cents(order.changeForCents)}`}</p>
-    <p className="text-sm">Faixa informada: {order.estimatedRange}{order.note&&` · Observação: ${order.note}`}</p>
+  return <article className={`rounded-2xl border p-4 shadow-sm sm:p-5 ${order.status==='AGUARDANDO_ACEITE'?'border-accent bg-accent/10 ring-2 ring-accent/30':'border-border bg-card'}`}>
+    <div className="flex flex-wrap items-start justify-between gap-3"><div className="min-w-0"><h2 className="break-all text-base font-black">{order.id}</h2><p className="mt-0.5 text-xs text-muted-foreground">{order.storeName??demo.stores.find(s=>s.id===order.storeId)?.name} · criado em {formatOrderDate(order.createdAt)}</p></div><StatusPill status={orderTone(order.status)} label={getOrderStatusLabel(order.status)}/></div>
+    {order.status==='AGUARDANDO_ACEITE'&&<div role="status" className="mt-3"><p className={`flex items-center justify-between gap-2 text-sm font-black tabular-nums ${remaining<=60?'text-destructive':''}`}><span>{remaining<=60?'Atenção: próximo de expirar':'Prazo para responder'}</span><span>{Math.floor(remaining/60)}min {String(remaining%60).padStart(2,'0')}s</span></p><div aria-hidden className="mt-1.5 h-2 overflow-hidden rounded-full bg-muted"><div className={`h-full rounded-full transition-[width] duration-1000 ease-linear ${remaining<=60?'bg-destructive':'bg-accent'}`} style={{width:`${Math.min(100,remaining/3)}%`}}/></div></div>}
+    <ul className="mt-4 divide-y rounded-xl border bg-background/60 text-sm">{order.items.map(i=><li key={i.productId} className="flex items-start justify-between gap-3 px-3 py-2"><div><p className="font-semibold">{i.quantity} × {i.name} <span className="font-normal text-muted-foreground">· {i.volumeMl} ml</span></p>{i.note&&<p className="text-xs text-muted-foreground">Observação: {i.note}</p>}</div><span className="shrink-0 tabular-nums">R$ {cents(i.quantity*i.unitPriceCents)}</span></li>)}</ul>
+    <dl className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2"><div><dt className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Valores</dt><dd className="tabular-nums">Subtotal R$ {cents(order.subtotalCents)} · Entrega R$ {cents(order.deliveryFeeCents)}<br/><b className="text-base">Total R$ {cents(order.totalCents)}</b></dd></div><div><dt className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Pagamento e contato</dt><dd>{order.payment==='PIX_NA_ENTREGA'?'Pix na entrega':'Dinheiro na entrega'}{order.changeForCents!==undefined&&` · Troco para R$ ${cents(order.changeForCents)}`}<br/>{order.phone}</dd></div><div className="sm:col-span-2"><dt className="text-xs font-bold uppercase tracking-wide text-muted-foreground">Entregar em</dt><dd>{[`${order.address.street}, ${order.address.number}`,order.address.neighborhood,order.address.complement,order.address.reference].filter(Boolean).join(' · ')}</dd></div></dl><p className="mt-2 text-xs text-muted-foreground">Faixa informada ao cliente: {order.estimatedRange}{order.note&&` · Observação do pedido: ${order.note}`}</p>
     <div className="mt-4 flex flex-wrap gap-2">
       {actor.role==='operador'&&next&&<button className="demo-primary" disabled={order.status==='AGUARDANDO_ACEITE'&&remaining===0} onClick={()=>next==='ENTREGUE'?setConfirmDelivery(true):transition(next)}>{actionLabel[next]}</button>}
       {actor.role==='operador'&&order.status==='AGUARDANDO_ACEITE'&&<button className="demo-button" onClick={()=>{setTarget('RECUSADO');setReason('');setOther('')}}>Recusar com motivo</button>}

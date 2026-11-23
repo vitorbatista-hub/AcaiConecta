@@ -30,7 +30,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([])
   const notify = useCallback((message: string, kind: ToastKind = 'success') => {
     const id = Date.now() + Math.random()
-    setToasts(items => [...items.slice(-3), { id, message, kind }])
+    setToasts(items => [...items.slice(-2), { id, message, kind }])
     window.setTimeout(() => setToasts(items => items.filter(item => item.id !== id)), 3600)
   }, [])
   return <ToastContext.Provider value={notify}>{children}<ToastViewport toasts={toasts} dismiss={id => setToasts(items => items.filter(item => item.id !== id))} /></ToastContext.Provider>
@@ -66,7 +66,7 @@ export function Topbar({ profile }: { profile: Profile }) {
           </Link>
 
         </div>
-        <button onClick={() => setOpen(!open)} aria-label={open ? "Fechar menu" : "Abrir menu"} aria-expanded={open} className="grid size-10 place-items-center rounded-full border border-border lg:hidden">
+        <button onClick={() => setOpen(!open)} aria-label={open ? "Fechar menu" : "Abrir menu"} aria-expanded={open} className="grid size-11 place-items-center rounded-full border border-border lg:hidden">
           {open ? <X className="size-5" /> : <Menu className="size-5" />}
         </button>
       </div>
@@ -92,7 +92,7 @@ export function AppFrame({ profile, children }: { profile: Profile; children: Re
 
 export function StatusPill({ status, label }: { status: 'open' | 'closed' | 'busy' | 'ready' | 'preparing' | 'delivered' | 'confirmed' | 'pending' | 'negative'; label?: string }) {
   const labels = { open: 'Aberto agora', closed: 'Fechado', busy: 'Movimento alto', ready: 'Pronto', preparing: 'Preparando', delivered: 'Entregue', confirmed: 'Confirmado', pending: 'Pendente', negative: 'Não concluído' }
-  const colors = { open: 'bg-secondary/15 text-secondary', closed: 'bg-muted text-muted-foreground', busy: 'bg-accent/20 text-accent-foreground', ready: 'bg-secondary/15 text-secondary', preparing: 'bg-accent/20 text-accent-foreground', delivered: 'bg-muted text-muted-foreground', confirmed: 'bg-primary/10 text-primary', pending: 'bg-accent/20 text-accent-foreground', negative: 'bg-destructive/10 text-destructive' }
+  const colors = { open: 'bg-secondary/15 text-secondary', closed: 'bg-muted text-muted-foreground', busy: 'bg-accent/20 text-foreground', ready: 'bg-secondary/15 text-secondary', preparing: 'bg-accent/20 text-foreground', delivered: 'bg-muted text-muted-foreground', confirmed: 'bg-primary/10 text-primary', pending: 'bg-accent/20 text-foreground', negative: 'bg-destructive/10 text-destructive' }
   return <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${colors[status]}`}><span className="size-1.5 rounded-full bg-current" />{label || labels[status]}</span>
 }
 
@@ -102,7 +102,7 @@ export function SectionHeading({ eyebrow, title, description, action }: { eyebro
 
 export function Money({ value }: { value: number }) { return <span>R$ {value.toFixed(2).replace('.', ',')}</span> }
 
-export function StatCard({ label, value, detail, icon: Icon, tone = 'primary' }: { label: string; value: string; detail: string; icon: React.ElementType; tone?: 'primary' | 'secondary' | 'accent' }) { return <div className="rounded-2xl border border-border bg-card p-5 shadow-sm"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-black tracking-tight">{value}</p></div><span className={`grid size-10 place-items-center rounded-xl ${tone === 'primary' ? 'bg-primary/10 text-primary' : tone === 'secondary' ? 'bg-secondary/15 text-secondary' : 'bg-accent/20 text-accent-foreground'}`}><Icon className="size-5" /></span></div><p className="mt-3 text-xs text-muted-foreground">{detail}</p></div> }
+export function StatCard({ label, value, detail, icon: Icon, tone = 'primary' }: { label: string; value: string; detail: string; icon: React.ElementType; tone?: 'primary' | 'secondary' | 'accent' }) { return <div className="rounded-2xl border border-border bg-card p-5 shadow-sm"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">{label}</p><p className="mt-2 text-2xl font-black tracking-tight">{value}</p></div><span className={`grid size-10 place-items-center rounded-xl ${tone === 'primary' ? 'bg-primary/10 text-primary' : tone === 'secondary' ? 'bg-secondary/15 text-secondary' : 'bg-accent/20 text-foreground'}`}><Icon className="size-5" /></span></div><p className="mt-3 text-xs text-muted-foreground">{detail}</p></div> }
 
 export const navIcons = { ShoppingBag, Store, LayoutDashboard, Users, Package }
 

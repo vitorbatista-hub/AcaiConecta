@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { KeyRound, LogOut, MapPin, UserRound } from 'lucide-react'
 import { usePrototype } from './prototype-provider'
 import { maxSavedAddresses, removeAddress, saveAddress, type SavedAddress } from '@/lib/customer-session'
 import { guestCustomerName } from '@/lib/mock-data'
@@ -18,19 +19,16 @@ export function CustomerAccount({ onDone }: { onDone?: () => void }) {
   const [recoveryContact, setRecoveryContact] = useState('')
   const [recoveryReason, setRecoveryReason] = useState('')
   const [recoverySent, setRecoverySent] = useState(false)
-  if (customer.signedIn) return <section className="space-y-4 rounded-2xl border bg-card p-5">
-    <h2 className="text-xl font-bold">Sua conta</h2>
-    <p>{customer.name} · {customer.email}</p>
-    <p className="text-sm text-muted-foreground">Os dados desta conta e dos pedidos ficam somente nesta aba do navegador.</p>
-    <button className="demo-button" onClick={() => demo.updateCustomer({ signedIn: false })}>Sair da conta</button>
-    <h3 className="font-bold">Endereços salvos</h3>
-    {customer.addresses.length === 0 && <p className="text-sm">Salve um endereço ao confirmar seu próximo pedido.</p>}
-    <p className="text-sm text-muted-foreground">Até {maxSavedAddresses} endereços: um principal e um secundário.</p>
-    {customer.addresses.map(address => <AddressCard key={address.id} address={address} />)}
-    {onDone && <button className="demo-primary" onClick={onDone}>Continuar pedido</button>}
+  if (customer.signedIn) return <section className="surface space-y-5">
+    <div className="flex items-center gap-4"><span className="grid size-14 shrink-0 place-items-center rounded-full bg-primary/10 text-primary" aria-hidden><UserRound className="size-7" /></span><div className="min-w-0"><h2 className="text-xl font-black leading-tight">{customer.name}</h2><p className="truncate text-sm text-muted-foreground">{customer.email}</p></div></div>
+    <p className="rounded-xl bg-muted p-3 text-sm text-muted-foreground">Os dados desta conta e dos pedidos ficam somente nesta aba do navegador.</p>
+    <div><h3 className="section-label flex items-center gap-2"><MapPin className="size-4" aria-hidden />Endereços salvos</h3><p className="mt-2 text-sm text-muted-foreground">Até {maxSavedAddresses} endereços: um principal e um secundário.</p></div>
+    {customer.addresses.length === 0 && <p className="empty-state">Salve um endereço ao confirmar seu próximo pedido.</p>}
+    <div className="grid gap-3">{customer.addresses.map(address => <AddressCard key={address.id} address={address} />)}</div>
+    <div className="flex flex-col-reverse gap-2 border-t pt-4 sm:flex-row sm:justify-between"><button className="demo-button inline-flex items-center justify-center gap-2" onClick={() => demo.updateCustomer({ signedIn: false })}><LogOut className="size-4" aria-hidden />Sair da conta</button>{onDone && <button className="demo-primary sm:min-w-48" onClick={onDone}>Continuar pedido</button>}</div>
   </section>
-  return <section className="rounded-2xl border bg-card p-5">
-    <h2 className="text-xl font-bold">{mode === 'login' ? 'Entrar' : 'Criar conta'}</h2>
+  return <section className="surface">
+    <div className="flex items-center gap-3"><span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary" aria-hidden><KeyRound className="size-5" /></span><h2 className="text-xl font-black">{mode === 'login' ? 'Entrar' : 'Criar conta'}</h2></div>
     <p className="my-3 text-sm text-muted-foreground">Esta etapa ainda não realiza autenticação no servidor; use dados e uma senha de teste, nunca dados reais.</p>
     {demo.customerBlocked && <p role="alert" className="mb-4 rounded-xl bg-destructive/10 p-3">Conta bloqueada pelo administrador. Acesse a ajuda para orientação.</p>}
     <form className="space-y-4" onSubmit={event => {
@@ -45,12 +43,12 @@ export function CustomerAccount({ onDone }: { onDone?: () => void }) {
       <label>E-mail<input className="demo-field" required type="email" maxLength={254} autoComplete="off" value={email} onChange={event => setEmail(event.target.value)} /></label>
       <label>Senha<input className="demo-field" required type="password" autoComplete="off" value={password} onChange={event => setPassword(event.target.value)} /><span className="text-xs text-muted-foreground">Use uma senha de teste — não a sua senha real.</span></label>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-      <button disabled={demo.customerBlocked} className="demo-primary">{mode === 'login' ? 'Simular entrada' : 'Simular cadastro'}</button>
+      <button disabled={demo.customerBlocked} className="demo-primary w-full">{mode === 'login' ? 'Simular entrada' : 'Simular cadastro'}</button>
     </form>
-    <div className="mt-4 flex flex-wrap gap-2"><button className="demo-button" onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setPassword(''); setError('') }}>{mode === 'login' ? 'Criar conta' : 'Já tenho uma conta'}</button><button className="demo-button" onClick={() => { setRecovery(open => !open); setRecoverySent(false) }}>Esqueci meu acesso</button></div>
+    <div className="mt-4 grid gap-2 sm:grid-cols-2"><button className="demo-button" onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setPassword(''); setError('') }}>{mode === 'login' ? 'Criar conta' : 'Já tenho uma conta'}</button><button className="demo-button" onClick={() => { setRecovery(open => !open); setRecoverySent(false) }}>Esqueci meu acesso</button></div>
     {recovery && (recoverySent
       ? <p role="status" className="mt-4 rounded-xl bg-secondary/10 p-3 text-sm">Solicitação registrada. O administrador do piloto vai analisar e conceder acesso; esta etapa não envia e-mail nem SMS.</p>
-      : <form className="mt-4 space-y-3 rounded-xl border p-4" onSubmit={event => {
+      : <form className="mt-4 space-y-3 rounded-2xl border bg-muted/40 p-4" onSubmit={event => {
         event.preventDefault()
         try { demo.requestAccessRecovery(recoveryContact, recoveryReason); setRecoverySent(true); setRecoveryContact(''); setRecoveryReason('') }
         catch (error) { setError(error instanceof Error ? error.message : 'Revise os dados.') }
@@ -69,7 +67,7 @@ function AddressCard({ address }: { address: SavedAddress }) {
   const [draft, setDraft] = useState<SavedAddress | null>(null)
   const [error, setError] = useState('')
   const label = address.primary ? 'Principal' : 'Secundário'
-  if (draft) return <form className="space-y-3 rounded-xl border p-3" onSubmit={event => {
+  if (draft) return <form className="space-y-3 rounded-2xl border border-primary/40 bg-card p-4" onSubmit={event => {
     event.preventDefault()
     try { demo.updateCustomer({ addresses: saveAddress(addresses, draft) }); setDraft(null); setError('') }
     catch (error) { setError(error instanceof Error ? error.message : 'Revise o endereço.') }
@@ -82,7 +80,7 @@ function AddressCard({ address }: { address: SavedAddress }) {
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
     <div className="flex flex-wrap gap-2"><button className="demo-primary">Salvar endereço</button><button type="button" className="demo-button" onClick={() => { setDraft(null); setError('') }}>Cancelar</button></div>
   </form>
-  return <div className="rounded-xl border p-3"><p>{address.street}, {address.number} · Centro · {label}</p><div className="mt-2 flex flex-wrap gap-2">
+  return <div className={`rounded-2xl border p-4 ${address.primary ? 'border-primary/40 bg-primary/5' : 'bg-background'}`}><div className="flex items-start justify-between gap-3"><p className="font-semibold">{address.street}, {address.number}<span className="block text-sm font-normal text-muted-foreground">Centro, Cametá/PA{address.complement ? ` · ${address.complement}` : ''}</span></p><span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${address.primary ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>{label}</span></div><div className="mt-3 flex flex-wrap gap-2">
     <button className="demo-button" onClick={() => setDraft(address)}>Editar</button>
     <button className="demo-button" onClick={() => demo.updateCustomer({ addresses: saveAddress(addresses, { ...address, primary: true }), address })} disabled={address.primary}>Tornar principal</button>
     <button className="demo-button" onClick={() => demo.updateCustomer({ addresses: removeAddress(addresses, address.id) })}>Remover endereço</button>

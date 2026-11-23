@@ -32,6 +32,20 @@ Estado das verificações técnicas do protótipo. Elas não representam valida�
 | Métricas do piloto | Testes: tempos médios, motivos, recorrência e aceites anteriores ao cancelamento. |
 | Fluxo entre perfis, modais e responsividade | Navegador em 16/09: pedido criado, recebido e acompanhado até a entrega; Escape e foco nos modais; sem rolagem horizontal em 390 × 844. |
 
+## Acessibilidade (23/11/2026)
+
+Chrome (Playwright) a 390 × 844, temas claro e escuro, protótipo em build de produção.
+
+| Verificação | Resultado |
+|---|---|
+| axe-core (WCAG 2.0/2.1/2.2 A e AA e boas práticas) em 27 telas e modais: início, cliente (lista, catálogo, sacola, acesso, checkout, pedido), operador (login e 4 abas) e administrador (5 abas) | Sem violações após as correções desta rodada. |
+| Correções feitas | Contraste do verde e do texto secundário nos dois temas, texto de selos laranja no tema escuro, texto fora de grupo em listas de definição, descrição de produto indisponível sem opacidade global, botão de menu com 44 px. |
+| Teclado | Link "Pular para o conteúdo" é o primeiro foco; modal recebe o foco, mantém o Tab em seu interior, fecha com Escape e devolve o foco ao botão de origem; contorno de foco de 2 px. |
+| Rodada completa de telas (23/11/2026, após o polimento) | axe sem violações em 390 e 1440 px, temas claro e escuro, incluindo minha conta, meus pedidos vazio, ajuda, login do operador, catálogo e edição de produto, configurações, as cinco abas do administrador e o cadastro assistido. |
+| Reflow | Sem rolagem horizontal a 320 px na listagem do cliente. |
+
+Não cobertos: leitor de tela real (NVDA, VoiceOver, TalkBack), outros navegadores (Firefox, Safari), dispositivos físicos, conexão instável, zoom de 200% e navegação por teclado completa nos painéis de operador e administrador. O axe detecta só parte dos problemas; esta rodada não comprova conformidade com a WCAG.
+
 ## Pendente de verificação em navegador
 
 Adicionados depois da verificação em navegador de 16/09/2026 e cobertos apenas por tipos, testes e build:

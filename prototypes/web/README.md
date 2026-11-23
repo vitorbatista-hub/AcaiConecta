@@ -46,4 +46,4 @@ Não há script de lint. O build não ignora erros de TypeScript. O estado atual
 - A cobertura está fixa no bairro Centro; a tela administrativa de bairros é somente leitura.
 - Métricas do piloto e faturamento do dia são calculados sobre dados simulados e não comprovam resultados reais.
 - Fotos ilustrativas seguem a DEC-038. Upload de foto é local e dura só a sessão.
-- Testes de acessibilidade, conexão instável e múltiplos navegadores estão pendentes.
+- Acessibilidade: auditoria automática (axe) e teste de teclado nos modais feitos em 23/11/2026 (ver [VERIFICATION.md](VERIFICATION.md)). Leitor de tela, múltiplos navegadores e conexão instável seguem pendentes.

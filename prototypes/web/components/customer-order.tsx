@@ -6,6 +6,7 @@ import { orderGuidance, orderTone } from '@/lib/order-presentation'
 import { StatusPill, useToast } from './app-shell'
 import { usePrototype } from './prototype-provider'
 import { Modal } from './modal'
+import { OrderProgress } from './order-progress'
 
 export function CustomerOrder({ order }: { order: Order }) {
   const demo = usePrototype()
@@ -13,10 +14,11 @@ export function CustomerOrder({ order }: { order: Order }) {
   const [cancel, setCancel] = useState(false)
   const remaining = Math.max(0, Math.ceil((Date.parse(order.acceptedDeadline) - demo.now) / 1000))
   const storeName = order.storeName ?? demo.stores.find(store => store.id === order.storeId)?.name ?? 'Batedeira'
-  return <article className="space-y-4 rounded-2xl border bg-card p-4 sm:p-6">
+  return <article className="surface space-y-4">
     <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-xl font-bold">{storeName}</h2><p className="mt-1 break-all text-xs text-muted-foreground">{order.id} · {formatOrderDate(order.createdAt)}</p></div><StatusPill status={orderTone(order.status)} label={getOrderStatusLabel(order.status)} /></div>
+    <OrderProgress status={order.status} />
     <p role="status" className="rounded-xl bg-muted p-3 text-sm">{orderGuidance[order.status]}</p>
-    {order.status === 'AGUARDANDO_ACEITE' && <p className="font-bold">Resposta em até {Math.floor(remaining / 60)}min {remaining % 60}s</p>}
+    {order.status === 'AGUARDANDO_ACEITE' && <p className="font-bold tabular-nums">Resposta em até {Math.floor(remaining / 60)}min {remaining % 60}s</p>}
     <ul className="space-y-2 text-sm">{order.items.map(item => <li key={item.productId}><p>{item.quantity} × {item.name} · R$ {cents(item.quantity * item.unitPriceCents)}</p>{item.note && <p className="text-muted-foreground">Observação: {item.note}</p>}</li>)}</ul>
     <dl className="grid gap-2 border-y py-3 text-sm"><div className="flex justify-between"><dt>Subtotal</dt><dd>R$ {cents(order.subtotalCents)}</dd></div><div className="flex justify-between"><dt>Entrega</dt><dd>{order.deliveryFeeCents ? `R$ ${cents(order.deliveryFeeCents)}` : 'Grátis'}</dd></div><div className="flex justify-between text-lg font-bold"><dt>Total</dt><dd>R$ {cents(order.totalCents)}</dd></div></dl>
     <details><summary className="font-bold">Endereço, pagamento e estimativa</summary><div className="mt-2 space-y-2 text-sm"><p>{order.address.street}, {order.address.number} · {order.address.neighborhood}, Cametá/PA</p>{order.address.complement && <p>Complemento: {order.address.complement}</p>}{order.address.reference && <p>Referência: {order.address.reference}</p>}<p>Telefone: {order.phone}</p><p>{order.payment === 'PIX_NA_ENTREGA' ? 'Pix na entrega, diretamente à batedeira' : 'Dinheiro na entrega'}{order.changeForCents !== undefined && ` · Troco para R$ ${cents(order.changeForCents)}`}</p><p>Faixa estimada informada no pedido: {order.estimatedRange}. Não é um horário garantido.</p>{order.note && <p>Observação: {order.note}</p>}</div></details>
