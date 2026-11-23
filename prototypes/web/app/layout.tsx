@@ -1,6 +1,7 @@
 import { PrototypeProvider } from '@/components/prototype-provider'
 import { ToastProvider } from '@/components/app-shell'
 import type { Metadata, Viewport } from 'next'
+import { themeInitScript } from '@/components/theme-switcher'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -40,7 +41,8 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="pt-BR" className="bg-background">
+    <html lang="pt-BR" className="bg-background" suppressHydrationWarning>
+      <head><script dangerouslySetInnerHTML={{ __html: themeInitScript }} /></head>
       <body className="antialiased">
         <ToastProvider><PrototypeProvider>{children}</PrototypeProvider></ToastProvider>
       </body>

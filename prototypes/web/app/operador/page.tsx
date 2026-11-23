@@ -8,12 +8,13 @@ import { usePrototype } from '@/components/prototype-provider'
 import { OrderPanel } from '@/components/order-panel'
 import { PhotoField } from '@/components/photo-field'
 import { Modal } from '@/components/modal'
-import { RoleLogin, RoleSignedInBar, useRoleSignIn } from '@/components/role-login'
+import { RoleSignedInBar, useRoleSignIn } from '@/components/role-login'
 import { useView } from '@/lib/use-view'
+import { roleSessionKeys } from '@/lib/access'
 import { storeDailyMetrics } from '@/lib/order-presentation'
 import { adminActorName, allowedProductVolumesMl, getSchedule, cents, isStoreOpenNow, operatorStoreId, parseMoney, type Product, type Store } from '@/lib/mock-data'
 
-const operatorSessionKey='acaiconecta-operator-store'
+const operatorSessionKey=roleSessionKeys.operatorStore
 function useOperatorStore(stores:Store[]) {
   const [id,setId]=useState(operatorStoreId)
   useEffect(()=>{try{setId(sessionStorage.getItem(operatorSessionKey)||operatorStoreId)}catch{}},[])
@@ -21,28 +22,12 @@ function useOperatorStore(stores:Store[]) {
   return [stores.find(s=>s.id===id)??stores[0],setStoreId] as const
 }
 
-function OperatorLogin({stores,onSignIn}:{stores:Store[];onSignIn:(storeId:string)=>void}) {
-  const [email,setEmail]=useState('')
-  const [password,setPassword]=useState('')
-  const [error,setError]=useState('')
-  return <RoleLogin title="Entrar no painel da batedeira" description="Acesse com o e-mail cadastrado para o operador. Esta etapa ainda não realiza autenticação no servidor; use uma senha de teste, nunca uma senha real." error={error} onSubmit={event=>{
-    event.preventDefault()
-    const store=stores.find(s=>s.operatorEmail.toLowerCase()===email.trim().toLowerCase())
-    if(!store){setError('E-mail não encontrado entre os operadores cadastrados.');return}
-    setError('');onSignIn(store.id)
-  }}>
-    <label>E-mail do operador<input className="demo-field" required type="email" maxLength={254} autoComplete="off" value={email} onChange={event=>setEmail(event.target.value)} /></label>
-    <label>Senha<input className="demo-field" required type="password" autoComplete="off" value={password} onChange={event=>setPassword(event.target.value)} /><span className="text-xs text-muted-foreground">Use uma senha de teste — não a sua senha real.</span></label>
-    <details className="text-xs text-muted-foreground"><summary>E-mails cadastrados para teste</summary><ul className="mt-2 space-y-1">{stores.map(s=><li key={s.id}>{s.operatorEmail} · {s.name}</li>)}</ul></details>
-  </RoleLogin>
-}
-
 export default function OperadorPage() {
   const demo=usePrototype()
   const notify=useToast()
   const [view,setView]=useView()
   const [store,setStoreId]=useOperatorStore(demo.stores)
-  const [signedIn,setSignedIn]=useRoleSignIn('acaiconecta-operator-signed-in')
+  const [signedIn,setSignedIn]=useRoleSignIn(roleSessionKeys.operatorSignedIn)
   const [confirmToggle,setConfirmToggle]=useState<'isOpen'|'deliveryAvailable'|null>(null)
   const orders=demo.orders.filter(o=>o.storeId===store.id).sort((a,b)=>Date.parse(a.createdAt)-Date.parse(b.createdAt))
   const pending=orders.filter(o=>o.status==='AGUARDANDO_ACEITE')
@@ -50,7 +35,7 @@ export default function OperadorPage() {
   const daily=storeDailyMetrics(demo.orders,store.id,demo.now)
   const actor={role:'operador' as const,name:store.operator,storeId:store.id}
   function toggle(key:'isOpen'|'deliveryAvailable') {try{demo.updateStore({...store,[key]:!store[key]});notify('Disponibilidade atualizada.')}catch(error){notify(String(error),'error')}}
-  if(!signedIn) return <AppFrame profile="operador"><OperatorLogin stores={demo.stores} onSignIn={id=>{setStoreId(id);setSignedIn(true)}} /></AppFrame>
+  if(!signedIn) return null
   return <AppFrame profile="operador"><div className="mx-auto max-w-6xl">
     <RoleSignedInBar onSignOut={()=>setSignedIn(false)}>Operando como <b>{store.operator}</b> · {store.name}</RoleSignedInBar>
     <SectionHeading eyebrow={`Painel da batedeira · ${store.name}`} title={view==='produtos'?'Catálogo':view==='config'?'Configurações':'Pedidos e operação'} />
@@ -93,12 +78,13 @@ function Settings({store}:{store:Store}) {
   const [fee,setFee]=useState(cents(store.deliveryFeeCents))
   const [min,setMin]=useState(store.estimatedRange.match(/\d+/g)?.[0]??'25')
   const [max,setMax]=useState(store.estimatedRange.match(/\d+/g)?.[1]??'35')
+  const [accepts500ml,setAccepts500ml]=useState(store.accepts500ml)
   const [schedule,setSchedule]=useState(getSchedule(store))
   const [error,setError]=useState('')
   const dayNames=['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado']
-  return <form className="surface max-w-2xl space-y-6" onSubmit={e=>{e.preventDefault();try{if(!Number.isInteger(Number(min))||!Number.isInteger(Number(max))||Number(min)<1||Number(max)<Number(min))throw new Error('Informe uma faixa válida, com máximo maior ou igual ao mínimo.');demo.updateStore({...store,deliveryFeeCents:parseMoney(fee),estimatedRange:`${min}–${max} min`,schedule,hours:'Consulte os horários por dia'});setError('');notify('Configurações salvas. Pedidos anteriores preservam taxa e estimativa.')}catch(error){setError(error instanceof Error?error.message:'Revise os dados.')}}}>
+  return <form className="surface max-w-2xl space-y-6" onSubmit={e=>{e.preventDefault();try{if(!Number.isInteger(Number(min))||!Number.isInteger(Number(max))||Number(min)<1||Number(max)<Number(min))throw new Error('Informe uma faixa válida, com máximo maior ou igual ao mínimo.');demo.updateStore({...store,accepts500ml,deliveryFeeCents:parseMoney(fee),estimatedRange:`${min}–${max} min`,schedule,hours:'Consulte os horários por dia'});setError('');notify('Configurações salvas. Pedidos anteriores preservam taxa e estimativa.')}catch(error){setError(error instanceof Error?error.message:'Revise os dados.')}}}>
     <div className="flex items-center gap-2 rounded-xl bg-muted p-3 text-sm"><MapPin className="size-4 shrink-0" aria-hidden/>Área do piloto: Centro, Cametá/PA.</div>
-    <section className="space-y-4"><h2 className="section-label">Entrega</h2><label>Taxa de entrega (R$)<input required inputMode="decimal" className="demo-field" value={fee} onChange={e=>setFee(e.target.value)}/></label><div className="grid grid-cols-2 gap-3"><label>Estimativa mínima (min)<input required type="number" min={1} className="demo-field" value={min} onChange={e=>setMin(e.target.value)}/></label><label>Estimativa máxima (min)<input required type="number" min={1} className="demo-field" value={max} onChange={e=>setMax(e.target.value)}/></label></div></section>
+    <section className="space-y-4"><h2 className="section-label">Entrega</h2><label>Taxa de entrega (R$)<input required inputMode="decimal" className="demo-field" value={fee} onChange={e=>setFee(e.target.value)}/></label><label className="flex items-start gap-3 rounded-2xl border p-3"><input type="checkbox" className="mt-0.5 size-5" checked={accepts500ml} onChange={e=>setAccepts500ml(e.target.checked)}/><span><span className="block font-bold">Entregar porções de 500 ml</span><span className="block text-sm text-muted-foreground">{accepts500ml?'Os clientes veem as opções de 500 ml e de 1 litro.':'Desativado: os clientes veem apenas as opções de 1 litro.'} O pedido mínimo continua sendo de 1 litro.</span></span></label><div className="grid grid-cols-2 gap-3"><label>Estimativa mínima (min)<input required type="number" min={1} className="demo-field" value={min} onChange={e=>setMin(e.target.value)}/></label><label>Estimativa máxima (min)<input required type="number" min={1} className="demo-field" value={max} onChange={e=>setMax(e.target.value)}/></label></div></section>
     <fieldset className="space-y-2"><legend className="section-label mb-2 w-full">Horários regulares</legend>{schedule.map((entry,index)=><div key={entry.day} className={`flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border p-3 ${entry.active?'bg-background':'bg-muted/40'}`}><label className="flex min-h-11 w-32 items-center gap-2 text-sm font-bold"><input type="checkbox" className="size-5" checked={entry.active} onChange={e=>setSchedule(rows=>rows.map((row,i)=>i===index?{...row,active:e.target.checked}:row))}/>{dayNames[entry.day]}</label><div className="flex items-center gap-2"><input aria-label={`Abertura ${dayNames[entry.day]}`} type="time" required disabled={!entry.active} className="demo-field !mt-0 w-auto" value={entry.opens} onChange={e=>setSchedule(rows=>rows.map((row,i)=>i===index?{...row,opens:e.target.value}:row))}/><span aria-hidden className="text-muted-foreground">às</span><input aria-label={`Fechamento ${dayNames[entry.day]}`} type="time" required disabled={!entry.active} className="demo-field !mt-0 w-auto" value={entry.closes} onChange={e=>setSchedule(rows=>rows.map((row,i)=>i===index?{...row,closes:e.target.value}:row))}/></div></div>)}</fieldset>
     {error&&<p role="alert" className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}<button className="demo-primary w-full sm:w-auto sm:min-w-48">Salvar configurações</button>
   </form>

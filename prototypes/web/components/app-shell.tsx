@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useView } from '@/lib/use-view'
 import { MapPin, ShoppingBag, Store, LayoutDashboard, Users, Package, LogOut, Menu, X } from 'lucide-react'
+import { ThemeSwitcher } from './theme-switcher'
 import { createContext, useCallback, useContext, useState } from 'react'
 
 const profileConfig = {
@@ -57,6 +58,7 @@ export function Topbar({ profile }: { profile: Profile }) {
       <div className="mx-auto flex h-18 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Brand />
         <div className="hidden items-center gap-2 lg:flex">
+          <ThemeSwitcher />
           <div className="flex items-center gap-2 rounded-full bg-muted px-3 py-2 text-xs text-muted-foreground">
             <MapPin className="size-3.5 text-secondary" />
             Cametá, PA
@@ -66,9 +68,10 @@ export function Topbar({ profile }: { profile: Profile }) {
           </Link>
 
         </div>
-        <button onClick={() => setOpen(!open)} aria-label={open ? "Fechar menu" : "Abrir menu"} aria-expanded={open} className="grid size-11 place-items-center rounded-full border border-border lg:hidden">
+        <div className="flex items-center gap-2 lg:hidden"><ThemeSwitcher />
+        <button onClick={() => setOpen(!open)} aria-label={open ? "Fechar menu" : "Abrir menu"} aria-expanded={open} className="grid size-11 place-items-center rounded-full border border-border">
           {open ? <X className="size-5" /> : <Menu className="size-5" />}
-        </button>
+        </button></div>
       </div>
       {open && <div className="border-t border-border bg-card px-4 py-4 lg:hidden"><div className="flex flex-col gap-2"><Link href={config.href} className="rounded-xl bg-muted px-4 py-3 text-sm font-semibold">{config.label}</Link>{(profile==='cliente'?[['/cliente','Descobrir'],['/cliente?view=pedidos','Meus pedidos'],['/cliente?view=conta','Minha conta']]:profile==='operador'?[['/operador','Visão geral'],['/operador?view=pedidos','Pedidos'],['/operador?view=produtos','Catálogo'],['/operador?view=config','Configurações']]:[['/admin','Visão geral'],['/admin?view=usuarios','Usuários'],['/admin?view=lojas','Batedeiras'],['/admin?view=pedidos','Pedidos e auditoria'],['/admin?view=suporte','Suporte e cobertura']]).map(([href,label])=><Link key={href} href={href} onClick={()=>setOpen(false)} className="rounded-xl px-4 py-3 text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground">{label}</Link>)}<Link href="/" className="rounded-xl px-4 py-3 text-sm text-muted-foreground">Voltar ao início</Link></div></div>}
     </header>

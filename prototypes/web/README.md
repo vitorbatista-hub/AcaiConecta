@@ -34,8 +34,8 @@ Não há script de lint. O build não ignora erros de TypeScript. O estado atual
 
 ## O que o protótipo cobre
 
-- **Cliente:** descoberta de batedeiras, catálogo, sacola com mínimo de 1 litro, taxa de entrega, dinheiro com troco ou Pix na entrega, envio com proteção contra reenvio, linha do tempo do pedido, cancelamento antes do aceite, login e cadastro, até dois endereços salvos (DEC-040) e painel de ajuda.
-- **Operador:** abertura e entrega controladas separadamente, com cor de estado e confirmação; fila com prazo de aceite de cinco minutos; transições permitidas com motivos obrigatórios; mensagens operacionais; catálogo com tamanhos de 500 ml ou 1 L (DEC-042); horários, taxa e faixa estimada; visão geral com faturamento do dia, entregas e pedidos aceitos hoje (DEC-043).
+- **Cliente:** descoberta de batedeiras, catálogo, sacola com mínimo de 1 litro, taxa de entrega, três tipos de açaí (R$ 10, 15 e 20 por litro, proporcional ao volume), dinheiro com troco na entrega ou Pix com QR Code, envio com proteção contra reenvio, linha do tempo do pedido, cancelamento antes do aceite, login e cadastro, até dois endereços salvos (DEC-040) e painel de ajuda.
+- **Operador:** abertura e entrega controladas separadamente, com cor de estado e confirmação; fila com prazo de aceite de cinco minutos; transições permitidas com motivos obrigatórios; mensagens operacionais; catálogo com tamanhos de 500 ml ou 1 L (DEC-042), com opção de entregar ou não porções de 500 ml nas configurações; horários, taxa e faixa estimada; visão geral com faturamento do dia, entregas e pedidos aceitos hoje (DEC-043).
 - **Administrador:** cadastro assistido de batedeira com e-mail do operador, ativação e suspensão, pedidos com intervenções e cancelamento operacional, bloqueio e reativação de clientes, métricas do piloto (PRD §5.4) e trilha de auditoria simulada.
 
 ## Limitações conhecidas

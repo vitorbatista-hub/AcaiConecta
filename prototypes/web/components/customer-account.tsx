@@ -1,15 +1,18 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { KeyRound, LogOut, MapPin, UserRound } from 'lucide-react'
 import { usePrototype } from './prototype-provider'
 import { maxSavedAddresses, removeAddress, saveAddress, type SavedAddress } from '@/lib/customer-session'
 import { guestCustomerName } from '@/lib/mock-data'
+import { adminLoginEmail, resolveAccess, startRoleSession } from '@/lib/access'
 
-export function CustomerAccount({ onDone }: { onDone?: () => void }) {
+export function CustomerAccount({ onDone, initialMode = 'login' }: { onDone?: () => void; initialMode?: 'login' | 'register' }) {
   const demo = usePrototype()
+  const router = useRouter()
   const customer = demo.customer
-  const [mode, setMode] = useState<'login' | 'register'>('login')
+  const [mode, setMode] = useState<'login' | 'register'>(initialMode)
   const [name, setName] = useState(customer.name)
   const [phone, setPhone] = useState(customer.phone)
   const [email, setEmail] = useState(customer.email)
@@ -29,12 +32,19 @@ export function CustomerAccount({ onDone }: { onDone?: () => void }) {
   </section>
   return <section className="surface">
     <div className="flex items-center gap-3"><span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary" aria-hidden><KeyRound className="size-5" /></span><h2 className="text-xl font-black">{mode === 'login' ? 'Entrar' : 'Criar conta'}</h2></div>
-    <p className="my-3 text-sm text-muted-foreground">Esta etapa ainda não realiza autenticação no servidor; use dados e uma senha de teste, nunca dados reais.</p>
+    <p className="my-3 text-sm text-muted-foreground">Seu perfil (cliente, batedeira ou administrador) é definido pelo cadastro do e-mail. Esta etapa ainda não realiza autenticação no servidor; use dados e uma senha de teste, nunca dados reais.</p>
     {demo.customerBlocked && <p role="alert" className="mb-4 rounded-xl bg-destructive/10 p-3">Conta bloqueada pelo administrador. Acesse a ajuda para orientação.</p>}
     <form className="space-y-4" onSubmit={event => {
       event.preventDefault()
       try {
         if (mode === 'register' && !/^\d{10,11}$/.test(phone.replace(/\D/g, ''))) throw new Error('Informe telefone com DDD.')
+        const access = resolveAccess(email, demo.stores)
+        if (mode === 'register' && access.role !== 'cliente') throw new Error('Este e-mail já pertence a outra conta. Use outro e-mail ou entre.')
+        if (mode === 'login' && access.role !== 'cliente') {
+          startRoleSession(access, email)
+          setPassword(''); setError(''); router.replace(access.role === 'admin' ? '/admin' : '/operador')
+          return
+        }
         demo.updateCustomer({ signedIn: true, name: name.trim() || guestCustomerName, email: email.trim(), phone: phone || customer.phone })
         setPassword(''); setError(''); onDone?.()
       } catch (error) { setError(error instanceof Error ? error.message : 'Revise os dados.') }
@@ -43,8 +53,9 @@ export function CustomerAccount({ onDone }: { onDone?: () => void }) {
       <label>E-mail<input className="demo-field" required type="email" maxLength={254} autoComplete="off" value={email} onChange={event => setEmail(event.target.value)} /></label>
       <label>Senha<input className="demo-field" required type="password" autoComplete="off" value={password} onChange={event => setPassword(event.target.value)} /><span className="text-xs text-muted-foreground">Use uma senha de teste — não a sua senha real.</span></label>
       {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-      <button disabled={demo.customerBlocked} className="demo-primary w-full">{mode === 'login' ? 'Simular entrada' : 'Simular cadastro'}</button>
+      <button disabled={demo.customerBlocked} className="demo-primary w-full">{mode === 'login' ? 'Entrar' : 'Cadastrar'}</button>
     </form>
+    <details className="mt-4 text-xs text-muted-foreground"><summary>Contas de teste (batedeiras e administrador)</summary><ul className="mt-2 space-y-1"><li>{adminLoginEmail} · administrador</li>{demo.stores.map(store => <li key={store.id}>{store.operatorEmail} · {store.name}</li>)}<li>Qualquer outro e-mail entra como cliente.</li></ul></details>
     <div className="mt-4 grid gap-2 sm:grid-cols-2"><button className="demo-button" onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setPassword(''); setError('') }}>{mode === 'login' ? 'Criar conta' : 'Já tenho uma conta'}</button><button className="demo-button" onClick={() => { setRecovery(open => !open); setRecoverySent(false) }}>Esqueci meu acesso</button></div>
     {recovery && (recoverySent
       ? <p role="status" className="mt-4 rounded-xl bg-secondary/10 p-3 text-sm">Solicitação registrada. O administrador do piloto vai analisar e conceder acesso; esta etapa não envia e-mail nem SMS.</p>

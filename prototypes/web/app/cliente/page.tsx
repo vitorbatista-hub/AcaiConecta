@@ -1,23 +1,28 @@
 'use client'
 
 import Image from 'next/image'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Bike, Clock, MapPin, Minus, Plus, Search, ShoppingBag } from 'lucide-react'
 import { AppFrame, SectionHeading, StatusPill, useToast } from '@/components/app-shell'
 import { usePrototype } from '@/components/prototype-provider'
 import { Modal } from '@/components/modal'
 import { CustomerAccount } from '@/components/customer-account'
 import { CustomerOrder } from '@/components/customer-order'
+import { QualityCard } from '@/components/quality-card'
+import { PixQrCode } from '@/components/pix-qr-code'
 import { SupportButton } from '@/components/support-panel'
 import { useView } from '@/lib/use-view'
 import { maxSavedAddresses, saveAddress } from '@/lib/customer-session'
-import { calculateTotals, cents, getFeeText, getSchedule, getStoreAvailabilityText, isStoreOpenNow, isStoreOrderable, parseMoney, type CartItem, type Product } from '@/lib/mock-data'
+import { calculateTotals, cents, getFeeText, getSchedule, getStoreAvailabilityText, isStoreOpenNow, isProductOffered, isStoreOrderable, parseMoney, type CartItem, type Product } from '@/lib/mock-data'
 
 type Step = 'cart' | 'account' | 'checkout' | null
 
 export default function ClientePage() {
   const demo = usePrototype()
   const customer = demo.customer
+  const router = useRouter()
+  useEffect(() => { if (!customer.signedIn) router.replace('/entrar') }, [customer.signedIn, router])
   const notify = useToast()
   const [view, setView] = useView('stores')
   const [search, setSearch] = useState('')
@@ -64,6 +69,7 @@ export default function ClientePage() {
     finally { setSending(false) }
   }
   const openCart = () => { setStoreId(null); setError(''); setStep('cart') }
+  if (!customer.signedIn) return null
   return <AppFrame profile="cliente"><div className="mx-auto max-w-6xl">
     {view === 'conta' ? <><SectionHeading title="Minha conta" /><CustomerAccount /></> : view === 'pedidos' || view.startsWith('pedido:') ? <>
       <SectionHeading title={selectedOrder ? 'Acompanhe seu pedido' : 'Meus pedidos'} action={<button className="demo-button" onClick={() => setView('stores')}>Ver batedeiras</button>} />
@@ -80,9 +86,9 @@ export default function ClientePage() {
     {customer.cart.length > 0 && !step && !selectedStore && view !== 'conta' && <div className="sticky bottom-3 z-20 mt-5"><button className="demo-primary flex w-full items-center justify-between gap-3 shadow-lg" onClick={openCart}><span>Ver sacola · {totals.volumeMl} ml</span><span>R$ {cents(totals.totalCents)}</span></button></div>}
     <div className="mt-6"><SupportButton orderId={selectedOrder?.id} /></div>
   </div>
-  {selectedStore && <Modal title={selectedStore.name} onClose={() => setStoreId(null)}><div className="mb-4 space-y-2 text-sm"><p>{getStoreAvailabilityText(selectedStore)}</p><p>{selectedStore.address} · Centro, Cametá/PA</p><p>{getFeeText(selectedStore)} · Estimativa {selectedStore.estimatedRange}</p><p>Mínimo de 1 litro por pedido. Você pode combinar volumes.</p><details><summary>Horários de funcionamento</summary>{getSchedule(selectedStore).map((hours, index) => <p key={`${hours.day}-${index}`}>{['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'][hours.day]}: {hours.active ? `${hours.opens}–${hours.closes}` : 'Fechada'}</p>)}</details></div>
+  {selectedStore && <Modal title={selectedStore.name} onClose={() => setStoreId(null)}><div className="mb-4 space-y-2 text-sm"><p>{getStoreAvailabilityText(selectedStore)}</p><p>{selectedStore.address} · Centro, Cametá/PA</p><p>{getFeeText(selectedStore)} · Estimativa {selectedStore.estimatedRange}</p><p>Escolha a qualidade e depois a quantidade. Mínimo de 1 litro por pedido; você pode combinar volumes.</p><details><summary>Horários de funcionamento</summary>{getSchedule(selectedStore).map((hours, index) => <p key={`${hours.day}-${index}`}>{['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'][hours.day]}: {hours.active ? `${hours.opens}–${hours.closes}` : 'Fechada'}</p>)}</details></div>
     {!isStoreOrderable(selectedStore) && <p className="mb-4 rounded-xl bg-muted p-3 text-sm">Catálogo disponível para consulta. Novos pedidos estão indisponíveis.</p>}
-    <div className="grid gap-3">{demo.products.filter(product => product.storeId === selectedStore.id && product.active && (product.available || product.showUnavailable)).map(product => <article key={product.id} className={`flex gap-3 rounded-2xl border bg-card p-3 `}><Image src={product.image || '/placeholder.svg'} width={96} height={96} sizes="96px" alt={product.name} className={`${product.available ? '' : 'opacity-60 grayscale '}size-20 shrink-0 rounded-xl object-cover sm:size-24`} /><div className="flex min-w-0 flex-1 flex-col"><div className="flex items-start justify-between gap-2"><h3 className="font-black leading-tight">{product.name}</h3><span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-bold">{product.volumeMl >= 1000 ? `${product.volumeMl / 1000} L` : `${product.volumeMl} ml`}</span></div><p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{product.description}</p><div className="mt-auto flex items-center justify-between gap-2 pt-2"><p className="text-lg font-black tabular-nums">R$ {cents(product.priceCents)}</p><button className="demo-primary" disabled={!product.available || !isStoreOrderable(selectedStore)} onClick={() => add(product)}>{product.available ? 'Adicionar' : 'Indisponível'}</button></div></div></article>)}</div>
+    <div className="grid gap-3">{Object.values(Object.groupBy(demo.products.filter(product => product.storeId === selectedStore.id && product.active && (product.available || product.showUnavailable) && isProductOffered(product, selectedStore)), product => String(product.grade ?? product.id))).map(group => group && <QualityCard key={`${selectedStore.id}-${group[0].grade ?? group[0].id}-${group.map(p => p.id).join()}`} title={group[0].grade ? `Açaí de ${group[0].grade}` : group[0].name} options={group} canOrder={isStoreOrderable(selectedStore)} onAdd={add} />)}</div>
     {!demo.products.some(product => product.storeId === selectedStore.id && product.active && (product.available || product.showUnavailable)) && <p>Nenhum produto disponível para consulta.</p>}
     {customer.cart.length > 0 && <div role="status" className="sticky bottom-0 mt-4 bg-background pt-3"><button className="demo-primary w-full" onClick={openCart}>Ver sacola · {customer.cart.reduce((sum, item) => sum + item.quantity, 0)} item(ns)</button></div>}
   </Modal>}
@@ -106,9 +112,10 @@ export default function ClientePage() {
     {customer.addresses.length < maxSavedAddresses ? <label className="flex items-center gap-2"><input type="checkbox" checked={saveDelivery} onChange={event => setSaveDelivery(event.target.checked)} />Salvar este endereço para os próximos pedidos</label> : <p className="text-sm text-muted-foreground">Você já tem 2 endereços salvos. Para trocar um deles, edite-o em Minha conta.</p>}
     <h3 className="border-b pb-1 pt-2 text-sm font-black uppercase tracking-[0.14em] text-secondary">Contato e pagamento</h3>
     <label>Telefone com DDD<input className="demo-field" required type="tel" maxLength={20} autoComplete="tel" value={customer.phone} onChange={event => demo.updateCustomer({ phone: event.target.value })} /></label>
-    <fieldset className="grid gap-2"><legend className="mb-1 text-sm font-bold">Forma de pagamento</legend><div className="grid grid-cols-2 gap-2">{([['PIX_NA_ENTREGA', 'Pix na entrega'], ['DINHEIRO', 'Dinheiro na entrega']] as const).map(([value, label]) => <label key={value} className={`flex min-h-11 cursor-pointer items-center justify-center rounded-xl border p-3 text-center text-sm font-bold transition has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-primary ${customer.payment === value ? 'border-primary bg-primary/10 text-primary' : 'bg-card'}`}><input type="radio" name="payment" className="sr-only" checked={customer.payment === value} onChange={() => demo.updateCustomer({ payment: value, change: '' })} />{label}</label>)}</div></fieldset>
+    <fieldset className="grid gap-2"><legend className="mb-1 text-sm font-bold">Forma de pagamento</legend><div className="grid grid-cols-2 gap-2">{([['PIX_NA_ENTREGA', 'Pix (QR Code)'], ['DINHEIRO', 'Dinheiro na entrega']] as const).map(([value, label]) => <label key={value} className={`flex min-h-11 cursor-pointer items-center justify-center rounded-xl border p-3 text-center text-sm font-bold transition has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-primary ${customer.payment === value ? 'border-primary bg-primary/10 text-primary' : 'bg-card'}`}><input type="radio" name="payment" className="sr-only" checked={customer.payment === value} onChange={() => demo.updateCustomer({ payment: value, change: '' })} />{label}</label>)}</div></fieldset>
     {customer.payment === 'DINHEIRO' && <label>Troco para (opcional)<input className="demo-field" inputMode="decimal" maxLength={11} value={customer.change} onChange={event => demo.updateCustomer({ change: event.target.value })} placeholder={`Total R$ ${cents(totals.totalCents)}`} /></label>}
-    <p className="text-sm text-muted-foreground">{customer.payment === 'PIX_NA_ENTREGA' ? 'Transfira o Pix diretamente à batedeira, somente no momento da entrega.' : 'Pague em dinheiro na entrega. Informe o valor da nota se precisar de troco.'}</p>
+    <p className="text-sm text-muted-foreground">{customer.payment === 'PIX_NA_ENTREGA' ? 'Escaneie o QR Code abaixo para pagar o valor do pedido.' : 'Você paga em dinheiro ao receber o pedido. Informe o valor da nota se precisar de troco.'}</p>
+    {customer.payment === 'PIX_NA_ENTREGA' && <PixQrCode totalCents={totals.totalCents} storeName={owner?.name ?? 'Batedeira'} />}
     <label>Observação do pedido (opcional)<textarea className="demo-field" maxLength={500} value={customer.note} onChange={event => demo.updateCustomer({ note: event.target.value })} /></label>
     {error && <p role="alert" className="rounded-xl bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
     <div className="sticky -bottom-4 -mx-4 -mb-4 flex flex-col-reverse gap-2 border-t bg-background px-4 py-3 sm:-bottom-6 sm:-mx-6 sm:-mb-6 sm:flex-row sm:justify-between sm:px-6"><button type="button" className="demo-button" onClick={() => setStep('cart')}>Revisar sacola</button><button disabled={sending} className="demo-primary sm:min-w-56">{sending ? 'Enviando…' : `Enviar pedido · R$ ${cents(totals.totalCents)}`}</button></div>

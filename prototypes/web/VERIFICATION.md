@@ -19,7 +19,8 @@ Estado das verificações técnicas do protótipo. Elas não representam valida�
 |---|---|
 | Volume mínimo de 1 litro | Testes; navegador em 16/09 (500 ml bloqueados, 2 × 500 ml liberados). |
 | Total, taxa e snapshot do pedido | Testes; navegador em 16/09 (2 × R$ 18,00 + R$ 2,50 = R$ 38,50). |
-| Pix, dinheiro e troco | Testes: troco só em dinheiro e com valor suficiente. |
+| Pix, dinheiro e troco | Testes: troco só em dinheiro e com valor suficiente; payload Pix (EMV) com CRC16 válido. |
+| Tipos 10/15/20 e 500 ml opcional | Testes: preço proporcional ao volume; 500 ml oculto no catálogo e recusado no pedido quando a batedeira desativa a opção. |
 | Disponibilidade, bairro, catálogo e quantidade | Testes: bloqueios por estado da batedeira, entrega, bairro, mistura de lojas, produto e quantidade inválida. |
 | Matriz de transições e perfis | Testes: saltos, vínculos incorretos, reabertura de estados terminais e ações de perfil indevido rejeitados. |
 | Recusa, falha e cancelamento | Testes: motivo obrigatório e limites de cada perfil; navegador em 16/09 para cancelamento administrativo. |

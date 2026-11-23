@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Activity, Check, Clock3, LifeBuoy, ScrollText, ShieldAlert, Store as StoreIcon, UserRound } from 'lucide-react'
 import { AppFrame, SectionHeading, StatCard, StatusPill, useToast } from '@/components/app-shell'
 import { usePrototype } from '@/components/prototype-provider'
@@ -8,18 +8,10 @@ import { PhotoField } from '@/components/photo-field'
 import { formatDuration, pilotMetrics } from '@/lib/order-presentation'
 import { Modal } from '@/components/modal'
 import { OrderPanel } from '@/components/order-panel'
-import { RoleLogin, RoleSignedInBar, useRoleSignIn } from '@/components/role-login'
+import { RoleSignedInBar, useRoleSignIn } from '@/components/role-login'
 import { useView } from '@/lib/use-view'
+import { roleSessionKeys } from '@/lib/access'
 import { adminActorName, adminStatusLabel, cents, guestCustomerName, isStoreOpenNow, mockNeighborhoods, type AdminStatus, type Store } from '@/lib/mock-data'
-
-function AdminLogin({onSignIn}:{onSignIn:(email:string)=>void}) {
-  const [email,setEmail]=useState('')
-  const [password,setPassword]=useState('')
-  return <RoleLogin title="Entrar na central administrativa" description="Acesse com o e-mail do administrador do piloto. Esta etapa ainda não realiza autenticação no servidor; use uma senha de teste, nunca uma senha real." onSubmit={event=>{event.preventDefault();onSignIn(email.trim()||adminActorName)}}>
-    <label>E-mail<input className="demo-field" required type="email" maxLength={254} autoComplete="off" value={email} onChange={event=>setEmail(event.target.value)} /></label>
-    <label>Senha<input className="demo-field" required type="password" autoComplete="off" value={password} onChange={event=>setPassword(event.target.value)} /><span className="text-xs text-muted-foreground">Use uma senha de teste — não a sua senha real.</span></label>
-  </RoleLogin>
-}
 
 export default function AdminPage() {
   const demo=usePrototype()
@@ -31,8 +23,9 @@ export default function AdminPage() {
   const [error,setError]=useState('')
   const [supportEmail,setSupportEmail]=useState(demo.supportEmail)
   const [accountReason,setAccountReason]=useState('')
-  const [signedIn,setSignedIn]=useRoleSignIn('acaiconecta-admin-signed-in')
+  const [signedIn,setSignedIn]=useRoleSignIn(roleSessionKeys.adminSignedIn)
   const [adminEmail,setAdminEmail]=useState(adminActorName)
+  useEffect(()=>{try{setAdminEmail(sessionStorage.getItem(roleSessionKeys.adminEmail)||adminActorName)}catch{}},[])
   const orders=demo.orders
   const metrics=pilotMetrics(orders)
   const responded=orders.filter(o=>o.timeline.some(e=>e.to==='ACEITO'||e.to==='RECUSADO'))
@@ -44,7 +37,7 @@ export default function AdminPage() {
     try{if(!editing)return;if(!reason.trim())throw new Error('Informe o motivo administrativo.');if(editing.adminStatus==='ATIVA'&&!eligible)throw new Error('Confirme a verificação externa de elegibilidade.');demo.updateStore(editing,reason);setEditing(null);notify('Cadastro e auditoria atualizados.')}
     catch(error){setError(error instanceof Error?error.message:'Revise os dados.')}
   }
-  if(!signedIn) return <AppFrame profile="admin"><AdminLogin onSignIn={email=>{setAdminEmail(email);setSignedIn(true)}} /></AppFrame>
+  if(!signedIn) return null
   return <AppFrame profile="admin"><div className="mx-auto max-w-6xl">
     <RoleSignedInBar onSignOut={()=>setSignedIn(false)}>Conectado como <b>{adminEmail}</b></RoleSignedInBar>
     <SectionHeading eyebrow="Administração" title="Supervisão do piloto" description="Resultados calculados a partir dos pedidos registrados nesta sessão."/>
@@ -55,7 +48,7 @@ export default function AdminPage() {
       <p className="mt-3 text-xs text-muted-foreground">Motivo registrado em 100% das recusas e cancelamentos exigidos pela máquina de estados desta simulação.</p>
     </section>
     <p className="mt-5 rounded-2xl bg-muted p-4 text-sm text-muted-foreground">Estas métricas não substituem a evidência do piloto real. Pagamentos são realizados diretamente na entrega; não há receita ou caixa confirmado pela plataforma.</p></>}
-    {view==='lojas'&&<><button className="demo-primary mb-5 inline-flex items-center gap-2" onClick={()=>edit({id:crypto.randomUUID(),name:'',owner:'',operator:'',operatorEmail:'',address:'',neighborhood:'Centro',image:'/placeholder.svg',adminStatus:'EM_ANALISE',isOpen:false,deliveryAvailable:false,hours:'09h às 18h',estimatedRange:'25–35 min',deliveryFeeCents:0,createdAt:new Date().toISOString()})}>Cadastrar batedeira e operador</button><div className="grid gap-4 sm:grid-cols-2">{demo.stores.map(store=>{const open=isStoreOpenNow(store);return <article key={store.id} className="flex flex-col rounded-2xl border bg-card p-5 shadow-sm"><div className="flex items-start justify-between gap-3"><h2 className="text-lg font-black leading-tight">{store.name}</h2><StatusPill status={store.adminStatus==='ATIVA'?'confirmed':store.adminStatus==='EM_ANALISE'?'pending':'negative'} label={adminStatusLabel(store.adminStatus)}/></div><dl className="mt-3 grid gap-1.5 text-sm"><div><dt className="sr-only">Operador responsável</dt><dd>{store.operator} <span className="text-muted-foreground">· {store.operatorEmail}</span></dd></div><div><dt className="sr-only">Endereço</dt><dd className="text-muted-foreground">{store.address} · {store.neighborhood}</dd></div></dl><p className="mt-3 flex flex-wrap gap-2 text-xs"><StatusPill status={open?'open':'closed'} label={open?'Aberta agora':'Fechada agora'}/><StatusPill status={store.deliveryAvailable?'open':'closed'} label={store.deliveryAvailable?'Entrega disponível':'Entrega indisponível'}/><span className="rounded-full bg-muted px-2.5 py-1 font-bold">Taxa R$ {cents(store.deliveryFeeCents)}</span></p><button className="demo-button mt-4 self-start" onClick={()=>edit(store)}>Revisar cadastro e situação</button></article>})}</div></>}
+    {view==='lojas'&&<><button className="demo-primary mb-5 inline-flex items-center gap-2" onClick={()=>edit({id:crypto.randomUUID(),name:'',owner:'',operator:'',operatorEmail:'',address:'',neighborhood:'Centro',image:'/placeholder.svg',adminStatus:'EM_ANALISE',isOpen:false,deliveryAvailable:false,accepts500ml:false,hours:'09h às 18h',estimatedRange:'25–35 min',deliveryFeeCents:0,createdAt:new Date().toISOString()})}>Cadastrar batedeira e operador</button><div className="grid gap-4 sm:grid-cols-2">{demo.stores.map(store=>{const open=isStoreOpenNow(store);return <article key={store.id} className="flex flex-col rounded-2xl border bg-card p-5 shadow-sm"><div className="flex items-start justify-between gap-3"><h2 className="text-lg font-black leading-tight">{store.name}</h2><StatusPill status={store.adminStatus==='ATIVA'?'confirmed':store.adminStatus==='EM_ANALISE'?'pending':'negative'} label={adminStatusLabel(store.adminStatus)}/></div><dl className="mt-3 grid gap-1.5 text-sm"><div><dt className="sr-only">Operador responsável</dt><dd>{store.operator} <span className="text-muted-foreground">· {store.operatorEmail}</span></dd></div><div><dt className="sr-only">Endereço</dt><dd className="text-muted-foreground">{store.address} · {store.neighborhood}</dd></div></dl><p className="mt-3 flex flex-wrap gap-2 text-xs"><StatusPill status={open?'open':'closed'} label={open?'Aberta agora':'Fechada agora'}/><StatusPill status={store.deliveryAvailable?'open':'closed'} label={store.deliveryAvailable?'Entrega disponível':'Entrega indisponível'}/><span className="rounded-full bg-muted px-2.5 py-1 font-bold">Taxa R$ {cents(store.deliveryFeeCents)}</span></p><button className="demo-button mt-4 self-start" onClick={()=>edit(store)}>Revisar cadastro e situação</button></article>})}</div></>}
     {view==='pedidos'&&<><div className="grid gap-4">{orders.length===0&&<p className="empty-state">Nenhum pedido registrado ainda.</p>}{orders.map(order=><OrderPanel key={order.id} order={order} actor={actor}/>)}</div><section className="mt-10"><h2 className="mb-4 flex items-center gap-2 text-2xl font-black"><ScrollText className="size-6 text-primary" aria-hidden/>Trilha de auditoria</h2>{demo.audit.length===0?<p className="empty-state">Nenhuma intervenção administrativa registrada.</p>:<ol className="space-y-3 border-l-2 border-primary/30 pl-4">{demo.audit.slice().reverse().map(event=><li key={event.id} className="relative rounded-2xl border bg-card p-4 text-sm shadow-sm"><span aria-hidden className="absolute -left-[1.4rem] top-5 size-3 rounded-full border-2 border-primary bg-background"/><p className="flex flex-wrap items-baseline justify-between gap-2"><b>{event.action}</b><span className="text-xs text-muted-foreground">{new Date(event.at).toLocaleString('pt-BR',{timeZone:'America/Belem'})}</span></p><p className="mt-1 text-muted-foreground">{event.author} · <span className="break-all">{event.entityId}</span></p><p className="mt-1">{event.reason}</p></li>)}</ol>}</section><p className="mt-4 text-sm text-muted-foreground">Incidentes do piloto continuam no diário operacional externo. Este registro representa intervenções administrativas nesta sessão.</p></>}
     {view==='usuarios'&&<div className="grid gap-8">
       <section><h2 className="mb-3 text-xl font-black">Acesso de clientes</h2><div className="surface"><div className="flex items-center gap-3"><span className="grid size-12 shrink-0 place-items-center rounded-full bg-primary/10 text-primary" aria-hidden><UserRound className="size-6"/></span><div className="min-w-0 flex-1"><p className="font-bold">{demo.customer.name||guestCustomerName}</p></div><StatusPill status={demo.customerBlocked?'negative':'open'} label={demo.customerBlocked?'Bloqueado':'Ativo'}/></div><p className="my-4 text-sm text-muted-foreground">O bloqueio impede novos envios e novas entradas. O histórico é preservado. Recuperação de acesso é assistida pelo suporte; não existe envio de senha.</p><form className="space-y-3" onSubmit={event=>{event.preventDefault();try{demo.setCustomerBlocked(!demo.customerBlocked,accountReason);setAccountReason('');notify('Situação da conta atualizada e auditada.')}catch(error){notify(error instanceof Error?error.message:'Revise os dados.','error')}}}><label>Motivo administrativo<textarea required maxLength={255} className="demo-field" value={accountReason} onChange={event=>setAccountReason(event.target.value)}/></label><button className="demo-button inline-flex items-center gap-2"><ShieldAlert className="size-4" aria-hidden/>{demo.customerBlocked?'Reativar conta':'Bloquear conta'}</button></form></div></section>

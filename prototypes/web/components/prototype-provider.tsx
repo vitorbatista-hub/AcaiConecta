@@ -6,7 +6,7 @@ import { adminActorName, allowedProductVolumesMl, appendOrder, applyTransition, 
 import { emptyCustomerSession, restoreCustomerSession, type AccessRequest, type CustomerSession } from '@/lib/customer-session'
 
 type AuditEvent = { id:string; at:string; author:string; entityId:string; action:string; reason:string }
-type DemoState = { version:1; stores:Store[]; products:Product[]; orders:Order[]; audit:AuditEvent[]; customer:CustomerSession; supportEmail:string; customerBlocked:boolean; accessRequests:AccessRequest[]; cartsStarted:number }
+type DemoState = { version:2; stores:Store[]; products:Product[]; orders:Order[]; audit:AuditEvent[]; customer:CustomerSession; supportEmail:string; customerBlocked:boolean; accessRequests:AccessRequest[]; cartsStarted:number }
 type Checkout = { items:CartItem[]; storeId:string; address:Order['address']; phone:string; payment:PaymentMethod; change?:number; note?:string; requestId:string; fee:number }
 type PrototypeContextValue = DemoState & {
   now:number
@@ -25,7 +25,7 @@ type PrototypeContextValue = DemoState & {
 }
 const Context = createContext<PrototypeContextValue|null>(null)
 const storageKey='acaiconecta-prototype-v1'
-const initialState=():DemoState=>({version:1,stores:structuredClone(mockStores),products:structuredClone(mockProducts),orders:structuredClone(mockOrders),audit:[],customer:emptyCustomerSession(),supportEmail:'',customerBlocked:false,accessRequests:[],cartsStarted:0})
+const initialState=():DemoState=>({version:2,stores:structuredClone(mockStores),products:structuredClone(mockProducts),orders:structuredClone(mockOrders),audit:[],customer:emptyCustomerSession(),supportEmail:'',customerBlocked:false,accessRequests:[],cartsStarted:0})
 
 export function PrototypeProvider({children}:{children:React.ReactNode}) {
   const [state,setState]=useState<DemoState>(initialState)
@@ -44,7 +44,7 @@ export function PrototypeProvider({children}:{children:React.ReactNode}) {
       const raw=sessionStorage.getItem(storageKey)
       if(raw) {
         const saved=JSON.parse(raw) as DemoState
-        if(saved.version!==1 || !Array.isArray(saved.stores) || !Array.isArray(saved.products) || !Array.isArray(saved.orders) || !Array.isArray(saved.audit)) throw new Error('Sessão inválida')
+        if(saved.version!==2 || !Array.isArray(saved.stores) || !Array.isArray(saved.products) || !Array.isArray(saved.orders) || !Array.isArray(saved.audit)) throw new Error('Sessão inválida')
         current.current={...initialState(),...saved,customer:restoreCustomerSession(saved.customer),orders:expireOrders(saved.orders)}
         const migrateImage=(image?:string)=>image?.startsWith('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/')?'/images/acai-tradicional.webp':image
         current.current={...current.current,stores:current.current.stores.map(store=>({...store,image:migrateImage(store.image)??'/placeholder.svg',operatorEmail:store.operatorEmail??''})),products:current.current.products.map(product=>({...product,image:migrateImage(product.image)}))}
