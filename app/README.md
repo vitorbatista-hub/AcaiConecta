@@ -47,15 +47,20 @@ Usuários do seed (senha única de desenvolvimento, impressa pelo comando): `adm
 - Estados: matriz de transições do PRD §12.3, permissões por papel, motivos obrigatórios, expiração e transições atômicas com bloqueio de linha.
 - Autenticação (ADR-001): sessões opacas com hash no banco, 30 dias renováveis para cliente e 12 horas para equipe, argon2id, limitação por e-mail e por origem (HMAC), resposta uniforme, bloqueio que encerra sessões e expurgo.
 
+- Sessão HTTP: cookie httpOnly, `SameSite=Lax` (e `__Host-` com `Secure` em produção); `proxy.ts` faz só a checagem otimista de cookie; a autorização real é no servidor (`exigirPapelNaPagina` nas páginas e `exigirPapel` em toda mutação). Telas `/entrar`, `/cadastro` e páginas-esqueleto `/conta`, `/operador` e `/admin`. Destino pós-login restrito a caminhos internos do papel.
+- Telas do cliente: listagem com busca por nome e filtro por bairro (`/`), perfil com cardápio e sacola, endereço, pagamento e envio idempotente (`/batedeiras/[id]`), acompanhamento com linha do tempo e cancelamento enquanto aguarda resposta (`/pedidos/[codigo]`), histórico (`/pedidos`) e conta com endereços salvos (`/conta`). A atualização do acompanhamento é uma reconsulta a cada 10 s, contingência até o SSE.
+- Telas do operador: painel `/operador` com chaves de aberta/entrega (com confirmação), resumo do dia (DEC-043), fila por ordem de criação com contagem do prazo de 5 minutos, aceitar, recusar com motivo, avançar estados, cancelar e registrar falha com motivo, mensagens operacionais e encerrados do dia; `/operador/catalogo` (produtos de 500 ml ou 1 L, disponibilidade, exibição quando indisponível, arquivar) e `/operador/configuracoes` (descrição, telefone, estimativa, bairros e taxas entre os habilitados, um horário por dia). O `batedeiraId` vem sempre da sessão. Alerta de novo pedido e reconsulta a cada 10 s são a contingência até o SSE; enquanto não há agendador, os pedidos vencidos são expirados ao carregar o painel e o acompanhamento do cliente.
+- Telas do administrador: `/admin` com métricas do piloto dos últimos 30 dias (respostas em 5 min, aceite, conclusão, cancelamento após aceite, expirados, recompra, motivos); `/admin/batedeiras` com cadastro assistido (operador e batedeira em análise), requisitos de ativação e ativar, suspender, reativar e desativar com motivo; `/admin/bairros` (novos nascem desabilitados); `/admin/pedidos` com filtros, histórico de estados, mensagem predefinida do suporte e cancelamento administrativo; `/admin/usuarios` com bloqueio, reativação e redefinição de senha; `/admin/auditoria`. Toda ação administrativa revalida o papel no banco e grava em `eventos_auditoria` na mesma transação.
+
 ## Próximos passos (combinados em 23/11/2026)
 
-Próxima sessão: cookie de sessão e proteção de rotas; depois telas do cliente, do operador e do administrador, nessa ordem. Antes, confirmar as premissas listadas abaixo.
+Próximo: SSE (ADR-002) e agendamento da expiração dos pedidos e do expurgo de autenticação; depois, edição de endereços do cliente, fotos e observabilidade. Premissas abaixo confirmadas pelo responsável em 23/11/2026.
 
 ## O que falta
 
-Telas e rotas (cliente, operador, administrador), cookie de sessão e proteção das rotas, SSE (ADR-002), agendamento do expurgo e da expiração, catálogo e configurações do operador, administração de batedeiras e bairros, métricas do piloto, upload de fotos, PWA, observabilidade e deploy.
+Edição e remoção de endereços salvos na conta do cliente, SSE (ADR-002), agendamento do expurgo e da expiração, catálogo e configurações do operador, administração de batedeiras e bairros, métricas do piloto, upload de fotos, PWA, observabilidade e deploy.
 
-## Premissas adotadas e a confirmar
+## Premissas adotadas (confirmadas em 23/11/2026)
 
 - O administrador só cancela pedidos após o aceite; não responde nem avança pedidos (matriz de `docs/product/flows.md`).
 - As listas de motivos de recusa e de cancelamento operacional não estão no PRD; as do código são provisórias (`src/domain/pedido/estados.ts`). Os motivos de falha de entrega seguem o PRD §13.2.

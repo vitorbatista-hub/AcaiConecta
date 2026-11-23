@@ -18,7 +18,7 @@ type Tx = Prisma.TransactionClient
 
 const hhmm = (d: Date) => d.toISOString().slice(11, 16)
 
-function horariosDe(linhas: { diaSemana: number; horaAbertura: Date; horaFechamento: Date; ativo: boolean }[]): Horario[] {
+export function horariosDe(linhas: { diaSemana: number; horaAbertura: Date; horaFechamento: Date; ativo: boolean }[]): Horario[] {
   return linhas.map(h => ({ diaSemana: h.diaSemana, abertura: hhmm(h.horaAbertura), fechamento: hhmm(h.horaFechamento), ativo: h.ativo }))
 }
 
