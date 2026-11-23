@@ -4,6 +4,8 @@ import { produtosDaBatedeira } from '@/server/operador'
 import { Cabecalho } from '../../_componentes/cabecalho'
 import { NavegacaoOperador } from '../navegacao'
 import { SemBatedeira } from '../sem-batedeira'
+import { obterArmazenamento } from '@/server/armazenamento'
+import { EnviarFoto } from '../enviar-foto'
 import { AcoesProduto, FormProduto } from './produto-form'
 
 export const metadata = { title: 'Catálogo — AçaíConecta' }
@@ -13,6 +15,7 @@ export default async function Catalogo() {
   const o = await operadorDaPagina('/operador/catalogo')
   if (!o) return <SemBatedeira />
   const produtos = await produtosDaBatedeira(o.batedeiraId)
+  const fotosDisponiveis = obterArmazenamento() !== null
   return (
     <>
       <Cabecalho />
@@ -35,6 +38,7 @@ export default async function Catalogo() {
                     {p.disponivel ? 'Disponível' : p.exibirQuandoIndisponivel ? 'Indisponível (visível)' : 'Indisponível (oculto)'}
                   </span>
                 </div>
+                <div className="mt-3"><EnviarFoto alvo="produto" produtoId={linha.id} urlAtual={p.imagemUrl} nome={p.nome} disponivel={fotosDisponiveis} /></div>
                 <div className="mt-3"><AcoesProduto p={linha} /></div>
                 <details className="mt-1">
                   <summary className="min-h-11 cursor-pointer py-2.5 text-sm font-bold">Editar nome, tamanho ou preço</summary>

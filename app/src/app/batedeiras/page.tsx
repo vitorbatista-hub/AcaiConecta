@@ -59,7 +59,7 @@ export default async function Batedeiras({ searchParams }: { searchParams: Promi
                 <li key={b.id.toString()}>
                   <Link href={`/batedeiras/${b.id}`} className="cartao-lift block overflow-hidden rounded-2xl border border-borda bg-cartao sombra-suave">
                     <div className="relative">
-                      <FotoOuArte url={b.imagemUrl} alt={`Foto da batedeira ${b.nome}`} variante={i} className="h-40 w-full" />
+                      <FotoOuArte miniatura url={b.imagemUrl} alt={`Foto da batedeira ${b.nome}`} variante={i} className="h-40 w-full" />
                       <span className={`absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-bold ${recebe ? 'bg-folha text-fundo' : 'bg-cartao text-suave'}`}>
                         {!b.aberta ? 'Fechada' : b.entregaDisponivel ? 'Aberta agora' : 'Aberta · sem entrega'}
                       </span>

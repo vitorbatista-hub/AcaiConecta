@@ -71,4 +71,6 @@ Edição e remoção de endereços salvos na conta do cliente, SSE (ADR-002), ag
 
 ## Imagens
 
-Não há envio de fotos ainda (backlog 2.5, depende do armazenamento da ADR-003). `FotoOuArte` mostra `imagemUrl` quando existir (só `https://` ou caminho local) e, senão, uma arte original da marca. Não usar fotos de terceiros nem as imagens do protótipo (DEC-038).
+O operador envia a foto da batedeira (`/operador/configuracoes`) e a de cada produto (`/operador/catalogo`). O servidor valida o conteúdo (JPEG, PNG ou WebP, até 5 MB e 25 megapixels; SVG, GIF e animações são recusados), aplica a orientação, **remove todos os metadados (EXIF, inclusive localização)** e regrava em WebP com dois tamanhos (1280 px e miniatura de 480 px), com nome aleatório. As fotos ficam em `/api/imagens/<id>.webp`, com cache longo, e o envio só aceita requisições do próprio site e de operador logado, sempre na própria batedeira. A dependência `sharp` foi adicionada para isso.
+
+Armazenamento (`src/server/armazenamento.ts`): por enquanto só há o driver em disco local, para desenvolvimento. Em produção o envio **fica desligado** a menos que `ARMAZENAMENTO=local` seja definido de propósito, e disco de contêiner não é durável. O driver S3 compatível (DigitalOcean Spaces) entra quando a ADR-003 for aprovada. Variáveis: `ARMAZENAMENTO` e `UPLOADS_DIR` (padrão `.uploads/`, ignorada pelo Git). `FotoOuArte` mostra a foto quando existe e, senão, a arte original da marca. Não usar fotos de terceiros nem as imagens do protótipo (DEC-038). Moderação pelo administrador (backlog 5.6) ainda não existe.

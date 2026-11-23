@@ -80,7 +80,7 @@ export function Sacola(props: {
             return (
               <li key={p.id} className={`rounded-2xl border border-borda bg-cartao p-4 sombra-suave ${p.disponivel ? '' : 'opacity-70'}`}>
                 <div className="flex items-start gap-3">
-                  <FotoOuArte url={p.imagemUrl} alt={`Foto de ${p.nome}`} variante={Number(p.volumeMl) / 500} className="h-20 w-20 shrink-0 rounded-xl" />
+                  <FotoOuArte miniatura url={p.imagemUrl} alt={`Foto de ${p.nome}`} variante={Number(p.volumeMl) / 500} className="h-20 w-20 shrink-0 rounded-xl" />
                   <div className="min-w-0 flex-1">
                     <h3 className="font-bold">{p.nome}</h3>
                     {p.descricao ? <p className="text-sm text-suave">{p.descricao}</p> : null}

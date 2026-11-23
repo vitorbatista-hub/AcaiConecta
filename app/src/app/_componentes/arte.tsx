@@ -1,3 +1,5 @@
+import { urlMiniatura } from '@/domain/imagem'
+
 /* Elementos visuais da marca. A arte é original e decorativa: não usa fotos de terceiros (DEC-038). */
 
 export function Logo({ className = 'h-7 w-7' }: { className?: string }) {
@@ -17,10 +19,10 @@ const imagemSegura = (url?: string | null): url is string => Boolean(url && /^(h
  * Foto real quando existe (`imagemUrl`); caso contrário, uma arte da marca.
  * Hoje ainda não há envio de fotos (backlog 2.5), então a arte é o que aparece.
  */
-export function FotoOuArte({ url, alt, variante = 0, className = '' }: { url?: string | null; alt: string; variante?: number; className?: string }) {
+export function FotoOuArte({ url, alt, variante = 0, className = '', miniatura = false }: { url?: string | null; alt: string; variante?: number; className?: string; miniatura?: boolean }) {
   if (imagemSegura(url)) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={url} alt={alt} loading="lazy" referrerPolicy="no-referrer" className={`object-cover ${className}`} />
+    return <img src={miniatura ? urlMiniatura(url) : url} alt={alt} loading="lazy" referrerPolicy="no-referrer" className={`object-cover ${className}`} />
   }
   return (
     <div aria-hidden="true" className={`arte-${Math.abs(variante) % 3} relative flex items-center justify-center overflow-hidden ${className}`}>
