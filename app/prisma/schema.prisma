@@ -1,0 +1,328 @@
+// Mapeamento Prisma do `database/schema.sql` (fonte oficial da estrutura, versão 0.7).
+// A migração 0001 é o próprio schema.sql, para preservar CHECKs, índices e colunas
+// que o Prisma não representa. Este arquivo só descreve o que o cliente precisa.
+// Qualquer mudança estrutural começa no schema.sql (ver README de `app/`).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum TipoUsuario {
+  CLIENTE
+  OPERADOR
+  ADMINISTRADOR
+
+  @@map("usuarios_tipo")
+}
+
+enum StatusUsuario {
+  ATIVO
+  BLOQUEADO
+  DESATIVADO
+
+  @@map("usuarios_status")
+}
+
+enum StatusBatedeira {
+  EM_ANALISE
+  ATIVA
+  SUSPENSA
+  DESATIVADA
+
+  @@map("batedeiras_status")
+}
+
+enum StatusPedido {
+  AGUARDANDO_ACEITE
+  ACEITO
+  EM_PREPARO
+  PRONTO
+  SAIU_PARA_ENTREGA
+  ENTREGUE
+  RECUSADO
+  EXPIRADO
+  CANCELADO
+  FALHA_NA_ENTREGA
+
+  @@map("pedidos_status")
+}
+
+enum FormaPagamento {
+  DINHEIRO
+  PIX_NA_ENTREGA
+
+  @@map("pedidos_forma_pagamento")
+}
+
+enum TipoEventoPedido {
+  PEDIDO_CRIADO
+  STATUS_ALTERADO
+  PEDIDO_RECUSADO
+  PEDIDO_CANCELADO
+  MENSAGEM_OPERACIONAL
+  INTERVENCAO_ADMINISTRATIVA
+
+  @@map("eventos_pedido_tipo")
+}
+
+model Usuario {
+  id            BigInt        @id @default(autoincrement()) @db.UnsignedBigInt
+  nome          String        @db.VarChar(150)
+  email         String        @unique(map: "uq_usuarios_email") @db.VarChar(254)
+  telefone      String?       @db.VarChar(20)
+  senhaHash     String        @map("senha_hash") @db.VarChar(255)
+  tipo          TipoUsuario
+  status        StatusUsuario @default(ATIVO)
+  criadoEm      DateTime      @default(now()) @map("criado_em") @db.Timestamp(0)
+  atualizadoEm  DateTime      @default(now()) @updatedAt @map("atualizado_em") @db.Timestamp(0)
+
+  sessoes          Sessao[]
+  batedeira        Batedeira?
+  enderecos        EnderecoCliente[]
+  pedidos          Pedido[]
+  eventosPedido    EventoPedido[]
+  eventosAuditoria EventoAuditoria[]
+
+  @@map("usuarios")
+}
+
+model Sessao {
+  id          BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  usuarioId   BigInt    @map("usuario_id") @db.UnsignedBigInt
+  tokenHash   String    @unique(map: "uq_sessoes_token") @map("token_hash") @db.Char(64)
+  criadoEm    DateTime  @default(now()) @map("criado_em") @db.Timestamp(0)
+  expiraEm    DateTime  @map("expira_em") @db.Timestamp(0)
+  encerradaEm DateTime? @map("encerrada_em") @db.Timestamp(0)
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId, encerradaEm, expiraEm], map: "idx_sessoes_usuario_ativas")
+  @@map("sessoes")
+}
+
+model TentativaLogin {
+  id         BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  email      String   @db.VarChar(254)
+  origemHash String   @map("origem_hash") @db.Char(64)
+  sucesso    Boolean
+  criadoEm   DateTime @default(now()) @map("criado_em") @db.Timestamp(0)
+
+  @@index([email, criadoEm], map: "idx_tentativas_login_email_janela")
+  @@index([origemHash, criadoEm], map: "idx_tentativas_login_origem_janela")
+  @@map("tentativas_login")
+}
+
+model Bairro {
+  id           BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  nome         String   @unique(map: "uq_bairros_nome") @db.VarChar(100)
+  ativo        Boolean  @default(true)
+  criadoEm     DateTime @default(now()) @map("criado_em") @db.Timestamp(0)
+  atualizadoEm DateTime @default(now()) @updatedAt @map("atualizado_em") @db.Timestamp(0)
+
+  batedeiras       Batedeira[]
+  batedeirasAtende BatedeiraBairro[]
+  enderecos        EnderecoCliente[]
+
+  @@map("bairros")
+}
+
+model Batedeira {
+  id                   BigInt          @id @default(autoincrement()) @db.UnsignedBigInt
+  responsavelId        BigInt          @unique(map: "uq_batedeiras_responsavel") @map("responsavel_id") @db.UnsignedBigInt
+  nome                 String          @db.VarChar(150)
+  descricao            String?         @db.VarChar(500)
+  telefoneOperacional  String?         @map("telefone_operacional") @db.VarChar(20)
+  imagemUrl            String?         @map("imagem_url") @db.VarChar(2048)
+  endereco             String          @db.VarChar(255)
+  bairroId             BigInt          @map("bairro_id") @db.UnsignedBigInt
+  pontoReferencia      String?         @map("ponto_referencia") @db.VarChar(255)
+  status               StatusBatedeira @default(EM_ANALISE)
+  aberta               Boolean         @default(false)
+  entregaDisponivel    Boolean         @default(false) @map("entrega_disponivel")
+  estimativaMinutosMin Int             @map("estimativa_minutos_min") @db.UnsignedSmallInt
+  estimativaMinutosMax Int             @map("estimativa_minutos_max") @db.UnsignedSmallInt
+  criadoEm             DateTime        @default(now()) @map("criado_em") @db.Timestamp(0)
+  atualizadoEm         DateTime        @default(now()) @updatedAt @map("atualizado_em") @db.Timestamp(0)
+
+  responsavel Usuario                  @relation(fields: [responsavelId], references: [id])
+  bairro      Bairro                   @relation(fields: [bairroId], references: [id])
+  horarios    HorarioFuncionamento[]
+  bairros     BatedeiraBairro[]
+  produtos    Produto[]
+  pedidos     Pedido[]
+
+  @@index([status, aberta, entregaDisponivel], map: "idx_batedeiras_status_disponibilidade")
+  @@index([bairroId], map: "idx_batedeiras_bairro")
+  @@map("batedeiras")
+}
+
+model HorarioFuncionamento {
+  id             BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  batedeiraId    BigInt   @map("batedeira_id") @db.UnsignedBigInt
+  diaSemana      Int      @map("dia_semana") @db.UnsignedTinyInt
+  horaAbertura   DateTime @map("hora_abertura") @db.Time(0)
+  horaFechamento DateTime @map("hora_fechamento") @db.Time(0)
+  ativo          Boolean  @default(true)
+
+  batedeira Batedeira @relation(fields: [batedeiraId], references: [id], onDelete: Cascade)
+
+  @@unique([batedeiraId, diaSemana, horaAbertura, horaFechamento], map: "uq_horarios_intervalo")
+  @@index([batedeiraId, diaSemana, ativo], map: "idx_horarios_batedeira_dia")
+  @@map("horarios_funcionamento")
+}
+
+model BatedeiraBairro {
+  id                  BigInt  @id @default(autoincrement()) @db.UnsignedBigInt
+  batedeiraId         BigInt  @map("batedeira_id") @db.UnsignedBigInt
+  bairroId            BigInt  @map("bairro_id") @db.UnsignedBigInt
+  taxaEntregaCentavos Int     @default(0) @map("taxa_entrega_centavos") @db.UnsignedInt
+  ativo               Boolean @default(true)
+
+  batedeira Batedeira @relation(fields: [batedeiraId], references: [id], onDelete: Cascade)
+  bairro    Bairro    @relation(fields: [bairroId], references: [id])
+
+  @@unique([batedeiraId, bairroId], map: "uq_batedeiras_bairros")
+  @@index([bairroId, ativo], map: "idx_batedeiras_bairros_busca")
+  @@map("batedeiras_bairros")
+}
+
+model Produto {
+  id                      BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  batedeiraId             BigInt   @map("batedeira_id") @db.UnsignedBigInt
+  nome                    String   @db.VarChar(150)
+  descricao               String?  @db.VarChar(500)
+  unidade                 String   @db.VarChar(50)
+  volumeMl                Int      @map("volume_ml") @db.UnsignedSmallInt
+  precoCentavos           Int      @map("preco_centavos") @db.UnsignedInt
+  imagemUrl               String?  @map("imagem_url") @db.VarChar(2048)
+  disponivel              Boolean  @default(true)
+  exibirQuandoIndisponivel Boolean @default(false) @map("exibir_quando_indisponivel")
+  ativo                   Boolean  @default(true)
+  criadoEm                DateTime @default(now()) @map("criado_em") @db.Timestamp(0)
+  atualizadoEm            DateTime @default(now()) @updatedAt @map("atualizado_em") @db.Timestamp(0)
+
+  batedeira Batedeira    @relation(fields: [batedeiraId], references: [id])
+  itens     ItemPedido[]
+
+  @@index([batedeiraId, ativo, disponivel], map: "idx_produtos_catalogo")
+  @@map("produtos")
+}
+
+model EnderecoCliente {
+  id              BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  clienteId       BigInt   @map("cliente_id") @db.UnsignedBigInt
+  logradouro      String   @db.VarChar(180)
+  numero          String   @db.VarChar(20)
+  complemento     String?  @db.VarChar(100)
+  bairroId        BigInt   @map("bairro_id") @db.UnsignedBigInt
+  pontoReferencia String?  @map("ponto_referencia") @db.VarChar(255)
+  principal       Boolean  @default(false)
+  ativo           Boolean  @default(true)
+  criadoEm        DateTime @default(now()) @map("criado_em") @db.Timestamp(0)
+  atualizadoEm    DateTime @default(now()) @updatedAt @map("atualizado_em") @db.Timestamp(0)
+
+  cliente Usuario  @relation(fields: [clienteId], references: [id])
+  bairro  Bairro   @relation(fields: [bairroId], references: [id])
+  pedidos Pedido[]
+
+  @@index([clienteId, ativo, principal], map: "idx_enderecos_cliente")
+  @@map("enderecos_clientes")
+}
+
+model Pedido {
+  id                   BigInt         @id @default(autoincrement()) @db.UnsignedBigInt
+  codigo               String         @unique(map: "uq_pedidos_codigo") @db.VarChar(24)
+  chaveIdempotencia    String         @map("chave_idempotencia") @db.VarChar(64)
+  clienteId            BigInt         @map("cliente_id") @db.UnsignedBigInt
+  batedeiraId          BigInt         @map("batedeira_id") @db.UnsignedBigInt
+  enderecoClienteId    BigInt?        @map("endereco_cliente_id") @db.UnsignedBigInt
+  status               StatusPedido   @default(AGUARDANDO_ACEITE)
+  formaPagamento       FormaPagamento @map("forma_pagamento")
+  subtotalCentavos     Int            @map("subtotal_centavos") @db.UnsignedInt
+  taxaEntregaCentavos  Int            @map("taxa_entrega_centavos") @db.UnsignedInt
+  totalCentavos        Int            @map("total_centavos") @db.UnsignedInt
+  volumeTotalMl        Int            @map("volume_total_ml") @db.UnsignedInt
+  trocoParaCentavos    Int?           @map("troco_para_centavos") @db.UnsignedInt
+  observacao           String?        @db.VarChar(500)
+  estimativaMinutosMin Int            @map("estimativa_minutos_min") @db.UnsignedSmallInt
+  estimativaMinutosMax Int            @map("estimativa_minutos_max") @db.UnsignedSmallInt
+  enderecoSnapshot     String         @map("endereco_snapshot") @db.VarChar(255)
+  bairroSnapshot       String         @map("bairro_snapshot") @db.VarChar(100)
+  referenciaSnapshot   String?        @map("referencia_snapshot") @db.VarChar(255)
+  criadoEm             DateTime       @default(now()) @map("criado_em") @db.Timestamp(0)
+  expiraAceiteEm       DateTime       @map("expira_aceite_em") @db.Timestamp(0)
+  aceitoEm             DateTime?      @map("aceito_em") @db.Timestamp(0)
+  finalizadoEm         DateTime?      @map("finalizado_em") @db.Timestamp(0)
+  atualizadoEm         DateTime       @default(now()) @updatedAt @map("atualizado_em") @db.Timestamp(0)
+
+  cliente  Usuario          @relation(fields: [clienteId], references: [id])
+  batedeira Batedeira       @relation(fields: [batedeiraId], references: [id])
+  endereco EnderecoCliente? @relation(fields: [enderecoClienteId], references: [id], onDelete: SetNull)
+  itens    ItemPedido[]
+  eventos  EventoPedido[]
+
+  @@unique([clienteId, chaveIdempotencia], map: "uq_pedidos_cliente_idempotencia")
+  @@index([clienteId, criadoEm], map: "idx_pedidos_cliente_criacao")
+  @@index([batedeiraId, status, criadoEm], map: "idx_pedidos_batedeira_fila")
+  @@index([status, expiraAceiteEm], map: "idx_pedidos_expiracao")
+  @@map("pedidos")
+}
+
+model ItemPedido {
+  id                       BigInt  @id @default(autoincrement()) @db.UnsignedBigInt
+  pedidoId                 BigInt  @map("pedido_id") @db.UnsignedBigInt
+  produtoId                BigInt? @map("produto_id") @db.UnsignedBigInt
+  nomeProdutoSnapshot      String  @map("nome_produto_snapshot") @db.VarChar(150)
+  unidadeSnapshot          String  @map("unidade_snapshot") @db.VarChar(50)
+  volumeUnitarioMlSnapshot Int     @map("volume_unitario_ml_snapshot") @db.UnsignedSmallInt
+  precoUnitarioCentavos    Int     @map("preco_unitario_centavos") @db.UnsignedInt
+  quantidade               Int     @db.UnsignedSmallInt
+  subtotalCentavos         Int     @map("subtotal_centavos") @db.UnsignedInt
+  observacao               String? @db.VarChar(300)
+
+  pedido  Pedido   @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  produto Produto? @relation(fields: [produtoId], references: [id], onDelete: SetNull)
+
+  @@index([pedidoId], map: "idx_itens_pedido_pedido")
+  @@map("itens_pedido")
+}
+
+model EventoPedido {
+  id             BigInt            @id @default(autoincrement()) @db.UnsignedBigInt
+  pedidoId       BigInt            @map("pedido_id") @db.UnsignedBigInt
+  usuarioId      BigInt?           @map("usuario_id") @db.UnsignedBigInt
+  origemProcesso String?           @map("origem_processo") @db.VarChar(100)
+  tipo           TipoEventoPedido
+  statusAnterior StatusPedido?     @map("status_anterior")
+  statusNovo     StatusPedido?     @map("status_novo")
+  motivo         String?           @db.VarChar(255)
+  mensagem       String?           @db.VarChar(500)
+  criadoEm       DateTime          @default(now()) @map("criado_em") @db.Timestamp(0)
+
+  pedido  Pedido   @relation(fields: [pedidoId], references: [id])
+  usuario Usuario? @relation(fields: [usuarioId], references: [id])
+
+  @@index([pedidoId, criadoEm], map: "idx_eventos_pedido_linha_tempo")
+  @@map("eventos_pedido")
+}
+
+model EventoAuditoria {
+  id           BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  usuarioId    BigInt   @map("usuario_id") @db.UnsignedBigInt
+  acao         String   @db.VarChar(100)
+  entidadeTipo String   @map("entidade_tipo") @db.VarChar(100)
+  entidadeId   BigInt   @map("entidade_id") @db.UnsignedBigInt
+  detalhes     Json?
+  criadoEm     DateTime @default(now()) @map("criado_em") @db.Timestamp(0)
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id])
+
+  @@index([entidadeTipo, entidadeId, criadoEm], map: "idx_eventos_auditoria_entidade")
+  @@index([usuarioId, criadoEm], map: "idx_eventos_auditoria_usuario")
+  @@map("eventos_auditoria")
+}

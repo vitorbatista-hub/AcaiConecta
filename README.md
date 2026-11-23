@@ -43,7 +43,7 @@ O produto será validado inicialmente em **Cametá, Pará**, com um grupo pequen
 - Arquitetura técnica: [proposta aprovada](docs/product/arquitetura-tecnica.md) (DEC-046), com as ADRs 001 e 002
 - Modelo de dados: schema SQL 0.7, modelo EER, dicionário de dados e [MER inicial](docs/product/mer-eer-inicial.md) alinhados; sessões e tentativas de login decididas na [ADR-001](docs/architecture/ADRs/ADR-001-sessoes-e-tentativas-de-login.md); aprovados (DEC-046)
 - Backlog: [backlog priorizado do MVP](docs/product/backlog-mvp.md) aprovado (DEC-046)
-- Aplicação: não iniciada
+- Aplicação: iniciada em [`app/`](app/README.md) (DEC-051), do zero e só local. Prontos e testados: regras de domínio, banco, criação idempotente de pedido, máquina de estados, expiração, autenticação e sessões. Telas, tempo real (SSE) e painéis ainda não foram implementados.
 - Piloto: pendente
 
 ## Organização do repositório
@@ -51,6 +51,7 @@ O produto será validado inicialmente em **Cametá, Pará**, com um grupo pequen
 - `docs/`: documentação vigente de produto, pesquisa, banco de dados e arquitetura (ADRs).
 - `docs/product/archive/`: documentos históricos, sem autoridade sobre os requisitos vigentes.
 - `database/`: schema SQL oficial e modelo visual derivado.
+- `app/`: código do MVP (Next.js, TypeScript, Prisma, MySQL), independente do protótipo.
 - `prototypes/web/`: código e recursos do protótipo web em elaboração, com dependências próprias e dados simulados.
 
 O protótipo serve à exploração visual da Fase 2. Suas telas e simulações não substituem o PRD nem representam aprovação das regras de negócio ou da arquitetura do MVP.

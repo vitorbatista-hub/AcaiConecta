@@ -1,0 +1,42 @@
+@import 'tailwindcss';
+
+@theme inline {
+  --color-fundo: var(--fundo);
+  --color-texto: var(--texto);
+  --color-suave: var(--suave);
+  --color-cartao: var(--cartao);
+  --color-borda: var(--borda);
+  --color-marca: var(--marca);
+  --color-marca-texto: var(--marca-texto);
+  --color-folha: var(--folha);
+}
+
+:root {
+  color-scheme: light;
+  --fundo: oklch(0.985 0.004 90);
+  --texto: oklch(0.2 0.03 300);
+  --suave: oklch(0.45 0.02 300);
+  --cartao: oklch(1 0 0);
+  --borda: oklch(0.9 0.01 90);
+  --marca: oklch(0.42 0.15 305);
+  --marca-texto: oklch(0.99 0 0);
+  --folha: oklch(0.42 0.11 135);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --fundo: oklch(0.15 0.02 300);
+    --texto: oklch(0.95 0.01 90);
+    --suave: oklch(0.78 0.02 300);
+    --cartao: oklch(0.2 0.02 300);
+    --borda: oklch(0.32 0.02 300);
+    --marca: oklch(0.72 0.14 305);
+    --marca-texto: oklch(0.15 0.02 300);
+    --folha: oklch(0.76 0.14 135);
+  }
+}
+
+body { background: var(--fundo); color: var(--texto); }
+:focus-visible { outline: 2px solid var(--marca); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
