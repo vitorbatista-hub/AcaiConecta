@@ -1,7 +1,7 @@
 # Backlog priorizado do MVP — AçaíConecta
 
 **Status:** Aprovado em 28/09/2026 (DEC-046) como ordem de trabalho da Fase 3. Estimativas e divisão em sprints ficam para o planejamento da Fase 3.
-**Base:** [PRD 2.6](PRD.md) §8 (escopo funcional), §19 (histórias e critérios de aceite), §25–26 (critérios de prontidão e de lançamento), [decisions.md](decisions.md), [arquitetura-tecnica.md](arquitetura-tecnica.md) e [mer-eer-inicial.md](mer-eer-inicial.md), e o protótipo em `prototypes/web/`.
+**Base:** [PRD 2.6](PRD.md) §8 (escopo funcional), §19 (histórias e critérios de aceite), §25–26 (critérios de prontidão e de lançamento), [decisions.md](decisions.md), [arquitetura-tecnica.md](arquitetura-tecnica.md) e [mer-eer-inicial.md](mer-eer-inicial.md), e o protótipo em `app/`.
 
 Convenção de prioridade:
 
@@ -18,7 +18,7 @@ Cada item referencia a história de usuário (US-xx) ou a seção do PRD que o o
 
 | # | Item | Prioridade | Origem | Notas |
 |---|---|---|---|---|
-| 1.1 | Projeto Next.js + TypeScript + Prisma + MySQL provisionado em homologação, a partir da baseline já validada no protótipo | P0 | DEC-023, [arquitetura-tecnica.md §2](arquitetura-tecnica.md#2-visão-geral-da-arquitetura) | Reaproveitar estrutura de `prototypes/web/`, não recomeçar do zero. |
+| 1.1 | Projeto Next.js + TypeScript + Prisma + MySQL provisionado em homologação, a partir da baseline já validada no protótipo | P0 | DEC-023, [arquitetura-tecnica.md §2](arquitetura-tecnica.md#2-visão-geral-da-arquitetura) | Reaproveitar estrutura de `app/`, não recomeçar do zero. |
 | 1.2 | Migrações Prisma a partir de [`database/schema.sql`](../../database/schema.sql) e [mer-eer-inicial.md](mer-eer-inicial.md), que já define tipos, índices e a constraint de idempotência (`uq_pedidos_cliente_idempotencia`), com as pendências de [mer-eer-inicial.md §4](mer-eer-inicial.md#4-pendências) fechadas | P0 | PRD §18.3, §24.3 | Bloqueia qualquer persistência real. |
 | 1.3 | Sessão de servidor (cookie httpOnly) e verificação de papel em toda mutação | P0 | PRD §16.1, [arquitetura-tecnica.md §7](arquitetura-tecnica.md#7-autenticação-e-autorização) | Sem isso, nenhuma US com controle de acesso pode ser considerada concluída, mesmo que a tela funcione. |
 | 1.4 | Ambiente de homologação separado de produção | P1 | Roadmap Fase 3; PRD §26 | Critério de lançamento do piloto. |

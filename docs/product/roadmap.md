@@ -33,7 +33,7 @@ Confirmar que o problema é relevante e que existe disposição real de batedeir
 
 **Situação:** Concluída em 28/09/2026 (DEC-049)
 
-**Protótipo:** disponível em [`../../prototypes/web/`](../../prototypes/web/README.md), com verificação técnica documentada. Testes de usabilidade considerados satisfatórios em 28/09/2026 (DEC-045).
+**Protótipo:** disponível em [`../../app/`](../../app/README.md), com verificação técnica documentada. Testes de usabilidade considerados satisfatórios em 28/09/2026 (DEC-045).
 
 **Modelo de dados, arquitetura e backlog:** [modelo conceitual e MER inicial](mer-eer-inicial.md), [dicionário de dados](../database/data-dictionary.md), [arquitetura técnica proposta](arquitetura-tecnica.md) e [backlog priorizado do MVP](backlog-mvp.md) aprovados em 28/09/2026 (DEC-046), com as decisões de arquitetura ADR-001 e ADR-002.
 

@@ -15,7 +15,7 @@ O protótipo não define regras de negócio. As referências do produto continua
 Requer Node.js 24 e pnpm compatível com o lockfile. Na raiz do repositório:
 
 ```sh
-cd prototypes/web
+cd app
 pnpm install --frozen-lockfile
 pnpm dev
 ```

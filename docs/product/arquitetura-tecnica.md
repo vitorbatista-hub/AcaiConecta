@@ -1,7 +1,7 @@
 # Arquitetura técnica proposta — AçaíConecta
 
 **Status:** Aprovada em 28/09/2026 (DEC-046). As escolhas de infraestrutura concreta (provedor de hospedagem, banco gerenciado, e-mail, etc.) são gates externos da Fase 3 (PRD §24.2) e não são fixadas aqui.
-**Base:** [PRD 2.6](PRD.md) §18 (requisitos não funcionais), §24.3 (baseline tecnológica: DEC-023), [decisions.md](decisions.md), [roadmap.md](roadmap.md) (entregáveis e critérios de conclusão da Fase 3), e o protótipo em `prototypes/web/`.
+**Base:** [PRD 2.6](PRD.md) §18 (requisitos não funcionais), §24.3 (baseline tecnológica: DEC-023), [decisions.md](decisions.md), [roadmap.md](roadmap.md) (entregáveis e critérios de conclusão da Fase 3), e o protótipo em `app/`.
 
 Escopo desta proposta: arquitetura para a Fase 3 (construção do MVP), dimensionada para um piloto de 3 a 5 batedeiras em um único bairro, sem processamento de pagamento pela plataforma. Não é uma arquitetura para escala regional (Fase 6).
 
@@ -46,7 +46,7 @@ Não há necessidade de um backend separado nem de comunicação entre serviços
 
 ## 3. Frontend
 
-- **Next.js (App Router) + React + TypeScript + Tailwind CSS**, como já validado no protótipo (`prototypes/web/`). Reaproveitar componentes e lógica de domínio já escritos ali sempre que a regra de negócio coincidir com o PRD vigente (endereços salvos seguem a DEC-040, com no máximo dois por cliente; ver [mer-eer-inicial.md §3](mer-eer-inicial.md#3-decisões-e-suposições-de-modelagem)).
+- **Next.js (App Router) + React + TypeScript + Tailwind CSS**, como já validado no protótipo (`app/`). Reaproveitar componentes e lógica de domínio já escritos ali sempre que a regra de negócio coincidir com o PRD vigente (endereços salvos seguem a DEC-040, com no máximo dois por cliente; ver [mer-eer-inicial.md §3](mer-eer-inicial.md#3-decisões-e-suposições-de-modelagem)).
 - **PWA instalável**: manifest + service worker mínimo para instalação em tela inicial (PRD exige "web responsiva e instalável", sem exigir app nativo). Não usar o service worker para funcionamento offline completo no MVP — pedidos exigem conectividade; o objetivo é só a instalabilidade e um retorno gracioso em conexão instável (PRD §18.2, §23 "Internet instável").
 - **Três áreas por papel** (`/cliente`, `/operador`, `/admin`), como já estruturado no protótipo, cada uma atrás de verificação de sessão e papel no servidor.
 - **Acessibilidade** (PRD §18.4): manter os padrões já aplicados no protótipo (foco em modais, navegação por teclado, rótulos) como parte do Definition of Done de cada tela nova, não como revisão isolada ao final.

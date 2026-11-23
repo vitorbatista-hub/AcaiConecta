@@ -16,7 +16,7 @@ Os trabalhos atuais incluem:
 
 ## Documentação
 
-- [Protótipo web em elaboração — status, execução e pendências](prototypes/web/README.md)
+- [Protótipo web em elaboração — status, execução e pendências](app/README.md)
 - [Vitrine opcional do protótipo no v0 — pode estar defasada em relação ao repositório (DEC-041)](https://v0.app/vitors-projects-edcbface/chat/acaiconecta-jAWnqGHlb8w)
 - [PRD vigente (2.6, aprovado)](docs/product/PRD.md)
 - [Roadmap](docs/product/roadmap.md)
@@ -39,11 +39,11 @@ O produto será validado inicialmente em **Cametá, Pará**, com um grupo pequen
 
 ## Situação da implementação
 
-- Protótipo: três perfis navegáveis com dados simulados; tipos, 24 testes e build aprovados; testes de usabilidade concluídos (DEC-045); verificação automatizada em navegador das telas mais recentes pendente (ver [README do protótipo](prototypes/web/README.md))
+- Protótipo: três perfis navegáveis com dados simulados; tipos, 28 testes e build aprovados; testes de usabilidade concluídos (DEC-045); verificação automatizada em navegador das telas mais recentes pendente (ver [README do protótipo](app/README.md))
 - Arquitetura técnica: [proposta aprovada](docs/product/arquitetura-tecnica.md) (DEC-046), com as ADRs 001 e 002
 - Modelo de dados: schema SQL 0.7, modelo EER, dicionário de dados e [MER inicial](docs/product/mer-eer-inicial.md) alinhados; sessões e tentativas de login decididas na [ADR-001](docs/architecture/ADRs/ADR-001-sessoes-e-tentativas-de-login.md); aprovados (DEC-046)
 - Backlog: [backlog priorizado do MVP](docs/product/backlog-mvp.md) aprovado (DEC-046)
-- Aplicação: iniciada em [`app/`](app/README.md) (DEC-051), do zero e só local. Prontos e testados: regras de domínio, banco, criação idempotente de pedido, máquina de estados, expiração, autenticação e sessões. Telas, tempo real (SSE) e painéis ainda não foram implementados.
+- Aplicação do MVP: a implementação anterior (DEC-051) foi descartada em 23/11/2026 e permanece apenas no histórico do Git; o código-fonte atual em [`app/`](app/README.md) é o antigo protótipo, com dados simulados. A decisão sobre como seguir para o MVP ainda precisa ser registrada.
 - Piloto: pendente
 
 ## Organização do repositório
@@ -51,8 +51,7 @@ O produto será validado inicialmente em **Cametá, Pará**, com um grupo pequen
 - `docs/`: documentação vigente de produto, pesquisa, banco de dados e arquitetura (ADRs).
 - `docs/product/archive/`: documentos históricos, sem autoridade sobre os requisitos vigentes.
 - `database/`: schema SQL oficial e modelo visual derivado.
-- `app/`: código do MVP (Next.js, TypeScript, Prisma, MySQL), independente do protótipo.
-- `prototypes/web/`: código e recursos do protótipo web em elaboração, com dependências próprias e dados simulados.
+- `app/`: código e recursos do protótipo web em elaboração, com dependências próprias e dados simulados.
 
 O protótipo serve à exploração visual da Fase 2. Suas telas e simulações não substituem o PRD nem representam aprovação das regras de negócio ou da arquitetura do MVP.
 

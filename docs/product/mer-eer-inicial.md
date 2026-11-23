@@ -1,7 +1,7 @@
 # Modelo conceitual e MER inicial — AçaíConecta
 
 **Status:** Aprovado em 28/09/2026 (DEC-046), junto com o schema SQL 0.7, o modelo EER (`database/acai_conecta.mwb`) e o dicionário de dados.
-**Base:** [PRD 2.6](PRD.md), [decisions.md](decisions.md), [flows.md](flows.md), [`database/schema.sql`](../../database/schema.sql) (versão 0.7, fonte oficial da estrutura) e o protótipo (`prototypes/web/lib/mock-data.ts`, `customer-session.ts`, `order-presentation.ts`).
+**Base:** [PRD 2.6](PRD.md), [decisions.md](decisions.md), [flows.md](flows.md), [`database/schema.sql`](../../database/schema.sql) (versão 0.7, fonte oficial da estrutura) e o protótipo (`app/lib/mock-data.ts`, `customer-session.ts`, `order-presentation.ts`).
 
 Este documento descreve entidades, relacionamentos e decisões de modelagem a partir das regras do MVP, alinhado ao schema SQL 0.7. O significado de cada campo e a regra de negócio correspondente ficam somente no [dicionário de dados](../database/data-dictionary.md), para não manter a mesma descrição em dois lugares. Ele não substitui o PRD: qualquer conflito entre este modelo e o PRD ou o `decisions.md` deve ser resolvido nessas fontes; qualquer conflito com o schema deve ser corrigido aqui ou registrado como mudança do schema.
 
