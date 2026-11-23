@@ -4,9 +4,9 @@ import { formatarReais } from '@/domain/dinheiro'
 import { dataHoraLocal, DESCRICAO_STATUS, descreverEvento, ETAPAS, etapaDoStatus, horaLocal, pedidoEncerrado, ROTULO_STATUS, textoEstimativa } from '@/domain/pedido/apresentacao'
 import { pedidoDoCliente } from '@/server/consultas-cliente'
 import { exigirPapelNaPagina } from '@/server/guardas'
-import { expirarPedidosVencidos } from '@/server/pedidos'
+import { ultimoEventoId } from '@/server/eventos'
 import { Cabecalho } from '../../_componentes/cabecalho'
-import { AtualizarPeriodicamente } from '../atualizar'
+import { TempoReal } from '../../_componentes/tempo-real'
 import { BotaoCancelar } from '../cancelar'
 
 export const metadata = { title: 'Acompanhar pedido — AçaíConecta' }
@@ -16,8 +16,7 @@ export default async function AcompanharPedido({ params }: { params: Promise<{ c
   const { codigo } = await params
   const cliente = await exigirPapelNaPagina('CLIENTE', `/pedidos/${codigo}`)
   if (!/^AC-[A-Z0-9]{8}$/.test(codigo)) notFound()
-  // Contingência até o agendamento da expiração: expira os pedidos vencidos ao consultar.
-  await expirarPedidosVencidos()
+  const desde = await ultimoEventoId({ tipo: 'pedido', codigo, clienteId: cliente.id })
   const p = await pedidoDoCliente(cliente.id, codigo)
   if (!p) notFound()
   const etapa = etapaDoStatus(p.status)
@@ -26,7 +25,7 @@ export default async function AcompanharPedido({ params }: { params: Promise<{ c
   return (
     <>
       <Cabecalho />
-      <AtualizarPeriodicamente ativo={!encerrado} />
+      <TempoReal url={`/api/eventos/pedido/${codigo}?desde=${desde}`} ativo={!encerrado} />
       <main className="mx-auto flex max-w-3xl flex-col gap-5 px-4 py-6">
         <Link href="/pedidos" className="text-sm font-semibold underline">← Meus pedidos</Link>
         <div>

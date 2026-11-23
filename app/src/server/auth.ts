@@ -64,7 +64,7 @@ export type UsuarioAutenticado = {
 }
 
 /** Valida o token de uma requisição. Sessão encerrada, expirada ou de conta inativa é recusada. */
-export async function usuarioDaSessao(token: string, agora: Date = new Date()): Promise<UsuarioAutenticado | null> {
+export async function usuarioDaSessao(token: string, agora: Date = new Date(), renovar = true): Promise<UsuarioAutenticado | null> {
   if (!token) return null
   const sessao = await prisma.sessao.findUnique({
     where: { tokenHash: hashDoToken(token) },
@@ -73,8 +73,9 @@ export async function usuarioDaSessao(token: string, agora: Date = new Date()): 
   if (!sessao) return null
   const { usuario } = sessao
   if (!sessaoValida({ encerradaEm: sessao.encerradaEm, expiraEm: sessao.expiraEm, usuarioAtivo: usuario.status === 'ATIVO' }, agora)) return null
+  // `renovar = false` serve a verificações periódicas (conexões SSE) que não devem estender a sessão.
   const renovada = expiracaoRenovada(usuario.tipo, agora, sessao.expiraEm)
-  if (renovada.getTime() !== sessao.expiraEm.getTime()) {
+  if (renovar && renovada.getTime() !== sessao.expiraEm.getTime()) {
     await prisma.sessao.update({ where: { id: sessao.id }, data: { expiraEm: renovada } })
   }
   return { id: usuario.id, nome: usuario.nome, tipo: usuario.tipo, batedeiraId: usuario.batedeira?.id ?? null }

@@ -5,6 +5,8 @@ import { STATUS_PEDIDO, type StatusPedido } from '@/domain/pedido/estados'
 import { adminDaPagina } from '@/server/guardas-admin'
 import { listarBatedeirasAdmin, listarPedidosAdmin } from '@/server/admin'
 import { Cabecalho } from '../../_componentes/cabecalho'
+import { TempoReal } from '../../_componentes/tempo-real'
+import { ultimoEventoId } from '@/server/eventos'
 import { NavegacaoAdmin } from '../navegacao'
 
 export const metadata = { title: 'Pedidos — AçaíConecta' }
@@ -17,10 +19,12 @@ export default async function Pedidos({ searchParams }: { searchParams: Promise<
   const status = (STATUS_PEDIDO as readonly string[]).includes(q.status ?? '') ? (q.status as StatusPedido) : undefined
   const batedeiraId = q.batedeira && /^\d{1,19}$/.test(q.batedeira) ? BigInt(q.batedeira) : undefined
   const codigo = q.codigo?.trim().slice(0, 24) || undefined
+  const desde = await ultimoEventoId({ tipo: 'admin' })
   const [pedidos, batedeiras] = await Promise.all([listarPedidosAdmin({ batedeiraId, status, codigo }), listarBatedeirasAdmin()])
   return (
     <>
       <Cabecalho />
+      <TempoReal url={`/api/eventos/admin?desde=${desde}`} />
       <main className="mx-auto flex max-w-3xl flex-col gap-5 px-4 py-6">
         <h1 className="text-3xl font-black tracking-tight">Pedidos</h1>
         <NavegacaoAdmin atual="/admin/pedidos" />

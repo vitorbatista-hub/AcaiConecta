@@ -5,7 +5,9 @@ import { dataHoraLocal, descreverEvento, pedidoEncerrado, ROTULO_STATUS } from '
 import { proximosEstadosPermitidos } from '@/domain/pedido/estados'
 import { adminDaPagina } from '@/server/guardas-admin'
 import { pedidoAdmin } from '@/server/admin'
-import { expirarPedidosVencidos, MENSAGENS_OPERACIONAIS } from '@/server/pedidos'
+import { ultimoEventoId } from '@/server/eventos'
+import { MENSAGENS_OPERACIONAIS } from '@/server/pedidos'
+import { TempoReal } from '../../../_componentes/tempo-real'
 import { Cabecalho } from '../../../_componentes/cabecalho'
 import { NavegacaoAdmin } from '../../navegacao'
 import { Suporte } from './suporte'
@@ -17,7 +19,7 @@ export default async function PedidoAdmin({ params }: { params: Promise<{ codigo
   const { codigo } = await params
   const a = await adminDaPagina(`/admin/pedidos/${codigo}`)
   if (!/^AC-[A-Z0-9]{8}$/.test(codigo)) notFound()
-  await expirarPedidosVencidos()
+  const desde = await ultimoEventoId({ tipo: 'admin', codigo })
   const p = await pedidoAdmin(codigo)
   if (!p) notFound()
   const podeCancelar = proximosEstadosPermitidos(p.status, { tipo: 'USUARIO', papel: 'ADMINISTRADOR', usuarioId: a.id }).includes('CANCELADO')
@@ -25,6 +27,7 @@ export default async function PedidoAdmin({ params }: { params: Promise<{ codigo
   return (
     <>
       <Cabecalho />
+      <TempoReal url={`/api/eventos/admin?codigo=${codigo}&desde=${desde}`} />
       <main className="mx-auto flex max-w-3xl flex-col gap-5 px-4 py-6">
         <Link href="/admin/pedidos" className="text-sm font-semibold underline">← Pedidos</Link>
         <div>

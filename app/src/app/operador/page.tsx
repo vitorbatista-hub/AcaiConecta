@@ -5,7 +5,8 @@ import { MOTIVOS_CANCELAMENTO_OPERACIONAL, MOTIVOS_FALHA_ENTREGA, MOTIVOS_RECUSA
 import { prisma } from '@/db/client'
 import { operadorDaPagina } from '@/server/guardas-operador'
 import { filaDoOperador, resumoDoDia } from '@/server/operador'
-import { expirarPedidosVencidos, horariosDe, MENSAGENS_OPERACIONAIS } from '@/server/pedidos'
+import { ultimoEventoId } from '@/server/eventos'
+import { horariosDe, MENSAGENS_OPERACIONAIS } from '@/server/pedidos'
 import { Cabecalho } from '../_componentes/cabecalho'
 import { AcoesPedido, type AcaoPedido } from './acoes-pedido'
 import { AoVivo } from './ao-vivo'
@@ -33,8 +34,8 @@ export default async function PainelOperador() {
   const o = await operadorDaPagina('/operador')
   if (!o) return <SemBatedeira />
   const agora = new Date()
-  // Contingência até o agendamento da expiração (backlog 4.3): expira os vencidos ao consultar.
-  await expirarPedidosVencidos(agora)
+  // Lido antes dos dados: eventos entre a leitura e a conexão SSE são reenviados, nunca perdidos.
+  const desde = await ultimoEventoId({ tipo: 'batedeira', batedeiraId: o.batedeiraId })
   const [{ ativos, encerradosHoje }, resumo, b] = await Promise.all([
     filaDoOperador(o.batedeiraId, agora),
     resumoDoDia(o.batedeiraId, agora),
@@ -53,7 +54,7 @@ export default async function PainelOperador() {
           {b.status !== 'ATIVA' ? <p role="alert" className="mt-1 font-bold text-red-700 dark:text-red-400">Batedeira {b.status === 'EM_ANALISE' ? 'em análise' : b.status === 'SUSPENSA' ? 'suspensa' : 'desativada'}: não recebe novos pedidos.</p> : null}
         </div>
         <NavegacaoOperador atual="/operador" />
-        <AoVivo aguardando={aguardando} />
+        <AoVivo aguardando={aguardando} desde={desde.toString()} />
 
         <ChavesDisponibilidade aberta={b.aberta} entrega={b.entregaDisponivel} aceitando={aceitaPedidosAgora(disp, agora)} />
         {!estaAbertaAgora(disp, agora) && b.aberta && b.status === 'ATIVA' ? <p className="text-sm text-suave">A chave está em “aberta”, mas agora está fora do horário regular cadastrado.</p> : null}
