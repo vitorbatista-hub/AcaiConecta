@@ -3,7 +3,7 @@
 **Estado:** Proposta (aguarda aprovação do responsável pelo projeto)
 **Data:** 2026-11-23
 **Responsável pela decisão:** responsável pelo projeto
-**Relacionados:** PRD 2.6 §17, §18.5 e §23; backlog 1.5 e 7.7; [ADR-003](ADR-003-infraestrutura-de-hospedagem.md) §4; [arquitetura técnica](../../product/arquitetura-tecnica.md) §10
+**Relacionados:** PRD 2.6 §17, §18.5 e §23; backlog 1.5 e 7.7; [ADR-003](ADR-003-infraestrutura.md) §4; [arquitetura técnica](../../product/arquitetura-tecnica.md) §10
 
 ## Contexto
 
