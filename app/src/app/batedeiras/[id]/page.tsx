@@ -4,6 +4,7 @@ import { textoEstimativa, textoProximaAbertura } from '@/domain/pedido/apresenta
 import { enderecosDoCliente, perfilBatedeira } from '@/server/consultas-cliente'
 import { usuarioAtual } from '@/server/guardas'
 import { Cabecalho } from '../../_componentes/cabecalho'
+import { FotoOuArte } from '../../_componentes/arte'
 import { Sacola } from './sacola'
 
 export const dynamic = 'force-dynamic'
@@ -26,8 +27,11 @@ export default async function PerfilBatedeira({ params }: { params: Promise<{ id
   return (
     <>
       <Cabecalho />
+      <div className="relative">
+        <FotoOuArte url={b.imagemUrl} alt={`Foto da batedeira ${b.nome}`} variante={Number(b.id % 3n)} className="h-44 w-full sm:h-56" />
+      </div>
       <main className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-6">
-        <Link href="/" className="text-sm font-semibold underline">← Todas as batedeiras</Link>
+        <Link href="/batedeiras" className="text-sm font-semibold underline">← Todas as batedeiras</Link>
         <div>
           <h1 className="text-3xl font-black tracking-tight">{b.nome}</h1>
           {b.descricao ? <p className="mt-1 text-suave">{b.descricao}</p> : null}
@@ -46,7 +50,7 @@ export default async function PerfilBatedeira({ params }: { params: Promise<{ id
           nomeBatedeira={b.nome}
           aceitaPedidos={b.aceitaPedidos}
           motivoIndisponivel={motivo}
-          produtos={b.produtos.map(p => ({ id: p.id.toString(), nome: p.nome, descricao: p.descricao, unidade: p.unidade, volumeMl: p.volumeMl, precoCentavos: p.precoCentavos, disponivel: p.disponivel }))}
+          produtos={b.produtos.map(p => ({ id: p.id.toString(), nome: p.nome, descricao: p.descricao, unidade: p.unidade, volumeMl: p.volumeMl, precoCentavos: p.precoCentavos, disponivel: p.disponivel, imagemUrl: p.imagemUrl }))}
           bairros={b.bairros.map(x => ({ id: x.bairroId.toString(), nome: x.bairro.nome, taxaCentavos: x.taxaEntregaCentavos }))}
           enderecos={enderecos.map(e => ({ id: e.id.toString(), bairroId: e.bairroId.toString(), principal: e.principal, texto: `${e.logradouro}, ${e.numero} — ${e.bairro.nome}` }))}
           logado={Boolean(cliente)}

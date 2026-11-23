@@ -4,9 +4,10 @@ import Link from 'next/link'
 import { useActionState, useEffect, useMemo, useState } from 'react'
 import { formatarReais } from '@/domain/dinheiro'
 import { QUANTIDADE_MAXIMA, VOLUME_MINIMO_ML } from '@/domain/pedido/calculo'
+import { FotoOuArte } from '../../_componentes/arte'
 import { enviarPedidoAction } from './actions'
 
-export type ProdutoVitrine = { id: string; nome: string; descricao: string | null; unidade: string; volumeMl: number; precoCentavos: number; disponivel: boolean }
+export type ProdutoVitrine = { id: string; nome: string; descricao: string | null; unidade: string; volumeMl: number; precoCentavos: number; disponivel: boolean; imagemUrl: string | null }
 export type BairroAtendido = { id: string; nome: string; taxaCentavos: number }
 export type EnderecoSalvo = { id: string; texto: string; bairroId: string; principal: boolean }
 
@@ -77,14 +78,15 @@ export function Sacola(props: {
           {produtos.map(p => {
             const n = qtd[p.id] ?? 0
             return (
-              <li key={p.id} className={`rounded-xl border border-borda bg-cartao p-4 ${p.disponivel ? '' : 'opacity-70'}`}>
-                <div className="flex items-start justify-between gap-3">
-                  <div>
+              <li key={p.id} className={`rounded-2xl border border-borda bg-cartao p-4 sombra-suave ${p.disponivel ? '' : 'opacity-70'}`}>
+                <div className="flex items-start gap-3">
+                  <FotoOuArte url={p.imagemUrl} alt={`Foto de ${p.nome}`} variante={Number(p.volumeMl) / 500} className="h-20 w-20 shrink-0 rounded-xl" />
+                  <div className="min-w-0 flex-1">
                     <h3 className="font-bold">{p.nome}</h3>
                     {p.descricao ? <p className="text-sm text-suave">{p.descricao}</p> : null}
                     <p className="mt-1 text-sm text-suave">{p.unidade}</p>
                   </div>
-                  <p className="shrink-0 font-black">{formatarReais(p.precoCentavos)}</p>
+                  <p className="shrink-0 text-lg font-black">{formatarReais(p.precoCentavos)}</p>
                 </div>
                 {p.disponivel ? (
                   props.aceitaPedidos ? (

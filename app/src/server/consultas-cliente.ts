@@ -76,3 +76,13 @@ export const pedidoDoCliente = (clienteId: bigint, codigo: string) =>
       eventos: { orderBy: [{ criadoEm: 'asc' }, { id: 'asc' }] },
     },
   })
+
+/** Vitrine da página inicial: até `n` batedeiras (as que recebem pedidos primeiro) com seus primeiros produtos disponíveis. */
+export async function batedeirasEmDestaque(n: number, agora: Date = new Date()) {
+  const lista = (await listarBatedeiras({}, agora)).slice(0, n)
+  const produtos = await prisma.produto.findMany({
+    where: { batedeiraId: { in: lista.map(b => b.id) }, ativo: true, disponivel: true },
+    orderBy: [{ volumeMl: 'asc' }, { nome: 'asc' }],
+  })
+  return lista.map(b => ({ ...b, produtos: produtos.filter(p => p.batedeiraId === b.id).slice(0, 3) }))
+}

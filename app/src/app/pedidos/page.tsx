@@ -18,7 +18,7 @@ export default async function MeusPedidos() {
         <h1 className="text-3xl font-black tracking-tight">Meus pedidos</h1>
         {pedidos.length === 0 ? (
           <p className="rounded-xl border border-borda bg-cartao p-6 text-center text-suave">
-            Você ainda não fez pedidos. <Link href="/" className="font-bold text-marca underline">Ver batedeiras</Link>
+            Você ainda não fez pedidos. <Link href="/batedeiras" className="font-bold text-marca underline">Ver batedeiras</Link>
           </p>
         ) : (
           <ul className="flex flex-col gap-3">

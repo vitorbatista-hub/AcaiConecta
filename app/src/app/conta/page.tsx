@@ -15,7 +15,7 @@ export default async function Conta() {
       <main className="mx-auto flex max-w-3xl flex-col gap-5 px-4 py-6">
         <h1 className="text-3xl font-black tracking-tight">Olá, {cliente.nome}</h1>
         <nav className="flex gap-4 text-sm font-bold">
-          <Link href="/" className="text-marca underline">Fazer um pedido</Link>
+          <Link href="/batedeiras" className="text-marca underline">Fazer um pedido</Link>
           <Link href="/pedidos" className="text-marca underline">Meus pedidos</Link>
         </nav>
         <section aria-labelledby="h-end" className="rounded-xl border border-borda bg-cartao p-4">
