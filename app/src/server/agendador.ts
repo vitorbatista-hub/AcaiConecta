@@ -1,4 +1,6 @@
+import { descreverErro } from '@/domain/log'
 import { expurgarAutenticacao } from './auth'
+import { log } from './log'
 import { expirarPedidosVencidos } from './pedidos'
 
 /** Tarefas periódicas do processo (backlog 4.3 e 7.3). Rodam dentro do servidor Node persistente (ADR-002/003). */
@@ -42,11 +44,25 @@ export function iniciarAgendador(): Agendador | null {
   if (process.env.AGENDADOR_DESLIGADO === '1') return null
   global.agendadorAcai ??= criarAgendador(
     [
-      { nome: 'expiracao-de-pedidos', intervaloMs: INTERVALO_EXPIRACAO_MS, executar: () => expirarPedidosVencidos() },
-      { nome: 'expurgo-de-autenticacao', intervaloMs: INTERVALO_EXPURGO_MS, executar: () => expurgarAutenticacao() },
+      {
+        nome: 'expiracao-de-pedidos',
+        intervaloMs: INTERVALO_EXPIRACAO_MS,
+        executar: async () => {
+          const n = await expirarPedidosVencidos()
+          if (n > 0) await log.info('pedidos_expirados', { quantidade: n, tarefa: 'expiracao-de-pedidos' })
+        },
+      },
+      {
+        nome: 'expurgo-de-autenticacao',
+        intervaloMs: INTERVALO_EXPURGO_MS,
+        executar: async () => {
+          const r = await expurgarAutenticacao()
+          await log.info('expurgo_autenticacao', { ...r, tarefa: 'expurgo-de-autenticacao' })
+        },
+      },
     ],
-    // Só o nome da tarefa e o tipo do erro: nunca o conteúdo, que pode conter dados de pedidos ou credenciais.
-    (nome, erro) => console.error(`[agendador] falha em ${nome}: ${erro instanceof Error ? erro.name : 'erro desconhecido'}`),
+    // Só a tarefa e o tipo do erro: nunca o conteúdo, que pode conter dados de pedidos ou credenciais.
+    (nome, erro) => void log.error('agendador_falhou', { tarefa: nome, erro: descreverErro(erro) }),
   )
   return global.agendadorAcai
 }

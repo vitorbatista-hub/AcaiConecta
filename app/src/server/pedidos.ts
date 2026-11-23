@@ -5,6 +5,7 @@ import { aceitaPedidosAgora, type Horario } from '@/domain/disponibilidade'
 import { calcularPedido, calcularPrazoAceite, type FormaPagamento, validarTroco } from '@/domain/pedido/calculo'
 import { type Ator, validarTransicao, type StatusPedido } from '@/domain/pedido/estados'
 import { ErroNegocio } from './erros'
+import { log } from './log'
 
 export const MENSAGENS_OPERACIONAIS = [
   'O entregador chegou.',
@@ -85,7 +86,10 @@ export async function criarPedido(entrada: EntradaPedido, agora: Date = new Date
   if (chave.length < 8 || chave.length > 64) throw new ErroNegocio('CHAVE_INVALIDA', 'Requisição inválida. Recarregue a página e tente de novo.')
   const existente = () => prisma.pedido.findUnique({ where: { clienteId_chaveIdempotencia: { clienteId: entrada.clienteId, chaveIdempotencia: chave } } })
   const anterior = await existente()
-  if (anterior) return { pedido: anterior, criado: false as const }
+  if (anterior) {
+    await log.info('pedido_repetido_ignorado', { pedido: anterior.codigo })
+    return { pedido: anterior, criado: false as const }
+  }
 
   try {
     const pedido = await prisma.$transaction(async tx => {
@@ -167,12 +171,16 @@ export async function criarPedido(entrada: EntradaPedido, agora: Date = new Date
       })
       return criado
     })
+    await log.info('pedido_criado', { pedido: pedido.codigo, batedeira: pedido.batedeiraId, totalCentavos: pedido.totalCentavos, volumeMl: pedido.volumeTotalMl })
     return { pedido, criado: true as const }
   } catch (e) {
     // Duas requisições simultâneas com a mesma chave: a restrição única do banco decide.
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
       const vencedor = await existente()
-      if (vencedor) return { pedido: vencedor, criado: false as const }
+      if (vencedor) {
+        await log.info('pedido_repetido_ignorado', { pedido: vencedor.codigo, simultaneo: true })
+        return { pedido: vencedor, criado: false as const }
+      }
     }
     throw e
   }
@@ -188,7 +196,7 @@ export async function transicionarPedido(
   args: { pedidoId: bigint; para: StatusPedido; ator: Ator; motivo?: string | null },
   agora: Date = new Date(),
 ) {
-  return prisma.$transaction(async tx => {
+  const atualizado = await prisma.$transaction(async tx => {
     await tx.$queryRaw`SELECT id FROM pedidos WHERE id = ${args.pedidoId} FOR UPDATE`
     const pedido = await tx.pedido.findUnique({ where: { id: args.pedidoId } })
     if (!pedido) throw new ErroNegocio('PEDIDO_NAO_ENCONTRADO', 'Pedido não encontrado.')
@@ -216,8 +224,16 @@ export async function transicionarPedido(
         criadoEm: agora,
       },
     })
-    return atualizado
+    return { atualizado, de: t.de }
   })
+  await log.info('pedido_transicao', {
+    pedido: atualizado.atualizado.codigo,
+    de: atualizado.de,
+    para: args.para,
+    ator: args.ator.tipo === 'SISTEMA' ? 'SISTEMA' : args.ator.papel,
+    processo: args.ator.tipo === 'SISTEMA' ? args.ator.processo : undefined,
+  })
+  return atualizado.atualizado
 }
 
 /** Expira os pedidos cujo prazo de 5 minutos terminou. Seguro para rodar em paralelo e repetidamente. */

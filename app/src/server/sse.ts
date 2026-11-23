@@ -20,6 +20,8 @@ export type OpcoesFluxo = {
   duracaoMaxMs?: number
   agora?: () => number
   dormir?: (ms: number, sinal: AbortSignal) => Promise<void>
+  /** Chamado quando a consulta ou a verificação da sessão falha e o fluxo é encerrado. */
+  aoFalhar?: (etapa: 'consulta' | 'sessao', erro: unknown) => void
 }
 
 export const dormirAteAbortar = (ms: number, sinal: AbortSignal) =>
@@ -52,8 +54,9 @@ export async function* fluxoSSE(o: OpcoesFluxo): AsyncGenerator<string> {
     let novos: EventoSSE[]
     try {
       novos = await o.consultar(ultimo)
-    } catch {
+    } catch (e) {
       // Falha transitória do banco: encerra; o navegador reconecta e retoma pelo Last-Event-ID.
+      o.aoFalhar?.('consulta', e)
       return
     }
     for (const e of novos) {
@@ -68,7 +71,8 @@ export async function* fluxoSSE(o: OpcoesFluxo): AsyncGenerator<string> {
       let valida = false
       try {
         valida = await o.sessaoValida()
-      } catch {
+      } catch (e) {
+        o.aoFalhar?.('sessao', e)
         return
       }
       if (!valida) {

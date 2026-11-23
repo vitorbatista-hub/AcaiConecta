@@ -1,6 +1,8 @@
 import { usuarioDaSessao } from './auth'
 import { lerCookieSessao } from './cookie-sessao'
 import { consultarEventos, ultimoEventoId, type EscopoEventos } from './eventos'
+import { descreverErro } from '@/domain/log'
+import { log } from './log'
 import { fluxoSSE, respostaDoFluxo } from './sse'
 
 const NUMERO = /^\d{1,19}$/
@@ -27,6 +29,7 @@ export async function responderSSE(req: Request, token: string, escopo: EscopoEv
       // A verificação periódica não renova a sessão do cliente: só confirma que ela continua válida.
       sessaoValida: async () => (await usuarioDaSessao(token, new Date(), false)) !== null,
       sinal: req.signal,
+      aoFalhar: (etapa, e) => void log.warn('sse_encerrado_por_falha', { etapa, escopo: escopo.tipo, erro: descreverErro(e) }),
     }),
   )
 }

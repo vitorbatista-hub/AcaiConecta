@@ -4,6 +4,7 @@ import { esperaDeLoginMs, JANELA_MS, MENSAGEM_LOGIN_INVALIDO, normalizarEmail } 
 import { validarSenha } from '@/domain/auth/senha'
 import { expiracaoInicial, expiracaoRenovada, gerarToken, hashDaOrigem, hashDoToken, sessaoValida } from '@/domain/auth/sessao'
 import { ErroNegocio } from './erros'
+import { log } from './log'
 
 const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 let hashFalso: Promise<string> | undefined
@@ -41,6 +42,7 @@ export async function entrar(
     prisma.tentativaLogin.findMany({ where: { origemHash, sucesso: false, criadoEm: { gt: desde } }, select: { criadoEm: true } }),
   ])
   if (esperaDeLoginMs(porEmail.map(t => t.criadoEm), porOrigem.map(t => t.criadoEm), agora) > 0) {
+    await log.warn('login_recusado', { razao: 'limitado' })
     throw new ErroNegocio('LOGIN_INVALIDO', MENSAGEM_LOGIN_INVALIDO)
   }
 
@@ -48,11 +50,15 @@ export async function entrar(
   const senhaConfere = await verify(usuario?.senhaHash ?? (await hashParaTempoConstante()), entrada.senha).catch(() => false)
   const ok = Boolean(usuario) && senhaConfere && usuario?.status === 'ATIVO'
   await prisma.tentativaLogin.create({ data: { email, origemHash, sucesso: ok, criadoEm: agora } })
-  if (!ok || !usuario) throw new ErroNegocio('LOGIN_INVALIDO', MENSAGEM_LOGIN_INVALIDO)
+  if (!ok || !usuario) {
+    await log.warn('login_recusado', { razao: 'invalido' })
+    throw new ErroNegocio('LOGIN_INVALIDO', MENSAGEM_LOGIN_INVALIDO)
+  }
 
   const token = gerarToken()
   const expiraEm = expiracaoInicial(usuario.tipo, agora)
   await prisma.sessao.create({ data: { usuarioId: usuario.id, tokenHash: hashDoToken(token), criadoEm: agora, expiraEm } })
+  await log.info('login_ok', { papel: usuario.tipo })
   return { token, expiraEm, tipo: usuario.tipo }
 }
 

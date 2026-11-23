@@ -17,7 +17,9 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
-    "test:db": "vitest run --config vitest.db.config.ts"
+    "test:db": "vitest run --config vitest.db.config.ts",
+    "db:backup": "bash scripts/backup-banco.sh",
+    "db:testar-restauracao": "bash scripts/testar-restauracao.sh"
   },
   "dependencies": {
     "@node-rs/argon2": "^2.2.2",

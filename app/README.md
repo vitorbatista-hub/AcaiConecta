@@ -69,6 +69,11 @@ Edição e remoção de endereços salvos na conta do cliente, SSE (ADR-002), ag
 - Batedeira só está "aberta" com a chave manual ligada e dentro de um horário regular ativo; sem horário cadastrado, fica fechada.
 - A lista de senhas comuns é uma amostra; ampliar antes do piloto.
 
+## Logs, erros e backup
+
+- **Logs estruturados** (ADR-004, proposta): uma linha JSON por evento em `stdout`/`stderr`, com `requisicaoId`. Cada requisição recebe `x-request-id` no `proxy`, devolvido na resposta. Eventos: `pedido_criado`, `pedido_repetido_ignorado`, `pedido_transicao` (com o código `AC-XXXXXXXX`), `pedidos_expirados`, `login_ok`, `login_recusado`, `acao_recusada`, `erro_servidor` (via `onRequestError`, com o `digest` mostrado na tela de erro), `agendador_falhou`. Campos pessoais, credenciais e textos livres são omitidos, e erros são descritos sem a mensagem. `LOG_LEVEL` (`debug`, `info`, `warn`, `error` ou `silent`); silencioso nos testes. Limitação: o Next.js também imprime o erro em `stderr`.
+- **Backup e restauração:** `pnpm db:backup` e `pnpm db:testar-restauracao`. Procedimento e evidência em `docs/operations/backup-e-restauracao.md`. A pasta `backups/` é ignorada pelo Git e contém dados pessoais.
+
 ## Imagens
 
 O operador envia a foto da batedeira (`/operador/configuracoes`) e a de cada produto (`/operador/catalogo`). O servidor valida o conteúdo (JPEG, PNG ou WebP, até 5 MB e 25 megapixels; SVG, GIF e animações são recusados), aplica a orientação, **remove todos os metadados (EXIF, inclusive localização)** e regrava em WebP com dois tamanhos (1280 px e miniatura de 480 px), com nome aleatório. As fotos ficam em `/api/imagens/<id>.webp`, com cache longo, e o envio só aceita requisições do próprio site e de operador logado, sempre na própria batedeira. A dependência `sharp` foi adicionada para isso.

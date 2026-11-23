@@ -1,6 +1,8 @@
 import { z } from 'zod'
 import { TAMANHO_MAXIMO_BYTES } from '@/domain/imagem'
+import { descreverErro } from '@/domain/log'
 import { mensagemDoErro } from '@/server/erro-usuario'
+import { log } from '@/server/log'
 import { enviarFoto, removerFoto, type AlvoFoto } from '@/server/fotos'
 import { usuarioDaRequisicao } from '@/server/resposta-sse'
 
@@ -60,7 +62,8 @@ export async function POST(req: Request) {
   } catch (e) {
     try {
       return json({ erro: mensagemDoErro(e) }, 400)
-    } catch {
+    } catch (inesperado) {
+      await log.error('envio_foto_falhou', { erro: descreverErro(inesperado) })
       return json({ erro: 'Não foi possível enviar a foto agora. Tente de novo.' }, 500)
     }
   }
