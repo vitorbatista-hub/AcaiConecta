@@ -3,6 +3,8 @@
 **Status:** Aprovado em 28/09/2026 (DEC-046) como ordem de trabalho da Fase 3. Estimativas e divisão em sprints ficam para o planejamento da Fase 3.
 **Base:** [PRD 2.6](PRD.md) §8 (escopo funcional), §19 (histórias e critérios de aceite), §25–26 (critérios de prontidão e de lançamento), [decisions.md](decisions.md), [arquitetura-tecnica.md](arquitetura-tecnica.md) e [mer-eer-inicial.md](mer-eer-inicial.md), e o protótipo em `app/`.
 
+> **Nota de 24/11/2026 (DEC-053):** a ordem e as prioridades abaixo continuam sendo a referência, mas a aplicação atual em `app/` cobre apenas parte dos itens, sem banco de dados nem tempo real: o acesso por perfil (login, cadastro de cliente e de batedeira, redefinição de senha) e as telas de cliente, operador e administrador existem com dados no navegador. Itens que dependem de persistência, SSE, logs, backup e hospedagem seguem **pendentes**.
+
 Convenção de prioridade:
 
 - **P0 — Caminho crítico:** sem isso não existe pedido de ponta a ponta; nenhum outro item tem valor sem estes.

@@ -3,6 +3,8 @@
 **Status:** Aprovada em 28/09/2026 (DEC-046). As escolhas de infraestrutura concreta (provedor de hospedagem, banco gerenciado, e-mail, etc.) são gates externos da Fase 3 (PRD §24.2) e não são fixadas aqui.
 **Base:** [PRD 2.6](PRD.md) §18 (requisitos não funcionais), §24.3 (baseline tecnológica: DEC-023), [decisions.md](decisions.md), [roadmap.md](roadmap.md) (entregáveis e critérios de conclusão da Fase 3), e o protótipo em `app/`.
 
+> **Nota de 24/11/2026 (DEC-053):** a aplicação atual em `app/` **não segue** esta arquitetura. Não há MySQL, Prisma, sessões em banco, tempo real (SSE) nem logs estruturados: as contas ficam em arquivo no servidor e pedidos e catálogo ficam no navegador. Este documento continua sendo a referência do alvo para quando houver banco de dados e hospedagem (ADR-003, ainda proposta); as ADRs 001, 002 e 004 estão superadas e devem ser reavaliadas então.
+
 Escopo desta proposta: arquitetura para a Fase 3 (construção do MVP), dimensionada para um piloto de 3 a 5 batedeiras em um único bairro, sem processamento de pagamento pela plataforma. Não é uma arquitetura para escala regional (Fase 6).
 
 ---
