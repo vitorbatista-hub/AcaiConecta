@@ -3,12 +3,12 @@ import Image from 'next/image'
 import { ArrowRight, Bike, Droplets, MapPin, Wallet } from 'lucide-react'
 import { Brand } from '@/components/app-shell'
 import { ThemeSwitcher } from '@/components/theme-switcher'
-import { traditionalAcaiImages } from '@/lib/mock-data'
+import { traditionalAcaiImages } from '@/lib/domain'
 
 export default function Page() {
   return <main className="min-h-screen bg-background">
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <header className="flex h-20 items-center justify-between"><Brand /><div className="flex items-center gap-1.5 sm:gap-2"><ThemeSwitcher /><Link href="/entrar" className="rounded-full border border-border bg-card px-3 py-2 text-sm font-bold sm:px-4 text-foreground">Entrar</Link><Link href="/entrar?view=cadastro" className="rounded-full bg-primary px-3 py-2 text-sm font-bold sm:px-4 text-primary-foreground">Cadastrar</Link></div></header>
+      <header className="flex h-20 items-center justify-between"><Brand /><div className="flex items-center gap-1.5 sm:gap-2"><ThemeSwitcher /><Link href="/entrar" className="rounded-full border border-border bg-card px-3 py-2 text-sm font-bold sm:px-4 text-foreground">Entrar</Link><Link href="/cadastro" className="rounded-full bg-primary px-3 py-2 text-sm font-bold sm:px-4 text-primary-foreground">Cadastrar</Link></div></header>
       <section className="grid items-center gap-10 py-12 lg:grid-cols-[1fr_0.9fr] lg:py-20">
         <div><div className="mb-6 inline-flex items-center gap-2 rounded-full border border-secondary/25 bg-secondary/10 px-3 py-1.5 text-xs font-bold text-secondary"><MapPin className="size-3.5" /> Feito em Cametá, PA</div><h1 className="max-w-3xl text-balance text-5xl font-black leading-[0.98] tracking-[-0.04em] sm:text-6xl lg:text-7xl">O sabor da nossa terra, <span className="text-primary">conectado</span> a você.</h1><p className="mt-6 max-w-xl text-pretty text-base leading-7 text-muted-foreground sm:text-lg">Encontre açaí tradicional no Centro de Cametá. Peça a partir de 1 litro e pague na entrega.</p><div className="mt-8 flex flex-wrap gap-3"><Link href="/entrar" className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-bold text-primary-foreground">Encontrar meu açaí <ArrowRight className="size-4" /></Link><a href="#como-funciona" className="rounded-full border border-border bg-card px-6 py-3.5 text-sm font-bold">Como funciona</a></div></div>
         <div className="overflow-hidden rounded-[2rem] border border-border bg-card shadow-xl"><Image src={traditionalAcaiImages.ceramicBowl} width={600} height={450} sizes="(max-width: 1024px) 100vw, 50vw" preload alt="Açaí tradicional servido em tigela, com colher; imagem ilustrativa" className="aspect-[4/3] w-full object-cover" /></div>

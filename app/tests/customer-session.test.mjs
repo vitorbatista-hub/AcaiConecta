@@ -1,11 +1,26 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { emptyCustomerSession, restoreCustomerSession, saveAddress, removeAddress, maxSavedAddresses } from '../lib/customer-session.ts'
-import { mockProducts, createOrderId, mockOrders } from '../lib/mock-data.ts'
+import { seedProducts, createOrderId } from '../lib/domain.ts'
+
+const baseTime = Date.now()
+const minutesAgo = m => new Date(baseTime - m * 60_000).toISOString()
+const orderFixture = {
+  id: 'AC-1040', customerId: 'customer-001', storeId: 'store-001',
+  items: [{ productId: 'store-001-tipo15-1000', name: 'Açaí de 15 · 1 litro', quantity: 1, volumeMl: 1000, unitPriceCents: 1500 }],
+  subtotalCents: 1500, deliveryFeeCents: 0, totalCents: 1500,
+  address: { street: 'Rua Nova', number: '120', neighborhood: 'Centro' }, phone: '91988880000', payment: 'PIX_NA_ENTREGA',
+  status: 'EM_PREPARO', createdAt: minutesAgo(12), estimatedRange: '25–35 min', acceptedDeadline: minutesAgo(7),
+  timeline: [
+    { to: 'AGUARDANDO_ACEITE', at: minutesAgo(12), author: 'cliente' },
+    { from: 'AGUARDANDO_ACEITE', to: 'ACEITO', at: minutesAgo(10), author: 'Operador' },
+    { from: 'ACEITO', to: 'EM_PREPARO', at: minutesAgo(5), author: 'Operador' },
+  ],
+}
 import { formatDuration, orderGuidance, orderTone, pilotMetrics, storeDailyMetrics } from '../lib/order-presentation.ts'
 
 test('restaura sacola e preenchimento sem guardar senha', () => {
-  const session = { ...emptyCustomerSession(), cart: [{ product: mockProducts[0], quantity: 2, note: 'Sem açúcar' }], storeId: mockProducts[0].storeId, phone: '91900000000', payment: 'DINHEIRO', change: '50', note: 'Casa azul' }
+  const session = { ...emptyCustomerSession(), cart: [{ product: seedProducts[0], quantity: 2, note: 'Sem açúcar' }], storeId: seedProducts[0].storeId, phone: '91900000000', payment: 'DINHEIRO', change: '50', note: 'Casa azul' }
   assert.deepEqual(restoreCustomerSession(JSON.parse(JSON.stringify(session))), session)
   assert.equal('password' in session, false)
   assert.equal('password' in restoreCustomerSession({ ...session, password: 'discard-me' }), false)
@@ -53,7 +68,7 @@ test('código de pedido cabe no campo de 24 caracteres do schema SQL', () => {
 })
 
 test('métricas preservam aceites anteriores ao cancelamento', () => {
-  const order = structuredClone(mockOrders[0])
+  const order = structuredClone(orderFixture)
   order.status = 'CANCELADO'
   const metrics = pilotMetrics([order])
   assert.equal(metrics.accepted, 1)
@@ -63,7 +78,7 @@ test('métricas preservam aceites anteriores ao cancelamento', () => {
 })
 
 test('métricas de apoio calculam tempos médios, motivos e recorrência', () => {
-  const base = structuredClone(mockOrders[0])
+  const base = structuredClone(orderFixture)
   const start = Date.parse(base.createdAt)
   const at = offset => new Date(start + offset).toISOString()
   const delivered = { ...base, id: 'AC-D1', customerId: 'customer-001', status: 'ENTREGUE', timeline: [
@@ -91,7 +106,7 @@ test('métricas de apoio calculam tempos médios, motivos e recorrência', () =>
 })
 
 test('faturamento do dia soma pedidos criados hoje, com taxa, exceto os que terminaram sem venda', () => {
-  const base = structuredClone(mockOrders[0])
+  const base = structuredClone(orderFixture)
   const now = Date.parse('2026-09-28T15:00:00Z')
   const today = new Date(now - 60 * 60_000).toISOString()
   const yesterday = new Date(now - 24 * 60 * 60_000).toISOString()

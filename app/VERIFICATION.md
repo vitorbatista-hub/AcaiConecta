@@ -1,6 +1,6 @@
-# Verificação do protótipo
+# Verificação da aplicação
 
-Estado das verificações técnicas do protótipo. Elas não representam validação com usuários, cobertura integral do PRD, implementação do MVP nem conclusão da Fase 2. O histórico detalhado de cada rodada, incluindo as antigas sincronizações com o v0, está no `CHANGELOG.md` e no histórico do Git.
+Estado das verificações técnicas da aplicação. Elas não representam validação com usuários, cobertura integral do PRD, implementação do MVP nem conclusão da Fase 2. O histórico detalhado de cada rodada, incluindo as antigas sincronizações com o v0, está no `CHANGELOG.md` e no histórico do Git.
 
 ## Verificações automatizadas
 
@@ -35,7 +35,7 @@ Estado das verificações técnicas do protótipo. Elas não representam valida�
 
 ## Acessibilidade (23/11/2026)
 
-Chrome (Playwright) a 390 × 844, temas claro e escuro, protótipo em build de produção.
+Chrome (Playwright) a 390 × 844, temas claro e escuro, aplicação em build de produção.
 
 | Verificação | Resultado |
 |---|---|

@@ -163,13 +163,13 @@
 }
 
 @layer components {
-  .demo-field { @apply min-h-11 mt-1 block w-full rounded-xl border border-border bg-background px-3 py-2 text-base font-normal text-foreground transition-colors placeholder:text-muted-foreground hover:border-primary/40 focus-visible:border-primary; }
+  .form-field { @apply min-h-11 mt-1 block w-full rounded-xl border border-border bg-background px-3 py-2 text-base font-normal text-foreground transition-colors placeholder:text-muted-foreground hover:border-primary/40 focus-visible:border-primary; }
   .surface { @apply rounded-3xl border bg-card p-5 shadow-sm sm:p-6; }
   .section-label { @apply border-b pb-1 text-sm font-black uppercase tracking-[0.14em] text-secondary; }
   .empty-state { @apply grid place-items-center gap-2 rounded-3xl border border-dashed bg-card/50 p-8 text-center text-sm text-muted-foreground; }
-  .demo-button { @apply min-h-11 rounded-full border border-border bg-card px-4 py-2 text-sm font-bold transition-colors; }
-  .demo-button[aria-pressed="true"] { @apply border-primary bg-primary/10 text-primary; }
-  .demo-primary { @apply min-h-11 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground; }
+  .btn { @apply min-h-11 rounded-full border border-border bg-card px-4 py-2 text-sm font-bold transition-colors; }
+  .btn[aria-pressed="true"] { @apply border-primary bg-primary/10 text-primary; }
+  .btn-primary { @apply min-h-11 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground; }
   .status-toggle-open { @apply min-h-11 rounded-full border border-secondary/40 bg-secondary/15 px-4 py-2 text-sm font-bold text-secondary transition-colors; }
   .status-toggle-closed { @apply min-h-11 rounded-full border border-destructive/40 bg-destructive/10 px-4 py-2 text-sm font-bold text-destructive transition-colors; }
 }

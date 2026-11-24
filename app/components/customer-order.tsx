@@ -1,20 +1,20 @@
 'use client'
 
 import { useState } from 'react'
-import { cents, formatOrderDate, getOrderStatusLabel, guestCustomerName, type Order } from '@/lib/mock-data'
+import { cents, formatOrderDate, getOrderStatusLabel, guestCustomerName, type Order } from '@/lib/domain'
 import { orderGuidance, orderTone } from '@/lib/order-presentation'
 import { StatusPill, useToast } from './app-shell'
-import { usePrototype } from './prototype-provider'
+import { useApp } from './app-provider'
 import { Modal } from './modal'
 import { OrderProgress } from './order-progress'
 import { PixQrCode } from './pix-qr-code'
 
 export function CustomerOrder({ order }: { order: Order }) {
-  const demo = usePrototype()
+  const ctx = useApp()
   const notify = useToast()
   const [cancel, setCancel] = useState(false)
-  const remaining = Math.max(0, Math.ceil((Date.parse(order.acceptedDeadline) - demo.now) / 1000))
-  const storeName = order.storeName ?? demo.stores.find(store => store.id === order.storeId)?.name ?? 'Batedeira'
+  const remaining = Math.max(0, Math.ceil((Date.parse(order.acceptedDeadline) - ctx.now) / 1000))
+  const storeName = order.storeName ?? ctx.stores.find(store => store.id === order.storeId)?.name ?? 'Batedeira'
   return <article className="surface space-y-4">
     <div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="text-xl font-bold">{storeName}</h2><p className="mt-1 break-all text-xs text-muted-foreground">{order.id} · {formatOrderDate(order.createdAt)}</p></div><StatusPill status={orderTone(order.status)} label={getOrderStatusLabel(order.status)} /></div>
     <OrderProgress status={order.status} />
@@ -23,9 +23,9 @@ export function CustomerOrder({ order }: { order: Order }) {
     <ul className="space-y-2 text-sm">{order.items.map(item => <li key={item.productId}><p>{item.quantity} × {item.name} · R$ {cents(item.quantity * item.unitPriceCents)}</p>{item.note && <p className="text-muted-foreground">Observação: {item.note}</p>}</li>)}</ul>
     <dl className="grid gap-2 border-y py-3 text-sm"><div className="flex justify-between"><dt>Subtotal</dt><dd>R$ {cents(order.subtotalCents)}</dd></div><div className="flex justify-between"><dt>Entrega</dt><dd>{order.deliveryFeeCents ? `R$ ${cents(order.deliveryFeeCents)}` : 'Grátis'}</dd></div><div className="flex justify-between text-lg font-bold"><dt>Total</dt><dd>R$ {cents(order.totalCents)}</dd></div></dl>
     <details><summary className="font-bold">Endereço, pagamento e estimativa</summary><div className="mt-2 space-y-2 text-sm"><p>{order.address.street}, {order.address.number} · {order.address.neighborhood}, Cametá/PA</p>{order.address.complement && <p>Complemento: {order.address.complement}</p>}{order.address.reference && <p>Referência: {order.address.reference}</p>}<p>Telefone: {order.phone}</p><p>{order.payment === 'PIX_NA_ENTREGA' ? 'Pix (QR Code)' : 'Dinheiro na entrega'}{order.changeForCents !== undefined && ` · Troco para R$ ${cents(order.changeForCents)}`}</p><p>Faixa estimada informada no pedido: {order.estimatedRange}. Não é um horário garantido.</p>{order.note && <p>Observação: {order.note}</p>}</div></details>
-    {order.payment === 'PIX_NA_ENTREGA' && !['RECUSADO', 'EXPIRADO', 'CANCELADO', 'ENTREGUE'].includes(order.status) && <PixQrCode totalCents={order.totalCents} storeName={storeName} />}
+    {order.payment === 'PIX_NA_ENTREGA' && !['RECUSADO', 'EXPIRADO', 'CANCELADO', 'ENTREGUE'].includes(order.status) && <PixQrCode totalCents={order.totalCents} storeName={storeName} pixKey={ctx.stores.find(store => store.id === order.storeId)?.pixKey} />}
     <details open><summary className="font-bold">Acompanhamento</summary><ol className="mt-3 space-y-3 border-l-2 border-primary/30 pl-4">{order.timeline.map((event, index) => <li key={`${event.at}-${index}`} className="text-sm"><p className="font-semibold">{event.message ?? getOrderStatusLabel(event.to)}</p>{event.reason && <p>Motivo: {event.reason}</p>}<p className="text-xs text-muted-foreground">{formatOrderDate(event.at)} · {event.author}</p></li>)}</ol></details>
-    {order.status === 'AGUARDANDO_ACEITE' && <button className="demo-button" disabled={remaining === 0} onClick={() => setCancel(true)}>Cancelar pedido</button>}
-    {cancel && <Modal title="Cancelar este pedido?" onClose={() => setCancel(false)}><p className="mb-4">O pedido ainda não foi aceito. O cancelamento não poderá ser desfeito.</p><div className="flex flex-wrap gap-2"><button className="demo-button" onClick={() => setCancel(false)}>Manter pedido</button><button className="demo-primary" onClick={() => { try { demo.transition(order.id, 'CANCELADO', { role: 'cliente', name: demo.customer.name || guestCustomerName, customerId: 'customer-001' }); setCancel(false); notify('Pedido cancelado.') } catch (error) { setCancel(false); notify(error instanceof Error ? error.message : 'Não foi possível cancelar.', 'error') } }}>Confirmar cancelamento</button></div></Modal>}
+    {order.status === 'AGUARDANDO_ACEITE' && <button className="btn" disabled={remaining === 0} onClick={() => setCancel(true)}>Cancelar pedido</button>}
+    {cancel && <Modal title="Cancelar este pedido?" onClose={() => setCancel(false)}><p className="mb-4">O pedido ainda não foi aceito. O cancelamento não poderá ser desfeito.</p><div className="flex flex-wrap gap-2"><button className="btn" onClick={() => setCancel(false)}>Manter pedido</button><button className="btn-primary" onClick={() => { try { ctx.transition(order.id, 'CANCELADO', { role: 'cliente', name: ctx.customer.name || guestCustomerName, customerId: 'customer-001' }); setCancel(false); notify('Pedido cancelado.') } catch (error) { setCancel(false); notify(error instanceof Error ? error.message : 'Não foi possível cancelar.', 'error') } }}>Confirmar cancelamento</button></div></Modal>}
   </article>
 }

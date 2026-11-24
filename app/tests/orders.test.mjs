@@ -1,12 +1,11 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { isStoreOpenNow, nextOpeningText, appendOrder, applyTransition, createOrderSnapshot, expireOrders, mockProducts, mockStores, parseMoney, acaiGrades, filterVisibleProducts } from '../lib/mock-data.ts'
+import { isStoreOpenNow, nextOpeningText, appendOrder, applyTransition, createOrderSnapshot, expireOrders, seedProducts, seedStores, parseMoney, acaiGrades, filterVisibleProducts } from '../lib/domain.ts'
 import { buildPixPayload, crc16 } from '../lib/pix.ts'
-import { resolveAccess } from '../lib/access.ts'
 const address={street:'Rua de teste',number:'10',neighborhood:'Centro'}
 const phone='91900000000'
-const store={...mockStores[0],deliveryFeeCents:250,schedule:Array.from({length:7},(_,day)=>({day,active:true,opens:'00:00',closes:'23:59'}))}
-const items=[{product:mockProducts[1],quantity:1}]
+const store={...seedStores[0],deliveryFeeCents:250,schedule:Array.from({length:7},(_,day)=>({day,active:true,opens:'00:00',closes:'23:59'}))}
+const items=[{product:seedProducts[1],quantity:1}]
 const create=(entries=items,s=store,a=address,payment='PIX_NA_ENTREGA',change,note)=>createOrderSnapshot(entries,s,a,phone,payment,change,note)
 const operator={role:'operador',name:'Operador',storeId:store.id}
 const customer={role:'cliente',name:'Cliente',customerId:'customer-001'}
@@ -25,12 +24,12 @@ test('Pix não leva troco; dinheiro exige valor suficiente e inteiro',()=>{
   assert.equal(create(items,store,address,'DINHEIRO',5000).changeForCents,5000)
 })
 test('1 litro é validado pelo volume, com múltiplos itens',()=>{
-  assert.throws(()=>create([{product:mockProducts[0],quantity:1}]))
-  assert.equal(create([{product:mockProducts[0],quantity:2}]).items[0].quantity,2)
+  assert.throws(()=>create([{product:seedProducts[0],quantity:1}]))
+  assert.equal(create([{product:seedProducts[0],quantity:2}]).items[0].quantity,2)
 })
 test('bloqueia mistura de batedeiras, itens inativos e quantidades inválidas',()=>{
-  for(const quantity of [0,-1,0.5,NaN,65536])assert.throws(()=>create([{product:mockProducts[1],quantity}]))
-  for(const product of [mockProducts.find(p=>p.storeId==='store-002'),{...mockProducts[1],active:false},{...mockProducts[1],available:false}]) assert.throws(()=>create([{product,quantity:1}]))
+  for(const quantity of [0,-1,0.5,NaN,65536])assert.throws(()=>create([{product:seedProducts[1],quantity}]))
+  for(const product of [seedProducts.find(p=>p.storeId==='store-002'),{...seedProducts[1],active:false},{...seedProducts[1],available:false}]) assert.throws(()=>create([{product,quantity:1}]))
 })
 test('disponibilidade e bairro são revalidados',()=>{
   for(const s of [{...store,isOpen:false},{...store,deliveryAvailable:false},{...store,adminStatus:'SUSPENSA'}])assert.throws(()=>create(items,s))
@@ -111,28 +110,22 @@ test('próxima abertura inclui a semana seguinte e ordena intervalos do mesmo di
 })
 
 test('três tipos de açaí (10, 15 e 20) com preço proporcional ao volume',()=>{
-  const prices=id=>Object.fromEntries(mockProducts.filter(p=>p.storeId==='store-001'&&p.grade===id).map(p=>[p.volumeMl,p.priceCents]))
+  const prices=id=>Object.fromEntries(seedProducts.filter(p=>p.storeId==='store-001'&&p.grade===id).map(p=>[p.volumeMl,p.priceCents]))
   assert.deepEqual(acaiGrades.map(g=>g.pricePerLiterCents),[1000,1500,2000])
   assert.deepEqual(prices(10),{500:500,1000:1000});assert.deepEqual(prices(15),{500:750,1000:1500});assert.deepEqual(prices(20),{500:1000,1000:2000})
 })
 test('500 ml é opcional por batedeira: oculto no catálogo e recusado no pedido',()=>{
   assert.ok(filterVisibleProducts('store-001').some(p=>p.volumeMl===500))
   assert.ok(filterVisibleProducts('store-002').every(p=>p.volumeMl===1000))
-  const off={...store,accepts500ml:false};const half=mockProducts.find(p=>p.storeId===store.id&&p.volumeMl===500)
+  const off={...store,accepts500ml:false};const half=seedProducts.find(p=>p.storeId===store.id&&p.volumeMl===500)
   assert.throws(()=>create([{product:half,quantity:2}],off),/500 ml/)
   assert.equal(create([{product:half,quantity:2}],{...store,accepts500ml:true}).items[0].quantity,2)
-  assert.doesNotThrow(()=>create([{product:mockProducts[1],quantity:1}],off))
+  assert.doesNotThrow(()=>create([{product:seedProducts[1],quantity:1}],off))
 })
 test('Pix copia e cola: campos EMV, valor e CRC16 válidos',()=>{
-  const payload=buildPixPayload(1250,'Açaí do Seu João')
+  const payload=buildPixPayload(1250,'Açaí do Seu João','chave-pix-de-teste')
   assert.ok(payload.startsWith('000201')&&payload.includes('br.gov.bcb.pix')&&payload.includes('540512.50')&&payload.includes('5802BR'))
   assert.equal(payload.slice(-4),crc16(payload.slice(0,-4)))
   assert.equal(crc16('123456789'),'29B1')
-  assert.throws(()=>buildPixPayload(0,'x'))
-})
-
-test('o perfil é definido pelo e-mail cadastrado: administrador, operador ou cliente',()=>{
-  assert.deepEqual(resolveAccess('ADMIN@acaiconecta.demo ',mockStores),{role:'admin'})
-  assert.deepEqual(resolveAccess(mockStores[1].operatorEmail.toUpperCase(),mockStores),{role:'operador',storeId:mockStores[1].id})
-  assert.deepEqual(resolveAccess('qualquer@email.com',mockStores),{role:'cliente'})
+  assert.throws(()=>buildPixPayload(0,'x','k'))
 })

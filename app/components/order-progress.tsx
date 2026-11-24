@@ -1,5 +1,5 @@
 import { Check } from 'lucide-react'
-import type { OrderStatus } from '@/lib/mock-data'
+import type { OrderStatus } from '@/lib/domain'
 
 const steps: { status: OrderStatus; label: string }[] = [
   { status: 'AGUARDANDO_ACEITE', label: 'Enviado' },

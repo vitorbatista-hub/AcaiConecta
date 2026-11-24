@@ -1,14 +1,14 @@
 'use client'
 
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
-import { adminActorName, allowedProductVolumesMl, appendOrder, applyTransition, createOrderSnapshot, expireOrders, mockOrders, mockProducts, mockStores, predefinedMessages, type Actor, type CartItem, type Order, type OrderStatus, type PaymentMethod, type Product, type Store } from '@/lib/mock-data'
+import { adminActorName, allowedProductVolumesMl, appendOrder, applyTransition, createOrderSnapshot, expireOrders, seedProducts, seedStores, predefinedMessages, type Actor, type CartItem, type Order, type OrderStatus, type PaymentMethod, type Product, type Store } from '@/lib/domain'
 
 import { emptyCustomerSession, restoreCustomerSession, type AccessRequest, type CustomerSession } from '@/lib/customer-session'
 
 type AuditEvent = { id:string; at:string; author:string; entityId:string; action:string; reason:string }
-type DemoState = { version:2; stores:Store[]; products:Product[]; orders:Order[]; audit:AuditEvent[]; customer:CustomerSession; supportEmail:string; customerBlocked:boolean; accessRequests:AccessRequest[]; cartsStarted:number }
+type AppState = { version:2; stores:Store[]; products:Product[]; orders:Order[]; audit:AuditEvent[]; customer:CustomerSession; supportEmail:string; customerBlocked:boolean; accessRequests:AccessRequest[]; cartsStarted:number }
 type Checkout = { items:CartItem[]; storeId:string; address:Order['address']; phone:string; payment:PaymentMethod; change?:number; note?:string; requestId:string; fee:number }
-type PrototypeContextValue = DemoState & {
+type AppContextValue = AppState & {
   now:number
   updateCustomer:(patch:Partial<CustomerSession>)=>void
   configureSupport:(email:string)=>void
@@ -20,37 +20,35 @@ type PrototypeContextValue = DemoState & {
   transition:(id:string,to:OrderStatus,actor:Actor,reason?:string)=>void
   message:(id:string,text:string,actor:Actor)=>void
   updateStore:(store:Store,reason?:string)=>void
+  registerStore:(profile:{id:string;name:string;operator:string;address:string;document?:string})=>void
   saveProduct:(product:Product)=>void
-  reset:()=>void
 }
-const Context = createContext<PrototypeContextValue|null>(null)
-const storageKey='acaiconecta-prototype-v1'
-const initialState=():DemoState=>({version:2,stores:structuredClone(mockStores),products:structuredClone(mockProducts),orders:structuredClone(mockOrders),audit:[],customer:emptyCustomerSession(),supportEmail:'',customerBlocked:false,accessRequests:[],cartsStarted:0})
+const Context = createContext<AppContextValue|null>(null)
+const storageKey='acaiconecta-state-v1'
+const initialState=():AppState=>({version:2,stores:structuredClone(seedStores),products:structuredClone(seedProducts),orders:[],audit:[],customer:emptyCustomerSession(),supportEmail:'',customerBlocked:false,accessRequests:[],cartsStarted:0})
 
-export function PrototypeProvider({children}:{children:React.ReactNode}) {
-  const [state,setState]=useState<DemoState>(initialState)
+export function AppProvider({children}:{children:React.ReactNode}) {
+  const [state,setState]=useState<AppState>(initialState)
   const current=useRef(state)
   const [ready,setReady]=useState(false)
   const [now,setNow]=useState(0)
   const [storageWarning,setStorageWarning]=useState('')
-  function commit(next:DemoState) {
+  function commit(next:AppState) {
     current.current=next
     setState(next)
     try { sessionStorage.setItem(storageKey,JSON.stringify(next)) }
-    catch { setStorageWarning('Armazenamento da sessão indisponível. A simulação será mantida somente enquanto esta página estiver aberta.') }
+    catch { setStorageWarning('Armazenamento da sessão indisponível. Seus dados serão mantidos somente enquanto esta página estiver aberta.') }
   }
   useEffect(()=>{
     try {
       const raw=sessionStorage.getItem(storageKey)
       if(raw) {
-        const saved=JSON.parse(raw) as DemoState
+        const saved=JSON.parse(raw) as AppState
         if(saved.version!==2 || !Array.isArray(saved.stores) || !Array.isArray(saved.products) || !Array.isArray(saved.orders) || !Array.isArray(saved.audit)) throw new Error('Sessão inválida')
         current.current={...initialState(),...saved,customer:restoreCustomerSession(saved.customer),orders:expireOrders(saved.orders)}
-        const migrateImage=(image?:string)=>image?.startsWith('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/')?'/images/acai-tradicional.webp':image
-        current.current={...current.current,stores:current.current.stores.map(store=>({...store,image:migrateImage(store.image)??'/placeholder.svg',operatorEmail:store.operatorEmail??''})),products:current.current.products.map(product=>({...product,image:migrateImage(product.image)}))}
         commit(current.current)
       }
-    } catch { setStorageWarning('A sessão anterior não pôde ser restaurada. Os dados iniciais foram carregados novamente.') }
+    } catch { setStorageWarning('Não foi possível restaurar a sessão anterior. Os dados iniciais foram carregados novamente.') }
     setReady(true)
     setNow(Date.now())
     const timer=window.setInterval(()=>{
@@ -106,14 +104,19 @@ export function PrototypeProvider({children}:{children:React.ReactNode}) {
     const data=current.current
     const existing=data.stores.find(s=>s.id===store.id)
     if(!store.name.trim()||!store.operator.trim()||!store.address.trim()) throw new Error('Informe nome, endereço e operador responsável.')
-    if(!store.operatorEmail?.trim()||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(store.operatorEmail.trim())) throw new Error('Informe um e-mail válido para o login do operador.')
-    if(data.stores.some(s=>s.id!==store.id&&s.operatorEmail.toLowerCase()===store.operatorEmail.trim().toLowerCase())) throw new Error('Já existe um operador cadastrado com este e-mail.')
     if(store.schedule?.some(h=>!Number.isInteger(h.day)||h.day<0||h.day>6||!/^([01]\d|2[0-3]):[0-5]\d$/.test(h.opens)||!/^([01]\d|2[0-3]):[0-5]\d$/.test(h.closes)||h.opens>=h.closes)) throw new Error('Revise os horários: o fechamento deve ser após a abertura, no mesmo dia.')
     if(!Number.isSafeInteger(store.deliveryFeeCents)||store.deliveryFeeCents<0) throw new Error('Informe uma taxa válida em centavos.')
     if((!existing||existing.adminStatus!==store.adminStatus)&&!reason?.trim()) throw new Error('Informe o motivo administrativo.')
     const audit=reason?[...data.audit,{id:crypto.randomUUID(),at:new Date().toISOString(),author:adminActorName,entityId:store.id,action:existing?'Alteração da batedeira':'Cadastro assistido',reason}]:data.audit
-    const normalized={...store,operatorEmail:store.operatorEmail.trim()}
+    const normalized=store
     commit({...data,audit,stores:existing?data.stores.map(s=>s.id===store.id?normalized:s):[...data.stores,normalized]})
+  }
+  function registerStore(profile:{id:string;name:string;operator:string;address:string;document?:string}) {
+    const data=current.current
+    if(data.stores.some(s=>s.id===profile.id)) return
+    const store:Store={id:profile.id,name:profile.name,owner:profile.operator,operator:profile.operator,address:profile.address,document:profile.document,neighborhood:'Centro',image:'/images/acai-tradicional.webp',adminStatus:'EM_ANALISE',isOpen:false,deliveryAvailable:false,accepts500ml:false,hours:'09h às 18h',estimatedRange:'25–35 min',deliveryFeeCents:0,createdAt:new Date().toISOString()}
+    const event={id:crypto.randomUUID(),at:store.createdAt,author:profile.operator,entityId:store.id,action:'Cadastro de batedeira',reason:'Autocadastro pelo site; aguardando análise'}
+    commit({...data,stores:[...data.stores,store],audit:[...data.audit,event]})
   }
   function saveProduct(product:Product) {
     if(!product.name.trim()||product.name.length>150||!(allowedProductVolumesMl as readonly number[]).includes(product.volumeMl)||!Number.isSafeInteger(product.priceCents)||product.priceCents<1) throw new Error('Informe nome, um dos tamanhos padrão (500 ml ou 1.000 ml) e preço maior que zero.')
@@ -154,11 +157,11 @@ export function PrototypeProvider({children}:{children:React.ReactNode}) {
   function trackCartStarted() {
     if(!current.current.customer.cart.length) commit({...current.current,cartsStarted:current.current.cartsStarted+1})
   }
-  const value={...state,now,updateCustomer,configureSupport,setCustomerBlocked,requestAccessRecovery,resolveAccessRequest,trackCartStarted,submitOrder,transition,message,updateStore,saveProduct,reset:()=>commit(initialState())}
+  const value={...state,now,updateCustomer,configureSupport,setCustomerBlocked,requestAccessRecovery,resolveAccessRequest,trackCartStarted,submitOrder,transition,message,updateStore,registerStore,saveProduct}
   return <Context.Provider value={value}>{storageWarning&&<p role="alert" className="bg-accent/20 p-3 text-sm">{storageWarning}</p>}{ready?children:<p role="status" className="p-8">Carregando…</p>}</Context.Provider>
 }
-export function usePrototype() {
+export function useApp() {
   const context=useContext(Context)
-  if(!context) throw new Error('PrototypeProvider ausente.')
+  if(!context) throw new Error('AppProvider ausente.')
   return context
 }

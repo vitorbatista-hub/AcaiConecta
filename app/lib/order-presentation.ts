@@ -1,4 +1,4 @@
-import type { Order, OrderStatus } from './mock-data'
+import type { Order, OrderStatus } from './domain'
 
 export const orderGuidance: Record<OrderStatus, string> = {
   AGUARDANDO_ACEITE: 'A batedeira tem até 5 minutos para responder. Você pode cancelar enquanto aguarda.',

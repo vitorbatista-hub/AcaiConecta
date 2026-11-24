@@ -1,4 +1,4 @@
-import { PrototypeProvider } from '@/components/prototype-provider'
+import { AppProvider } from '@/components/app-provider'
 import { ToastProvider } from '@/components/app-shell'
 import type { Metadata, Viewport } from 'next'
 import { themeInitScript } from '@/components/theme-switcher'
@@ -7,7 +7,6 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'AçaíConecta - Açaí tradicional em Cametá/PA',
   description: 'Conectando consumidores a batedeiras de açaí tradicional de Cametá',
-  generator: 'v0.app',
   icons: {
     icon: [
       {
@@ -44,7 +43,7 @@ export default function RootLayout({
     <html lang="pt-BR" className="bg-background" suppressHydrationWarning>
       <head><script dangerouslySetInnerHTML={{ __html: themeInitScript }} /></head>
       <body className="antialiased">
-        <ToastProvider><PrototypeProvider>{children}</PrototypeProvider></ToastProvider>
+        <ToastProvider><AppProvider>{children}</AppProvider></ToastProvider>
       </body>
     </html>
   )

@@ -1,5 +1,5 @@
 {
-  "name": "acaiconecta-prototype",
+  "name": "acaiconecta",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "node --test --test-isolation=none tests/*.test.mjs"
+    "test": "node --test --test-isolation=none tests/*.test.mjs",
+    "acesso:gerar": "node scripts/gerar-acesso.mjs"
   },
   "dependencies": {
     "lucide-react": "^1.16.0",

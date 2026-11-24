@@ -1,4 +1,4 @@
-import type { CartItem, Order, PaymentMethod } from './mock-data'
+import type { CartItem, Order, PaymentMethod } from './domain'
 
 export type SavedAddress = Order['address'] & { id: string; primary: boolean }
 // DEC-040: one primary and at most one secondary address per customer.
@@ -62,4 +62,16 @@ export function restoreCustomerSession(value: unknown): CustomerSession {
   }
   const defaults = emptyCustomerSession()
   return Object.fromEntries(Object.keys(defaults).map(key => [key, candidate[key as keyof CustomerSession]])) as CustomerSession
+}
+
+export type ProfileAddress = { street: string; number: string; complement?: string; reference?: string }
+/** Endereço informado no cadastro vira o endereço principal, sem sobrescrever endereços que o cliente já salvou. */
+export function sessionPatchFromProfile(profile: { name: string; email: string; phone?: string; address?: ProfileAddress }, current: CustomerSession): Partial<CustomerSession> {
+  const patch: Partial<CustomerSession> = { signedIn: true, name: profile.name, email: profile.email, phone: profile.phone ?? '' }
+  if (profile.address && current.addresses.length === 0) {
+    const address: SavedAddress = { id: 'cadastro', primary: true, street: profile.address.street, number: profile.address.number, complement: profile.address.complement ?? '', reference: profile.address.reference ?? '', neighborhood: 'Centro' }
+    patch.addresses = [address]
+    if (!current.address.street) patch.address = { street: address.street, number: address.number, neighborhood: 'Centro', complement: address.complement, reference: address.reference }
+  }
+  return patch
 }
