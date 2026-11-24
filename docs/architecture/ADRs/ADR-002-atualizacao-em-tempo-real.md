@@ -1,6 +1,6 @@
 # ADR-002 — Atualização em tempo real de pedidos e alertas
 
-**Estado:** Aceita
+**Estado:** Superada em 24/11/2026 (DEC-053): a aplicação atual não tem atualização em tempo real, porque os pedidos ainda ficam no navegador. Deverá ser reavaliada quando houver banco e pedidos compartilhados entre usuários. O texto abaixo é mantido como registro histórico.
 **Data:** 2026-09-28
 **Responsável pela decisão:** responsável pelo projeto (exigência de tempo real); mecanismo definido a partir de recomendação técnica
 **Relacionados:** PRD 2.6 §8.2, §15 e §18.2; DEC-023; DEC-031; DEC-035; [arquitetura técnica proposta](../../product/arquitetura-tecnica.md) §5; [ADR-001](ADR-001-sessoes-e-tentativas-de-login.md)

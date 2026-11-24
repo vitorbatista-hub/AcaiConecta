@@ -1,6 +1,6 @@
 # ADR-001 — Sessões e tentativas de login persistidas no banco
 
-**Estado:** Aceita
+**Estado:** Superada em 24/11/2026 (DEC-053): a aplicação atual não usa banco; a sessão é um cookie assinado e a limitação de tentativas fica em memória. A decisão pode voltar a valer, ou ser reescrita, quando houver banco de dados. O texto abaixo é mantido como registro histórico.
 **Data:** 2026-09-28
 **Responsável pela decisão:** responsável pelo projeto, a partir de recomendação técnica
 **Relacionados:** PRD 2.6 §16.2 e §17; DEC-023; DEC-035; [`database/schema.sql`](../../../database/schema.sql) 0.7; [arquitetura técnica proposta](../../product/arquitetura-tecnica.md) §7
