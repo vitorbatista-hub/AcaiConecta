@@ -103,7 +103,7 @@ Cada item referencia a história de usuário (US-xx) ou a seção do PRD que o o
 |---|---|---|---|---|
 | 8.1 | Navegação por teclado, foco visível em modais, rótulos em campos, estado não comunicado só por cor | P0 | PRD §18.4 | Definition of Done de cada tela nova, não revisão isolada ao final ([arquitetura-tecnica.md §3](arquitetura-tecnica.md#3-frontend)) — já é o padrão seguido no protótipo. |
 | 8.2 | Responsividade em tela móvel, sem rolagem horizontal | P0 | PRD §18.1 | |
-| 8.3 | Testes de acessibilidade, conexão instável e múltiplos navegadores | P1 | PRD §18.1–18.2, roadmap Fase 2 | Ainda pendente mesmo no protótipo (ver `VERIFICATION.md`); deve ser feito antes do lançamento do piloto, não necessariamente antes do primeiro código da Fase 3. |
+| 8.3 | Testes de acessibilidade, conexão instável e múltiplos navegadores | P1 | PRD §18.1–18.2, roadmap Fase 2 | Ainda pendente (a verificação com axe-core feita no protótipo em 23/11/2026 está no CHANGELOG e no histórico do Git); deve ser feito antes do lançamento do piloto, não necessariamente antes do primeiro código da Fase 3. |
 
 ---
 

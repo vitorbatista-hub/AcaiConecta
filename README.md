@@ -17,7 +17,6 @@ Os trabalhos atuais incluem:
 ## Documentação
 
 - [Aplicação web — execução, acesso da equipe e limitações](app/README.md)
-- [Vitrine opcional do protótipo no v0 — pode estar defasada em relação ao repositório (DEC-041)](https://v0.app/vitors-projects-edcbface/chat/acaiconecta-jAWnqGHlb8w)
 - [PRD vigente (2.6, aprovado)](docs/product/PRD.md)
 - [Roadmap](docs/product/roadmap.md)
 - [Registro de decisões](docs/product/decisions.md)

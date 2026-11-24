@@ -19,7 +19,7 @@ export const seedNeighborhoods:NeighborhoodStatus[]=[{name:'Centro',active:true}
 export const predefinedMessages=['O entregador chegou.','Não encontramos o endereço.','Seu pedido está atrasado.','Precisamos confirmar uma informação do pedido.','Um item ficou indisponível; aguarde contato do suporte.']
 export const adminActorName='Administrador do piloto'
 export const guestCustomerName='Cliente'
-export const requiredVolumeMl=1000;export const acceptanceWindowMinutes=5;export const orderMinVolumeMessage='Adicione pelo menos 1.000 ml para enviar o pedido.'
+export const requiredVolumeMl=1000;export const orderMinVolumeMessage='Adicione pelo menos 1.000 ml para enviar o pedido.'
 export const allowedProductVolumesMl=[500,1000] as const
 
 
@@ -30,7 +30,7 @@ export const getStoreById=(id:string)=>seedStores.find(s=>s.id===id)
 export const getProductsByStoreId=(id:string)=>seedProducts.filter(p=>p.storeId===id)
 export const filterVisibleProducts=(id:string)=>{const store=getStoreById(id);return getProductsByStoreId(id).filter(p=>p.active&&(p.available||p.showUnavailable)&&(!store||isProductOffered(p,store)))};export const isStoreOrderable=(s:Store)=>s.adminStatus==='ATIVA'&&isStoreOpenNow(s)&&s.deliveryAvailable
 export function calculateTotals(items:{product:Product;quantity:number}[],fee:number){const subtotalCents=items.reduce((sum,i)=>sum+i.product.priceCents*i.quantity,0);const volumeMl=items.reduce((sum,i)=>sum+i.product.volumeMl*i.quantity,0);return{subtotalCents,deliveryFeeCents:fee,totalCents:subtotalCents+fee,volumeMl}}
-export const cents=(value:number)=>(value/100).toFixed(2).replace('.',',');export const isProductOffered=(p:Product,s:Pick<Store,'accepts500ml'>)=>p.volumeMl!==500||s.accepts500ml;export const isAddressCovered=(a:{neighborhood:string})=>a.neighborhood.trim().toLowerCase()==='centro';export const isCashChangeValid=(total:number,change?:number)=>change===undefined||change>=total
+export const cents=(value:number)=>(value/100).toFixed(2).replace('.',',');export const isProductOffered=(p:Product,s:Pick<Store,'accepts500ml'>)=>p.volumeMl!==500||s.accepts500ml;export const isAddressCovered=(a:{neighborhood:string})=>a.neighborhood.trim().toLowerCase()==='centro';
 export const createOrderId=()=>`AC-${crypto.randomUUID().replaceAll('-', '').slice(0, 20).toUpperCase()}`
 export function createOrderSnapshot(items:{product:Product;quantity:number;note?:string}[],store:Store,addressValue:Order['address'],phone:string,payment:PaymentMethod,changeForCents?:number,note?:string):Order{validateCheckout(items,store,addressValue,phone,payment,changeForCents,note);const timestamp=Date.now();const totals=calculateTotals(items,store.deliveryFeeCents);return{id:createOrderId(),customerId:'customer-001',storeId:store.id,items:items.map(i=>({productId:i.product.id,name:i.product.name,quantity:i.quantity,volumeMl:i.product.volumeMl,unitPriceCents:i.product.priceCents,note:i.note})),subtotalCents:totals.subtotalCents,deliveryFeeCents:totals.deliveryFeeCents,totalCents:totals.totalCents,address:{...addressValue},phone,payment,changeForCents:payment==='DINHEIRO'?changeForCents:undefined,note,status:'AGUARDANDO_ACEITE',createdAt:new Date(timestamp).toISOString(),estimatedRange:store.estimatedRange,acceptedDeadline:new Date(timestamp+300000).toISOString(),timeline:[{to:'AGUARDANDO_ACEITE',at:new Date(timestamp).toISOString(),author:'cliente'}]}}
 export type Actor = { role:'cliente'|'operador'|'admin'|'sistema'; name:string; storeId?:string; customerId?:string }
@@ -52,9 +52,8 @@ export function applyTransition(order:Order,to:OrderStatus,actor:Actor,reason?:s
 }
 export const canTransition=(from:OrderStatus,to:OrderStatus)=>({AGUARDANDO_ACEITE:['ACEITO','RECUSADO','EXPIRADO','CANCELADO'],ACEITO:['EM_PREPARO','CANCELADO'],EM_PREPARO:['PRONTO','CANCELADO'],PRONTO:['SAIU_PARA_ENTREGA','CANCELADO'],SAIU_PARA_ENTREGA:['ENTREGUE','FALHA_NA_ENTREGA']} as Record<string,string[]>)[from]?.includes(to)??false
 export const adminStatusLabel=(s:AdminStatus)=>({EM_ANALISE:'Em análise',ATIVA:'Ativa',SUSPENSA:'Suspensa',DESATIVADA:'Desativada'}[s])
-export const paymentLabels={DINHEIRO:'Dinheiro na entrega',PIX_NA_ENTREGA:'Pix (QR Code)'};export type CartItem={product:Product;quantity:number;note?:string}
+export type CartItem={product:Product;quantity:number;note?:string}
 export function formatOrderDate(value:string){return new Date(value).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short',timeZone:'America/Belem'})}
-export function formatTime(value:string){return new Date(value).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',timeZone:'America/Belem'})}
 
 
 // Regras da simulação; não substituem autorização ou transações no servidor.
