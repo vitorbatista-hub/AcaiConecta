@@ -56,7 +56,7 @@ export function LoginForm() {
         ctx.updateCustomer(sessionPatchFromProfile(me, ctx.customer))
       }
       router.replace(data.redirect)
-    } catch (err) { setError(err instanceof Error && err.message.includes('bloqueada') ? err.message : 'Sem conexão. Tente novamente.') } finally { setPending(false) }
+    } catch { setError('Sem conexão. Tente novamente.') } finally { setPending(false) }
   }
 
   return <section className="surface" aria-labelledby="auth-titulo">

@@ -8,13 +8,12 @@ import { parseRange } from '@/lib/store-rules'
 import { emptyCustomerSession, restoreCustomerSession, type AccessRequest, type CustomerSession } from '@/lib/customer-session'
 
 type AuditEvent = { id:string; at:string; author:string; entityId:string; action:string; reason:string }
-type AppState = { version:4; stores:Store[]; products:Product[]; serverAudit:AuditEvent[]; orders:Order[]; audit:AuditEvent[]; customer:CustomerSession; supportEmail:string; customerBlocked:boolean; accessRequests:AccessRequest[]; cartsStarted:number }
+type AppState = { version:4; stores:Store[]; products:Product[]; serverAudit:AuditEvent[]; orders:Order[]; audit:AuditEvent[]; customer:CustomerSession; supportEmail:string; accessRequests:AccessRequest[]; cartsStarted:number }
 type Checkout = { items:CartItem[]; storeId:string; address:Order['address']; phone:string; note?:string; requestId:string; fee:number }
 type AppContextValue = AppState & {
   now:number
   updateCustomer:(patch:Partial<CustomerSession>)=>void
   configureSupport:(email:string)=>void
-  setCustomerBlocked:(blocked:boolean,reason:string)=>void
   requestAccessRecovery:(contact:string,reason:string)=>void
   resolveAccessRequest:(id:string)=>void
   trackCartStarted:()=>void
@@ -33,7 +32,7 @@ type AppContextValue = AppState & {
 }
 const Context = createContext<AppContextValue|null>(null)
 const storageKey='acaiconecta-state-v1'
-const initialState=():AppState=>({version:4,stores:[],products:[],serverAudit:[],orders:[],audit:[],customer:emptyCustomerSession(),supportEmail:'',customerBlocked:false,accessRequests:[],cartsStarted:0})
+const initialState=():AppState=>({version:4,stores:[],products:[],serverAudit:[],orders:[],audit:[],customer:emptyCustomerSession(),supportEmail:'',accessRequests:[],cartsStarted:0})
 
 export function AppProvider({children}:{children:React.ReactNode}) {
   const [state,setState]=useState<AppState>(initialState)
@@ -115,7 +114,6 @@ export function AppProvider({children}:{children:React.ReactNode}) {
   }
   async function submitOrder(input:Checkout) {
     const data=current.current
-    if(data.customerBlocked) throw new Error('Conta bloqueada. Acesse Ajuda para orientação de recuperação.')
     if(!data.customer.signedIn) throw new Error('Entre na sua conta antes de enviar o pedido.')
     const { order }=await post<{order:Order}>('/api/pedidos',{storeId:input.storeId,requestId:input.requestId,phone:input.phone,note:input.note,address:input.address,feeCents:input.fee,items:input.items.map(item=>({productId:item.product.id,quantity:item.quantity,note:item.note,unitPriceCents:item.product.priceCents}))})
     const next={...current.current,orders:[order,...current.current.orders.filter(o=>o.id!==order.id)],customer:{...current.current.customer,cart:[],storeId:null,note:'',requestId:''}}
@@ -155,7 +153,6 @@ export function AppProvider({children}:{children:React.ReactNode}) {
     await send('/api/operador/produtos','POST',{id:product.id,name:product.name,description:product.description??'',volumeMl:product.volumeMl,priceCents:product.priceCents,active:product.active,available:product.available,showUnavailable:product.showUnavailable})
   }
   function updateCustomer(patch:Partial<CustomerSession>) {
-    if(patch.signedIn && current.current.customerBlocked) throw new Error('Conta bloqueada. Procure o suporte do AçaíConecta.')
     commit({...current.current,customer:{...current.current.customer,...patch}})
   }
   function configureSupport(email:string) {
@@ -163,11 +160,6 @@ export function AppProvider({children}:{children:React.ReactNode}) {
     if(value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) throw new Error('Informe um e-mail válido para o suporte.')
     const event={id:crypto.randomUUID(),at:new Date().toISOString(),author:adminActorName,entityId:'pilot',action:'Contato de suporte atualizado',reason:value?'Canal de atendimento configurado':'Canal removido'}
     commit({...current.current,supportEmail:value,audit:[...current.current.audit,event]})
-  }
-  function setCustomerBlocked(blocked:boolean,reason:string) {
-    if(!reason.trim()) throw new Error('Informe o motivo administrativo.')
-    const event={id:crypto.randomUUID(),at:new Date().toISOString(),author:adminActorName,entityId:'customer-001',action:blocked?'Bloqueio de conta':'Reativação de conta',reason:reason.trim()}
-    commit({...current.current,customerBlocked:blocked,customer:{...current.current.customer,signedIn:blocked?false:current.current.customer.signedIn},audit:[...current.current.audit,event]})
   }
   function requestAccessRecovery(contact:string,reason:string) {
     if(!contact.trim()||!reason.trim()) throw new Error('Informe um contato e o motivo da solicitação.')
@@ -182,12 +174,12 @@ export function AppProvider({children}:{children:React.ReactNode}) {
     if(request.resolved) throw new Error('Solicitação já concluída.')
     const at=new Date().toISOString()
     const event={id:crypto.randomUUID(),at,author:adminActorName,entityId:'customer-001',action:'Recuperação de acesso concedida',reason:`Solicitação de ${request.contact}: ${request.reason}`}
-    commit({...data,customerBlocked:false,accessRequests:data.accessRequests.map(item=>item.id===id?{...item,resolved:true,resolvedAt:at}:item),audit:[...data.audit,event]})
+    commit({...data,accessRequests:data.accessRequests.map(item=>item.id===id?{...item,resolved:true,resolvedAt:at}:item),audit:[...data.audit,event]})
   }
   function trackCartStarted() {
     if(!current.current.customer.cart.length) commit({...current.current,cartsStarted:current.current.cartsStarted+1})
   }
-  const value={...state,now,updateCustomer,configureSupport,setCustomerBlocked,requestAccessRecovery,resolveAccessRequest,trackCartStarted,submitOrder,transition,choosePayment,message,refreshOrders,saveStoreSettings,changeStoreStatus,saveProduct,refreshCatalog,audit:[...state.serverAudit,...state.audit].sort((a,b)=>Date.parse(a.at)-Date.parse(b.at))}
+  const value={...state,now,updateCustomer,configureSupport,requestAccessRecovery,resolveAccessRequest,trackCartStarted,submitOrder,transition,choosePayment,message,refreshOrders,saveStoreSettings,changeStoreStatus,saveProduct,refreshCatalog,audit:[...state.serverAudit,...state.audit].sort((a,b)=>Date.parse(a.at)-Date.parse(b.at))}
   return <Context.Provider value={value}>{storageWarning&&<p role="alert" className="bg-accent/20 p-3 text-sm">{storageWarning}</p>}{ready?children:<p role="status" className="p-8">Carregando…</p>}</Context.Provider>
 }
 export function useApp() {
