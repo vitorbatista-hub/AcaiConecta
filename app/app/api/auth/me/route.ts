@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getAccountView } from '@/lib/accounts'
+import { listAddresses } from '@/lib/profile'
 import { currentSession } from '@/lib/session-server'
 
 export const dynamic = 'force-dynamic'
@@ -13,5 +14,6 @@ export async function GET() {
   if (!account) return NextResponse.json({ error: 'Não autenticado.' }, { status: 401, headers })
   // O documento (CPF/CNPJ) nunca sai por aqui: só o administrador o consulta, em /api/admin/batedeiras.
   const { email, role, name, phone, address, store } = account
-  return NextResponse.json({ email, role, storeId: store?.id, name, phone, address, store }, { headers })
+  const addresses = role === 'cliente' ? await listAddresses(session.userId) : undefined
+  return NextResponse.json({ email, role, storeId: store?.id, name, phone, address, addresses, store }, { headers })
 }

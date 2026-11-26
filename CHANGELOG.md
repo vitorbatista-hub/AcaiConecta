@@ -6,6 +6,15 @@ O formato é inspirado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.
 
 ## [Não lançado]
 
+### Adicionado
+
+- Faixa do topo (25/11/2026): cliente e administrador veem "Olá, [primeiro nome]!"; a batedeira vê o nome do estabelecimento, em texto maior e só na tela inicial de cada perfil (Descobrir ou Visão geral). "Voltar ao início", no menu, passa a ser **Sair** e encerra a sessão.
+- Área **Minha conta** para cliente, batedeira e administrador (25/11/2026, DEC-063, backlog 7.8): dados pessoais, e-mail, senha, endereços do cliente (agora no MySQL) e cadastro da batedeira com auditoria. Schema inalterado. Endereços que existiam só no navegador deixam de ser exibidos. Testes: 51 sem banco e 35 com banco, `tsc` e `next build` sem erros; rotas conferidas em parte por HTTP. Telas não verificadas em navegador.
+
+### Alterado
+
+- Revisão de situação da batedeira em `/admin` (25/11/2026): a caixa de elegibilidade aparece só quando a situação escolhida é **Ativa**; nesse caso o botão de salvar fica desabilitado até ela ser marcada e enquanto não houver bairro atendido, com aviso explicando o motivo. Trocar a situação desmarca a caixa. Regras do servidor inalteradas.
+
 ### Corrigido
 
 - Login local retornando "Acesso indisponível" depois que o MySQL reinicia (25/11/2026): o usuário usa `caching_sha2_password` e, com o cache vazio e sem TLS, o driver não podia obter a chave pública RSA. A `DATABASE_URL` local passa a usar `allowPublicKeyRetrieval=true` (`.env.example` e README atualizados). Vale só para o banco em `127.0.0.1`; produção deve usar TLS (ADR-003).

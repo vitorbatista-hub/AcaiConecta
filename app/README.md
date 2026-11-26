@@ -41,6 +41,8 @@ Todos entram em `/entrar` somente com **e-mail e senha** (o cadastro fica em `/c
 - **Cliente:** nome, telefone com DDD, endereço de entrega (rua, número e bairro da lista oficial de 13 bairros urbanos; complemento e referência opcionais), e-mail e senha (mínimo de 8 caracteres). O endereço vira o endereço principal salvo.
 - **Batedeira:** CPF ou CNPJ válido, nome da batedeira, endereço (rua, número e bairro da lista oficial), nome do responsável, telefone, e-mail e senha. A batedeira nasce **Em análise** (fechada e sem entrega), com faixa estimada provisória de 30 a 45 minutos, e só recebe pedidos depois que o administrador a ativar.
 
+**Minha conta** (DEC-063), nos três perfis: nome e telefone, e-mail e senha (exigem a senha atual; trocar a senha encerra as outras sessões), endereços do cliente (no banco, até dois) e cadastro da batedeira (CPF/CNPJ apenas mascarado; alterações auditadas). Rotas: `/api/conta` e `/api/conta/enderecos`.
+
 O CPF/CNPJ fica só no banco: o administrador o vê mascarado e o usuário não o recebe de volta.
 
 **Esqueceu a senha:** `/esqueci-senha` gera um link de uso único, válido por 30 minutos (só o hash fica no banco), para `/redefinir-senha`. Ainda **não há provedor de e-mail**: em desenvolvimento o link aparece no log do servidor; em produção nada é enviado (`lib/email.ts`) e, como o e-mail transacional está fora do MVP (DEC-035), a recuperação de acesso é assistida pelo administrador (DEC-061).
@@ -55,7 +57,7 @@ Não existe mais conta de operador criada por script: batedeiras se cadastram pe
 
 ## Estado atual e limitações
 
-- **Dados ainda no navegador:** sacola, endereços salvos do cliente, contato de suporte, solicitações de recuperação de acesso e o bloqueio de cliente ficam no `sessionStorage`. Os pedidos **não**: cliente, batedeira e administrador enxergam os mesmos pedidos em qualquer aparelho.
+- **Dados ainda no navegador:** sacola, contato de suporte, solicitações de recuperação de acesso e o bloqueio de cliente ficam no `sessionStorage`. Os pedidos **não**: cliente, batedeira e administrador enxergam os mesmos pedidos em qualquer aparelho.
 - **Pedidos no servidor:** preço, taxa e total são recalculados no servidor com os dados do banco (o navegador só confirma o que viu; se mudou, o pedido é recusado para revisão). O mesmo `requestId` do mesmo cliente nunca duplica o pedido. Cada mudança de estado é uma transação com o pedido bloqueado, então o aceite da batedeira e a expiração automática não se atropelam. A expiração roda a cada 10 s em `instrumentation.ts` (exige processo persistente) e também ao listar pedidos.
 - **Catálogo no banco:** batedeiras, produtos, cobertura e horários valem para todos os aparelhos; o cliente só vê batedeiras **ativas**. A batedeira se prepara (produtos, bairros, horários) enquanto está em análise e o administrador a ativa em `/admin` (exige ao menos um bairro e a confirmação de elegibilidade, com motivo e auditoria no banco). O bloqueio de conta funciona no servidor, mas ainda não há tela para bloqueá-la.
 - **Fotos:** o envio de fotos de batedeira e de produto está desligado até haver armazenamento de objetos (ADR-003, backlog 2.5); a imagem ilustrativa padrão é usada. Os produtos agrupam os tamanhos pelo nome (ex.: "Açaí de 15" em 500 ml e 1 L).

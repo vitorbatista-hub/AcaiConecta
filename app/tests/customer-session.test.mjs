@@ -18,7 +18,7 @@ const orderFixture = {
     { from: 'ACEITO', to: 'EM_PREPARO', at: minutesAgo(5), author: 'Operador' },
   ],
 }
-import { formatDuration, orderGuidance, orderTone, pilotMetrics, storeDailyMetrics } from '../lib/order-presentation.ts'
+import { formatDuration, greeting, orderGuidance, orderTone, pilotMetrics, storeDailyMetrics } from '../lib/order-presentation.ts'
 
 test('restaura sacola e preenchimento sem guardar senha', () => {
   const session = { ...emptyCustomerSession(), cart: [{ product: seedProducts[0], quantity: 2, note: 'Sem açúcar' }], storeId: seedProducts[0].storeId, phone: '91900000000', note: 'Casa azul' }
@@ -137,4 +137,9 @@ test('formatDuration indica ausência de dados e formata minutos e segundos', ()
   assert.equal(formatDuration(null), 'Sem dados')
   assert.equal(formatDuration(45_000), '45s')
   assert.equal(formatDuration(125_000), '2min 5s')
+})
+
+test('saudação usa só o primeiro nome', () => {
+  assert.equal(greeting('  Vitor Batista '), 'Olá, Vitor!')
+  assert.equal(greeting(''), 'Olá!')
 })

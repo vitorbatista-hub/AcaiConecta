@@ -3,8 +3,9 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useView } from '@/lib/use-view'
-import { MapPin, ShoppingBag, Store, LayoutDashboard, Users, Package, LogOut, Menu, X } from 'lucide-react'
+import { MapPin, ShoppingBag, Store, LayoutDashboard, Users, Package, LogOut, Menu, X, UserRound } from 'lucide-react'
 import { ThemeSwitcher } from './theme-switcher'
+import { useSignOut } from './sign-out'
 import { createContext, useCallback, useContext, useState } from 'react'
 
 const profileConfig = {
@@ -53,6 +54,7 @@ export function Topbar({ profile }: { profile: Profile }) {
   const [open, setOpen] = useState(false)
   const config = profileConfig[profile]
   const Icon = config.icon
+  const signOut = useSignOut(profile)
   return (
     <header className="sticky top-0 z-40 border-b border-border/70 bg-background/95 backdrop-blur">
       <div className="mx-auto flex h-18 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
@@ -73,7 +75,7 @@ export function Topbar({ profile }: { profile: Profile }) {
           {open ? <X className="size-5" /> : <Menu className="size-5" />}
         </button></div>
       </div>
-      {open && <div className="border-t border-border bg-card px-4 py-4 lg:hidden"><div className="flex flex-col gap-2"><Link href={config.href} className="rounded-xl bg-muted px-4 py-3 text-sm font-semibold">{config.label}</Link>{(profile==='cliente'?[['/cliente','Descobrir'],['/cliente?view=pedidos','Meus pedidos'],['/cliente?view=conta','Minha conta']]:profile==='operador'?[['/operador','Visão geral'],['/operador?view=pedidos','Pedidos'],['/operador?view=produtos','Catálogo'],['/operador?view=config','Configurações']]:[['/admin','Visão geral'],['/admin?view=usuarios','Usuários'],['/admin?view=lojas','Batedeiras'],['/admin?view=pedidos','Pedidos e auditoria'],['/admin?view=suporte','Suporte e cobertura']]).map(([href,label])=><Link key={href} href={href} onClick={()=>setOpen(false)} className="rounded-xl px-4 py-3 text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground">{label}</Link>)}<Link href="/" className="rounded-xl px-4 py-3 text-sm text-muted-foreground">Voltar ao início</Link></div></div>}
+      {open && <div className="border-t border-border bg-card px-4 py-4 lg:hidden"><div className="flex flex-col gap-2"><Link href={config.href} className="rounded-xl bg-muted px-4 py-3 text-sm font-semibold">{config.label}</Link>{(profile==='cliente'?[['/cliente','Descobrir'],['/cliente?view=pedidos','Meus pedidos'],['/cliente?view=conta','Minha conta']]:profile==='operador'?[['/operador','Visão geral'],['/operador?view=pedidos','Pedidos'],['/operador?view=produtos','Catálogo'],['/operador?view=config','Configurações'],['/operador?view=conta','Minha conta']]:[['/admin','Visão geral'],['/admin?view=usuarios','Usuários'],['/admin?view=lojas','Batedeiras'],['/admin?view=pedidos','Pedidos e auditoria'],['/admin?view=suporte','Suporte e cobertura'],['/admin?view=conta','Minha conta']]).map(([href,label])=><Link key={href} href={href} onClick={()=>setOpen(false)} className="rounded-xl px-4 py-3 text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground">{label}</Link>)}<button type="button" onClick={() => void signOut()} className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"><LogOut className="size-4" aria-hidden />Sair</button></div></div>}
     </header>
   )
 }
@@ -81,12 +83,13 @@ export function Topbar({ profile }: { profile: Profile }) {
 export function SideNav({ profile }: { profile: Profile }) {
   const pathname = usePathname()
   const [activeView] = useView('')
+  const signOut = useSignOut(profile)
   const links = profile === 'cliente'
-    ? [{ href: '/cliente', label: 'Descobrir', icon: MapPin }, { href: '/cliente?view=pedidos', label: 'Meus pedidos', icon: Package }, { href: '/cliente?view=conta', label: 'Minha conta', icon: Users }]
+    ? [{ href: '/cliente', label: 'Descobrir', icon: MapPin }, { href: '/cliente?view=pedidos', label: 'Meus pedidos', icon: Package }, { href: '/cliente?view=conta', label: 'Minha conta', icon: UserRound }]
     : profile === 'operador'
-      ? [{ href: '/operador', label: 'Visão geral', icon: LayoutDashboard }, { href: '/operador?view=pedidos', label: 'Pedidos', icon: Package }, { href: '/operador?view=produtos', label: 'Catálogo', icon: Store }, { href: '/operador?view=config', label: 'Configurações', icon: Store }]
-      : [{ href: '/admin', label: 'Visão geral', icon: LayoutDashboard }, { href: '/admin?view=usuarios', label: 'Usuários', icon: Users }, { href: '/admin?view=lojas', label: 'Batedeiras', icon: Store }, { href: '/admin?view=pedidos', label: 'Pedidos e auditoria', icon: Package }, { href: '/admin?view=suporte', label: 'Suporte e cobertura', icon: Users }]
-  return <aside className="hidden w-56 shrink-0 border-r border-border bg-card/60 lg:block"><nav className="sticky top-18 flex flex-col gap-1 p-4" aria-label="Navegação principal">{links.map(({ href, label, icon: Icon }) => { const targetPath = href.split('?')[0]; const targetView = new URLSearchParams(href.split('?')[1] || '').get('view'); const active = pathname === targetPath && (targetView ? activeView === targetView : !activeView); return <Link key={href} href={href}  aria-current={active ? 'page' : undefined} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition ${active ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}><Icon className="size-4" />{label}</Link> })}<div className="my-4 h-px bg-border" /><Link href="/" className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"><LogOut className="size-4" />Voltar ao início</Link></nav></aside>
+      ? [{ href: '/operador', label: 'Visão geral', icon: LayoutDashboard }, { href: '/operador?view=pedidos', label: 'Pedidos', icon: Package }, { href: '/operador?view=produtos', label: 'Catálogo', icon: Store }, { href: '/operador?view=config', label: 'Configurações', icon: Store }, { href: '/operador?view=conta', label: 'Minha conta', icon: UserRound }]
+      : [{ href: '/admin', label: 'Visão geral', icon: LayoutDashboard }, { href: '/admin?view=usuarios', label: 'Usuários', icon: Users }, { href: '/admin?view=lojas', label: 'Batedeiras', icon: Store }, { href: '/admin?view=pedidos', label: 'Pedidos e auditoria', icon: Package }, { href: '/admin?view=suporte', label: 'Suporte e cobertura', icon: Users }, { href: '/admin?view=conta', label: 'Minha conta', icon: UserRound }]
+  return <aside className="hidden w-56 shrink-0 border-r border-border bg-card/60 lg:block"><nav className="sticky top-18 flex flex-col gap-1 p-4" aria-label="Navegação principal">{links.map(({ href, label, icon: Icon }) => { const targetPath = href.split('?')[0]; const targetView = new URLSearchParams(href.split('?')[1] || '').get('view'); const active = pathname === targetPath && (targetView ? activeView === targetView : !activeView); return <Link key={href} href={href}  aria-current={active ? 'page' : undefined} className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition ${active ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}><Icon className="size-4" />{label}</Link> })}<div className="my-4 h-px bg-border" /><button type="button" onClick={() => void signOut()} className="flex items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"><LogOut className="size-4" aria-hidden />Sair</button></nav></aside>
 }
 
 export function AppFrame({ profile, children }: { profile: Profile; children: React.ReactNode }) {

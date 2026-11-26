@@ -110,3 +110,9 @@ export function pilotMetrics(orders: Order[], now = Date.now()) {
     activeStoresLastWeek,
   }
 }
+
+/** Saudação do topo (cliente e administrador): só o primeiro nome. */
+export function greeting(name: string): string {
+  const first = name.trim().split(/\s+/)[0]
+  return first ? `Olá, ${first}!` : 'Olá!'
+}

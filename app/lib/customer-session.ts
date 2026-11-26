@@ -62,14 +62,11 @@ export function restoreCustomerSession(value: unknown): CustomerSession {
   return Object.fromEntries(Object.keys(defaults).map(key => [key, candidate[key as keyof CustomerSession]])) as CustomerSession
 }
 
-export type ProfileAddress = { street: string; number: string; neighborhood?: string; complement?: string; reference?: string }
-/** Endereço informado no cadastro vira o endereço principal, sem sobrescrever endereços que o cliente já salvou. */
-export function sessionPatchFromProfile(profile: { name: string; email: string; phone?: string; address?: ProfileAddress }, current: CustomerSession): Partial<CustomerSession> {
-  const patch: Partial<CustomerSession> = { signedIn: true, name: profile.name, email: profile.email, phone: profile.phone ?? '' }
-  if (profile.address && current.addresses.length === 0) {
-    const address: SavedAddress = { id: 'cadastro', primary: true, street: profile.address.street, number: profile.address.number, complement: profile.address.complement ?? '', reference: profile.address.reference ?? '', neighborhood: profile.address.neighborhood ?? 'Centro' }
-    patch.addresses = [address]
-    if (!current.address.street) patch.address = { street: address.street, number: address.number, neighborhood: address.neighborhood, complement: address.complement, reference: address.reference }
-  }
+/** Dados da conta no servidor: os endereços salvos vêm do banco; o endereço do pedido em andamento só é preenchido se estiver vazio. */
+export function sessionPatchFromProfile(profile: { name: string; email: string; phone?: string; addresses?: SavedAddress[] }, current: CustomerSession): Partial<CustomerSession> {
+  const addresses = (profile.addresses ?? []).slice(0, maxSavedAddresses)
+  const patch: Partial<CustomerSession> = { signedIn: true, name: profile.name, email: profile.email, phone: profile.phone ?? '', addresses }
+  const primary = addresses.find(address => address.primary)
+  if (primary && !current.address.street) patch.address = { street: primary.street, number: primary.number, neighborhood: primary.neighborhood, complement: primary.complement, reference: primary.reference }
   return patch
 }

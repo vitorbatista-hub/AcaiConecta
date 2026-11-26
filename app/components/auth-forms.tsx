@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { KeyRound } from 'lucide-react'
 import { useApp } from './app-provider'
-import { sessionPatchFromProfile, type ProfileAddress } from '@/lib/customer-session'
+import { sessionPatchFromProfile, type SavedAddress } from '@/lib/customer-session'
 import { neighborhoodLabel, officialNeighborhoods } from '@/lib/neighborhoods'
 
 type Result = { role?: string; redirect?: string; error?: string; message?: string }
@@ -52,7 +52,7 @@ export function LoginForm() {
       const { ok, data } = await postJson('/api/auth/login', { email, password })
       if (!ok || !data.redirect) { setError(data.error ?? 'Não foi possível entrar. Tente novamente.'); setPassword(''); return }
       if (data.role === 'cliente') {
-        const me = (await fetch('/api/auth/me', { cache: 'no-store' }).then(r => r.json())) as { name: string; email: string; phone?: string; address?: ProfileAddress }
+        const me = (await fetch('/api/auth/me', { cache: 'no-store' }).then(r => r.json())) as { name: string; email: string; phone?: string; addresses?: SavedAddress[] }
         ctx.updateCustomer(sessionPatchFromProfile(me, ctx.customer))
       }
       router.replace(data.redirect)
@@ -93,7 +93,7 @@ export function RegisterForm() {
       const { ok, data } = await postJson('/api/auth/register', { tipo: kind, ...form })
       if (!ok || !data.redirect) { setError(data.error ?? 'Não foi possível concluir. Tente novamente.'); setForm(f => ({ ...f, password: '' })); return }
       if (data.role === 'cliente') {
-        const me = (await fetch('/api/auth/me', { cache: 'no-store' }).then(r => r.json())) as { name: string; email: string; phone?: string; address?: ProfileAddress }
+        const me = (await fetch('/api/auth/me', { cache: 'no-store' }).then(r => r.json())) as { name: string; email: string; phone?: string; addresses?: SavedAddress[] }
         ctx.updateCustomer(sessionPatchFromProfile(me, ctx.customer))
       }
       router.replace(data.redirect)

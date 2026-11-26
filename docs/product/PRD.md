@@ -171,6 +171,7 @@ Responsável por cadastrar ou aprovar batedeiras, revisar informações, prestar
 - buscar por nome e filtrar por bairro atendido;
 - consultar perfil, catálogo, preços, horário e estimativa;
 - criar conta com nome, telefone, e-mail e senha;
+- alterar nome, telefone, e-mail e senha em **Minha conta** (DEC-063);
 - cadastrar até dois endereços de entrega, um principal e um secundário, podendo editá-los, removê-los e alternar o principal (DEC-040);
 - adicionar produtos e quantidades ao pedido;
 - incluir observações limitadas por item ou pedido;
@@ -196,6 +197,7 @@ Responsável por cadastrar ou aprovar batedeiras, revisar informações, prestar
 - acompanhar fila de pedidos;
 - atualizar estados permitidos;
 - registrar falha de entrega;
+- alterar em **Minha conta** os dados do responsável e o cadastro da batedeira, exceto o CPF/CNPJ (DEC-063);
 - consultar resumo operacional básico, incluindo o faturamento do dia (DEC-043).
 
 ### 8.3 Administrador
@@ -208,7 +210,8 @@ Responsável por cadastrar ou aprovar batedeiras, revisar informações, prestar
 - manter a lista oficial de bairros urbanos (sem habilitação prévia de cada bairro, DEC-057);
 - acompanhar o cadastro da batedeira no provedor de pagamento, estornar pedidos e decidir contestações, exercendo também a função de suporte (DEC-058);
 - consultar métricas do piloto;
-- acessar trilha de auditoria.
+- acessar trilha de auditoria;
+- alterar os próprios dados em **Minha conta** (DEC-063).
 
 ---
 
@@ -531,6 +534,7 @@ No MVP, cada usuário possuirá um único papel e cada batedeira terá um operad
 - limitação de tentativas;
 - encerramento de sessões;
 - bloqueio de conta;
+- senha atual exigida para trocar e-mail ou senha, encerrando as outras sessões na troca de senha (DEC-063);
 - registro de ações administrativas sensíveis;
 - acesso do operador limitado à sua batedeira;
 - acesso do cliente limitado aos próprios dados e pedidos.

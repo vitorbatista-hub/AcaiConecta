@@ -7,19 +7,20 @@ import { AppFrame, SectionHeading, StatusPill, useToast } from '@/components/app
 import { useApp } from '@/components/app-provider'
 import { OrderPanel } from '@/components/order-panel'
 import { Modal } from '@/components/modal'
-import { StaffSignedInBar, useStaffSession } from '@/components/staff-session'
+import { WelcomeBar, useStaffSession } from '@/components/staff-session'
 import { useView } from '@/lib/use-view'
+import { AccountSettings } from '@/components/account-settings'
 import { storeDailyMetrics } from '@/lib/order-presentation'
 import { neighborhoodLabel, officialNeighborhoods } from '@/lib/neighborhoods'
 import { adminActorName, allowedProductVolumesMl, coverageFor, getSchedule, cents, isStoreOpenNow, nextOpeningText, parseMoney, type Product, type Store } from '@/lib/domain'
 
 export default function OperadorPage() {
   const ctx=useApp()
-  const [session,signOut]=useStaffSession('operador')
+  const session=useStaffSession('operador')
   const store=ctx.stores.find(s=>s.id===session?.storeId)
   if(!session) return null
   if(!store) return <AppFrame profile="operador"><p role="alert" className="mx-auto max-w-xl rounded-2xl border bg-card p-6">Sua conta não está vinculada a uma batedeira cadastrada. Procure o administrador.</p></AppFrame>
-  return <OperatorPanel store={store} signOut={signOut}/>
+  return <OperatorPanel store={store}/>
 }
 
 function StatusSwitch({title,icon:Icon,on,onLabel,offLabel,onHint,offHint,extra,onChange}:{title:string;icon:React.ElementType;on:boolean;onLabel:string;offLabel:string;onHint:string;offHint:string;extra?:string;onChange:()=>void}) {
@@ -29,7 +30,7 @@ function StatusSwitch({title,icon:Icon,on,onLabel,offLabel,onHint,offHint,extra,
     <button type="button" role="switch" aria-checked={on} aria-label={`${title}: ${on?onLabel:offLabel}. Alternar`} onClick={onChange} className={`relative h-8 w-14 shrink-0 rounded-full border transition-colors focus-visible:outline-2 focus-visible:outline-primary ${on?'border-secondary bg-secondary':'border-border bg-muted'}`}><span className={`absolute left-1 top-1 size-6 rounded-full bg-white shadow transition-transform ${on?'translate-x-6':''}`}/></button>
   </div>
 }
-function OperatorPanel({store,signOut}:{store:Store;signOut:()=>void}) {
+function OperatorPanel({store}:{store:Store}) {
   const ctx=useApp()
   const notify=useToast()
   const [view,setView]=useView()
@@ -42,10 +43,10 @@ function OperatorPanel({store,signOut}:{store:Store;signOut:()=>void}) {
   async function toggle(key:'isOpen'|'deliveryAvailable') {try{await ctx.saveStoreSettings({...store,[key]:!store[key]});notify(key==='isOpen'?(store.isOpen?'Batedeira fechada.':'Batedeira aberta.'):(store.deliveryAvailable?'Entregas pausadas.':'Entregas disponíveis.'))}catch(error){notify(error instanceof Error?error.message:'Não foi possível salvar.','error')}}
   const change=(key:'isOpen'|'deliveryAvailable')=>store[key]?setConfirmToggle(key):toggle(key)
   return <AppFrame profile="operador"><div className="mx-auto max-w-6xl">
-    <StaffSignedInBar onSignOut={signOut}>Operando como <b>{store.operator}</b> · {store.name}</StaffSignedInBar>
-    <SectionHeading eyebrow={`Painel da batedeira · ${store.name}`} title={view==='produtos'?'Catálogo':view==='config'?'Configurações':'Pedidos e operação'} />
+    {view==='overview'&&<WelcomeBar><b>{store.name}</b></WelcomeBar>}
+    <SectionHeading eyebrow="Painel da batedeira" title={view==='produtos'?'Catálogo':view==='config'?'Configurações':view==='conta'?'Minha conta':'Pedidos e operação'} />
     {store.adminStatus!=='ATIVA'&&<p role="alert" className="mb-4 rounded-xl bg-accent/20 p-4">Batedeira {store.adminStatus.toLowerCase()}: novos pedidos bloqueados. O histórico e os pedidos existentes permanecem disponíveis.</p>}
-    <nav aria-label="Seções da batedeira" className="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0 [&>button]:shrink-0">{[['overview','Visão geral'],['pedidos','Pedidos'],['produtos','Catálogo'],['config','Configurações']].map(([key,label])=><button key={key} className="btn" aria-pressed={view===key} onClick={()=>setView(key)}>{label}</button>)}</nav>
+    <nav aria-label="Seções da batedeira" className="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0 [&>button]:shrink-0">{[['overview','Visão geral'],['pedidos','Pedidos'],['produtos','Catálogo'],['config','Configurações'],['conta','Minha conta']].map(([key,label])=><button key={key} className="btn" aria-pressed={view===key} onClick={()=>setView(key)}>{label}</button>)}</nav>
     {(view==='overview'||view==='pedidos')&&<>
       {view==='overview'&&<><div className="mb-3 flex flex-wrap gap-3"><StatusSwitch title="Batedeira" icon={StoreIcon} on={store.isOpen} onLabel="Aberta" offLabel="Fechada" onHint="Recebendo novos pedidos." offHint="Não recebe novos pedidos." extra={store.isOpen&&!isStoreOpenNow(store)?`Fora do horário de funcionamento · ${nextOpeningText(store)}`:undefined} onChange={()=>change('isOpen')}/><StatusSwitch title="Entregas" icon={Bike} on={store.deliveryAvailable} onLabel="Disponíveis" offLabel="Pausadas" onHint="Clientes podem pedir entrega." offHint="Clientes não podem pedir entrega." onChange={()=>change('deliveryAvailable')}/></div><dl className="compact-metrics mb-4"><div><dt>Aguardando</dt><dd>{pending.length}</dd></div><div><dt>Em operação</dt><dd>{active.length}</dd></div><div><dt>Entregues</dt><dd>{orders.filter(o=>o.status==='ENTREGUE').length}</dd></div><div><dt>Faturamento do dia</dt><dd>R$ {cents(daily.revenueCents)}</dd></div><div><dt>Entregas hoje</dt><dd>{daily.deliveredToday}</dd></div><div><dt>Pedidos aceitos hoje</dt><dd>{daily.acceptedToday}</dd></div></dl>
       {confirmToggle&&<Modal title={confirmToggle==='isOpen'?(store.isOpen?'Fechar a batedeira?':'Abrir a batedeira?'):(store.deliveryAvailable?'Pausar as entregas?':'Disponibilizar as entregas?')} onClose={()=>setConfirmToggle(null)}><p className="mb-4">{confirmToggle==='isOpen'?(store.isOpen?'Enquanto fechada, a batedeira não recebe novos pedidos.':'Ao abrir, a batedeira volta a receber novos pedidos.'):(store.deliveryAvailable?'Enquanto pausada, os clientes não poderão solicitar entrega. O atendimento presencial não é afetado.':'Ao disponibilizar, os clientes voltam a poder solicitar entrega.')}</p><div className="flex flex-wrap gap-2"><button className="btn" onClick={()=>setConfirmToggle(null)}>Cancelar</button><button className="btn-primary" onClick={()=>{toggle(confirmToggle);setConfirmToggle(null)}}>{confirmToggle==='isOpen'?(store.isOpen?'Confirmar fechamento':'Confirmar abertura'):(store.deliveryAvailable?'Confirmar pausa':'Confirmar disponibilização')}</button></div></Modal>}</>}
@@ -56,6 +57,7 @@ function OperatorPanel({store,signOut}:{store:Store;signOut:()=>void}) {
     </>}
     {view==='produtos'&&<Catalog storeId={store.id}/>}
     {view==='config'&&<Settings store={store}/>}
+    {view==='conta'&&<AccountSettings/>}
   </div></AppFrame>
 }
 

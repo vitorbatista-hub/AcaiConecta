@@ -49,7 +49,7 @@ Cada item referencia a história de usuário (US-xx) ou a seção do PRD que o o
 | 3.6 | Acompanhar estados do pedido e linha do tempo | P0 | PRD §8.1, §15.2 | Tabela `eventos_pedido` ([dicionário de dados](../database/data-dictionary.md#eventos_pedido)). **Feito:** 25/11/2026, por consulta a cada 5 s. |
 | 3.7 | Consultar pedidos recentes / histórico | P1 | PRD §8.1 | |
 | 3.8 | Cancelar pedido enquanto `AGUARDANDO_ACEITE` | P0 | US-06 | Caminho crítico da história de cancelamento. **Feito:** 25/11/2026. |
-| 3.9 | Cadastro de cliente (nome, telefone, e-mail, senha) e até dois endereços salvos (principal e secundário) | P1 | PRD §8.1, §16.2 | Já implementado em `app/` (`customer-session.ts`, `customer-account.tsx`). Limite de dois endereços decidido na DEC-040; bloqueio de conta previsto no PRD §16.2. |
+| 3.9 | Cadastro de cliente (nome, telefone, e-mail, senha) e até dois endereços salvos (principal e secundário) | P1 | PRD §8.1, §16.2 | Já implementado em `app/` (`customer-session.ts`, `profile.ts`; endereços no banco desde 25/11/2026). Limite de dois endereços decidido na DEC-040; bloqueio de conta previsto no PRD §16.2. |
 
 ## Épico 4 — Resposta e operação do pedido (batedeira)
 
@@ -95,6 +95,7 @@ Cada item referencia a história de usuário (US-xx) ou a seção do PRD que o o
 | 7.2 | Hash de senha com algoritmo lento (scrypt, argon2 ou bcrypt; scrypt, DEC-062) | P0 | PRD §17 | Não negociável mesmo em piloto pequeno — dado pessoal real de cliente e operador. |
 | 7.3 | Limitação de tentativas de login e encerramento de sessão | P1 (**feito para o login em 25/11/2026**) | PRD §16.2, [ADR-001](../architecture/ADRs/ADR-001-sessoes-e-tentativas-de-login.md) | Tabelas `sessoes` e `tentativas_login` (schema 0.8); limitação por e-mail e por origem, conforme a ADR-001. |
 | 7.4 | Recuperação de acesso assistida pelo administrador | P1 | PRD §16.2, DEC-061 | Sem fluxo automatizado por e-mail (fora do MVP, DEC-035). O fluxo `/esqueci-senha` de `app/` só funciona em desenvolvimento (o link vai para o log); em produção a recuperação é assistida até uma nova decisão sobre provedor de e-mail. |
+| 7.8 | Área **Minha conta** nos três perfis (dados pessoais, e-mail, senha, endereços do cliente e cadastro da batedeira) | P1 | DEC-063, PRD §8 | **Feito:** 25/11/2026; telas ainda não verificadas em navegador. |
 | 7.5 | Política de privacidade, termos de uso e finalidade documentada por dado coletado | P1 | PRD §17, §26 | Gate externo (jurídico) — não é trabalho de engenharia, mas é pré-condição do critério de lançamento. Fica por conta do responsável pelo produto/jurídico, não da equipe técnica. |
 | 7.6 | Anonimização de dados pessoais desacoplada do registro operacional do pedido | P2 | PRD §17, [arquitetura-tecnica.md §11](arquitetura-tecnica.md#11-confiabilidade-e-integridade-de-dados) | Necessária antes de excluir qualquer dado de cliente, mas não bloqueia o primeiro pedido do piloto. |
 | 7.7 | Alerta para falha recorrente no fluxo de criação/transição de pedido | P2 | PRD §18.5 | Reforça o P1 de logs (1.5); pode chegar na segunda iteração do piloto. |

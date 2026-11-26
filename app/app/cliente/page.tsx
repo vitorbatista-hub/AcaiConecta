@@ -7,16 +7,18 @@ import { Bike, Clock, MapPin, Minus, Plus, Search, ShoppingBag } from 'lucide-re
 import { AppFrame, SectionHeading, StatusPill, useToast } from '@/components/app-shell'
 import { useApp } from '@/components/app-provider'
 import { Modal } from '@/components/modal'
-import { CustomerAccount } from '@/components/customer-account'
+import { AccountSettings } from '@/components/account-settings'
 import { CustomerOrder } from '@/components/customer-order'
 import { QualityCard } from '@/components/quality-card'
 import { SupportButton } from '@/components/support-panel'
 import { useView } from '@/lib/use-view'
-import { maxSavedAddresses, saveAddress, sessionPatchFromProfile, type ProfileAddress } from '@/lib/customer-session'
+import { WelcomeBar } from '@/components/staff-session'
+import { greeting } from '@/lib/order-presentation'
+import { maxSavedAddresses, saveAddress, sessionPatchFromProfile, type SavedAddress } from '@/lib/customer-session'
 import { calculateTotals, cents, visibleProducts, coverageFor, getFeeText, getSchedule, getStoreAvailabilityText, isStoreOpenNow, isStoreOrderable, servesNeighborhood, type CartItem, type Product } from '@/lib/domain'
 import { neighborhoodLabel, officialNeighborhoods } from '@/lib/neighborhoods'
 
-type Step = 'cart' | 'account' | 'checkout' | null
+type Step = 'cart' | 'checkout' | null
 
 export default function ClientePage() {
   const ctx = useApp()
@@ -29,7 +31,7 @@ export default function ClientePage() {
   // O cookie emitido pelo servidor é a fonte da verdade: sem sessão de cliente válida, volta para a entrada.
   useEffect(() => {
     let active = true
-    fetch('/api/auth/me', { cache: 'no-store' }).then(r => (r.ok ? r.json() : null)).then((me: { role?: string; name: string; email: string; phone?: string; address?: ProfileAddress } | null) => {
+    fetch('/api/auth/me', { cache: 'no-store' }).then(r => (r.ok ? r.json() : null)).then((me: { role?: string; name: string; email: string; phone?: string; addresses?: SavedAddress[] } | null) => {
       if (!active) return
       if (me?.role !== 'cliente') { try { updateCustomerRef.current({ signedIn: false }) } catch {} router.replace('/entrar'); return }
       try { updateCustomerRef.current(sessionPatchFromProfile(me, customerRef.current)) } catch { router.replace('/entrar') }
@@ -79,9 +81,15 @@ export default function ClientePage() {
       ctx.updateCustomer({ requestId })
       // Validate saved-address data before the order is committed.
       const storeAddress = saveDelivery && customer.addresses.length < maxSavedAddresses
-      const addresses = storeAddress ? saveAddress(customer.addresses, { ...customer.address, id: crypto.randomUUID(), primary: customer.addresses.length === 0 }) : customer.addresses
+      const newAddress = { ...customer.address, id: '', primary: customer.addresses.length === 0 }
+      if (storeAddress) saveAddress(customer.addresses, newAddress)
       const order = await ctx.submitOrder({ items: customer.cart, storeId: owner.id, address: customer.address, phone: customer.phone, note: customer.note, requestId, fee: totals.deliveryFeeCents })
-      if (storeAddress) ctx.updateCustomer({ addresses })
+      if (storeAddress) {
+        // O pedido já foi enviado: uma falha aqui só avisa, sem desfazer nada.
+        const response = await fetch('/api/conta/enderecos', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newAddress) }).catch(() => null)
+        if (response?.ok) ctx.updateCustomer({ addresses: (await response.json() as { addresses: SavedAddress[] }).addresses })
+        else notify('Pedido enviado, mas o endereço não foi salvo.', 'error')
+      }
       setSaveDelivery(false); setStep(null); setStoreId(null); setView(`pedido:${order.id}`); notify(`Pedido enviado para ${owner.name}.`)
     } catch (error) { setError(error instanceof Error ? error.message : 'Não foi possível enviar. Revise o pedido.') }
     finally { setSending(false) }
@@ -89,7 +97,8 @@ export default function ClientePage() {
   const openCart = () => { setStoreId(null); setError(''); setStep('cart') }
   if (!customer.signedIn) return null
   return <AppFrame profile="cliente"><div className="mx-auto max-w-6xl">
-    {view === 'conta' ? <><SectionHeading title="Minha conta" /><CustomerAccount /></> : view === 'pedidos' || view.startsWith('pedido:') ? <>
+    {view === 'stores' && <WelcomeBar><b>{greeting(customer.name)}</b></WelcomeBar>}
+    {view === 'conta' ? <><SectionHeading title="Minha conta" /><AccountSettings /></> : view === 'pedidos' || view.startsWith('pedido:') ? <>
       <SectionHeading title={selectedOrder ? 'Acompanhe seu pedido' : 'Meus pedidos'} action={<button className="btn" onClick={() => setView('stores')}>Ver batedeiras</button>} />
       {selectedOrder ? <><CustomerOrder order={selectedOrder} /><button className="btn mt-4" onClick={() => setView('pedidos')}>Todos os pedidos</button></> : <div className="grid gap-4">{orders.length ? orders.map(order => <CustomerOrder key={order.id} order={order} />) : <div className="empty-state"><ShoppingBag className="size-8" aria-hidden /><p className="font-bold text-foreground">Você ainda não enviou pedidos</p><p>Escolha uma batedeira para começar.</p><button className="btn-primary mt-2" onClick={() => setView('stores')}>Ver batedeiras</button></div>}</div>}
     </> : <>
@@ -116,9 +125,8 @@ export default function ClientePage() {
     <dl className="my-4 space-y-1.5 rounded-2xl bg-muted p-4 text-sm tabular-nums"><div className="flex justify-between"><dt>Volume</dt><dd className="font-bold">{totals.volumeMl} ml</dd></div><div className="flex justify-between"><dt>Subtotal</dt><dd>R$ {cents(totals.subtotalCents)}</dd></div><div className="flex justify-between"><dt>Entrega</dt><dd>{totals.deliveryFeeCents ? `R$ ${cents(totals.deliveryFeeCents)}` : 'Grátis'}</dd></div><div className="flex justify-between border-t pt-2 text-lg font-black"><dt>Total</dt><dd>R$ {cents(totals.totalCents)}</dd></div></dl>
     <p role="status" className={`mb-3 rounded-xl px-3 py-2 text-sm font-semibold ${totals.volumeMl < 1000 ? 'bg-accent/20' : 'bg-secondary/15 text-secondary'}`}>{totals.volumeMl < 1000 ? `Faltam ${1000 - totals.volumeMl} ml para atingir o mínimo de 1 litro.` : 'Mínimo de 1 litro atingido.'}</p>
     {owner && !isStoreOrderable(owner) && <p role="alert" className="mb-3 text-sm">A batedeira está indisponível. Sua sacola foi preservada para revisão.</p>}
-    <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between"><button className="btn" onClick={() => { setStep(null); setStoreId(customer.storeId) }}>Adicionar outros produtos</button><button className="btn-primary sm:min-w-48" disabled={totals.volumeMl < 1000 || !owner || !isStoreOrderable(owner)} onClick={() => { setError(''); setStep(customer.signedIn ? 'checkout' : 'account') }}>Continuar pedido</button></div>
+    <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between"><button className="btn" onClick={() => { setStep(null); setStoreId(customer.storeId) }}>Adicionar outros produtos</button><button className="btn-primary sm:min-w-48" disabled={totals.volumeMl < 1000 || !owner || !isStoreOrderable(owner)} onClick={() => { setError(''); setStep('checkout') }}>Continuar pedido</button></div>
   </> : <div className="empty-state"><ShoppingBag className="size-8" aria-hidden /><p className="font-bold text-foreground">Sua sacola está vazia</p><p>Abra um catálogo para adicionar produtos.</p></div>}</Modal>}
-  {step === 'account' && <Modal title="Acesso para enviar o pedido" onClose={() => setStep('cart')}><CustomerAccount onDone={() => setStep('checkout')} /></Modal>}
   {step === 'checkout' && <Modal title="Revisar e enviar pedido" onClose={() => setStep('cart')}><form className="space-y-4" onSubmit={event => { event.preventDefault(); submit() }}>
     <section className="rounded-xl bg-muted p-4 text-sm"><h3 className="font-bold">{owner?.name}</h3><ul className="mt-2 space-y-1">{customer.cart.map(item => <li key={item.product.id}>{item.quantity} × {item.product.name} · R$ {cents(item.quantity * item.product.priceCents)}{item.note && <p>Observação: {item.note}</p>}</li>)}</ul><p className="mt-3 text-muted-foreground">{totals.volumeMl} ml · Subtotal R$ {cents(totals.subtotalCents)} · Entrega {totals.deliveryFeeCents ? `R$ ${cents(totals.deliveryFeeCents)}` : 'grátis'}</p><p className="mt-1 flex items-baseline justify-between text-lg font-black"><span>Total</span><span className="tabular-nums">R$ {cents(totals.totalCents)}</span></p><p className="text-xs text-muted-foreground">Estimativa: {deliveryCoverage?.estimatedRange ?? owner?.estimatedRange}, sem garantia de horário.</p></section>
     <h3 className="border-b pb-1 text-sm font-black uppercase tracking-[0.14em] text-secondary">Entrega</h3>

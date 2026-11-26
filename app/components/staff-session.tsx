@@ -1,8 +1,8 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { LogOut } from 'lucide-react'
+import { accountChangeEvent } from './account-settings'
 
 export type StaffInfo = { email: string; role: 'admin' | 'operador'; storeId?: string; name: string; store?: { id: string; name: string; address: string; neighborhood?: string } }
 
@@ -12,18 +12,18 @@ export function useStaffSession(role: StaffInfo['role']) {
   const [session, setSession] = useState<StaffInfo | null>(null)
   useEffect(() => {
     let active = true
-    fetch('/api/auth/me', { cache: 'no-store' })
+    const load = () => fetch('/api/auth/me', { cache: 'no-store' })
       .then(response => (response.ok ? (response.json() as Promise<StaffInfo>) : null))
       .then(info => { if (!active) return; if (info && info.role === role) setSession(info); else router.replace('/entrar') })
       .catch(() => { if (active) router.replace('/entrar') })
-    return () => { active = false }
+    void load()
+    window.addEventListener(accountChangeEvent, load)
+    return () => { active = false; window.removeEventListener(accountChangeEvent, load) }
   }, [role, router])
-  const signOut = useCallback(async () => {
-    try { await fetch('/api/auth/logout', { method: 'POST' }) } finally { router.replace('/entrar') }
-  }, [router])
-  return [session, signOut] as const
+  return session
 }
 
-export function StaffSignedInBar({ children, onSignOut }: { children: React.ReactNode; onSignOut: () => void }) {
-  return <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-2xl border bg-card p-3 text-sm shadow-sm"><span>{children}</span><button className="btn inline-flex items-center gap-2" onClick={onSignOut}><LogOut className="size-4" aria-hidden />Sair</button></div>
+/** Saudação das telas iniciais de cada perfil. */
+export function WelcomeBar({ children }: { children: React.ReactNode }) {
+  return <p className="mb-4 break-words rounded-2xl border bg-card px-4 py-3 text-xl leading-tight tracking-tight shadow-sm sm:text-2xl">{children}</p>
 }
