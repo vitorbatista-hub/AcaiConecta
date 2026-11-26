@@ -6,6 +6,10 @@ O formato é inspirado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.
 
 ## [Não lançado]
 
+### Alterado
+
+- Navegação (25/11/2026): **Sair** leva à página inicial do site, e as telas de acesso ganham uma seta para voltar a ela.
+
 ### Adicionado
 
 - Faixa do topo (25/11/2026): cliente e administrador veem "Olá, [primeiro nome]!"; a batedeira vê o nome do estabelecimento, em texto maior e só na tela inicial de cada perfil (Descobrir ou Visão geral). "Voltar ao início", no menu, passa a ser **Sair** e encerra a sessão.
