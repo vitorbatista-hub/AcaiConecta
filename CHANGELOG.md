@@ -6,6 +6,10 @@ O formato é inspirado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.
 
 ## [Não lançado]
 
+### Corrigido
+
+- Administração de clientes (26/11/2026, ADR-006 etapa 5 parcial, PRD §16.2): a tela **Usuários** mostrava um único cliente guardado no navegador (com nome desatualizado) e o bloqueio não valia no servidor. Agora lista as contas do banco e bloqueia ou reativa com motivo e auditoria; o bloqueio encerra as sessões e invalida links de redefinição, sem cancelar pedidos. Rotas `GET /api/admin/clientes` e `POST /api/admin/clientes/situacao`. Schema inalterado. Testes: 52 sem banco e 39 com banco.
+
 ### Alterado
 
 - Navegação (25/11/2026): **Sair** leva à página inicial do site, e as telas de acesso ganham uma seta para voltar a ela.

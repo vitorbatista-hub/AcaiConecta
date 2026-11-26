@@ -38,7 +38,7 @@ O produto será validado inicialmente em **Cametá, Pará**, com um grupo pequen
 
 ## Situação da implementação
 
-- Interface: três áreas (cliente, batedeira e administração) com 51 testes sem banco e 35 com banco, tipos e build aprovados. Contas, sessões, batedeiras, catálogo e pedidos usam o MySQL local (etapa 4 de 7 da ADR-006); a sacola ainda fica no navegador; não há provedor de pagamento, estorno nem contestação (Épico 9).
+- Interface: três áreas (cliente, batedeira e administração) com 52 testes sem banco e 39 com banco, tipos e build aprovados. Contas, sessões, batedeiras, catálogo e pedidos usam o MySQL local (etapa 4 de 7 da ADR-006); a administração de contas de cliente (listar, bloquear e reativar) também usa o banco; a sacola, o suporte e as solicitações de recuperação de acesso ainda ficam no navegador; não há provedor de pagamento, estorno nem contestação (Épico 9).
 - Arquitetura técnica: [aprovada](docs/product/arquitetura-tecnica.md) (DEC-046) como alvo, com as ADRs 001 (sessões) e 002 (tempo real) aprovadas e ainda não implementadas em `app/`; a ADR-004 (logs) é proposta e a ADR-003 (infraestrutura) está em revisão (DEC-061).
 - Modelo de dados: schema SQL 0.11 (pagamento, estorno, contestação, bairros por batedeira, CPF/CNPJ da batedeira e redefinição de senha; 25/11/2026, validado em MySQL 8.0), dicionário de dados e [MER inicial](docs/product/mer-eer-inicial.md) alinhados; modelo aprovado na versão 0.7 (DEC-046).
 - Backlog: [backlog priorizado do MVP](docs/product/backlog-mvp.md) aprovado (DEC-046)
