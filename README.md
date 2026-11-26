@@ -10,14 +10,15 @@ As fases 1 — Descoberta e Validação do Problema e 2 — Definição e Protot
 
 Os trabalhos atuais incluem:
 
-- escolha da infraestrutura de hospedagem, banco, arquivos e observabilidade, a registrar em ADR (primeira tarefa da fase);
+- escolha da infraestrutura de hospedagem, banco, arquivos e observabilidade e do provedor de pagamento Pix, a registrar em ADR;
+- pagamento (Pix on-line e dinheiro), estorno, contestação e atendimento a bairros urbanos, decididos em 25/11/2026 (DEC-056 a DEC-059); PRD 2.7 aprovado em 25/11/2026 (DEC-060);
 - implementação do backlog priorizado do MVP;
 - política de privacidade e termos de uso, obrigatórios antes do piloto.
 
 ## Documentação
 
 - [Aplicação web — execução, acesso da equipe e limitações](app/README.md)
-- [PRD vigente (2.6, aprovado)](docs/product/PRD.md)
+- [PRD (2.7, aprovado)](docs/product/PRD.md)
 - [Roadmap](docs/product/roadmap.md)
 - [Registro de decisões](docs/product/decisions.md)
 - [Decisões de arquitetura (ADRs)](docs/architecture/ADRs/)
@@ -26,11 +27,10 @@ Os trabalhos atuais incluem:
 - [Fluxo atual de pedido e entrega](docs/research/current-order-flow.md)
 - [Schema SQL do MVP](database/schema.sql)
 - [Dicionário de dados do MVP](docs/database/data-dictionary.md)
-- [Modelo EER para MySQL Workbench (schema 0.7)](database/acai_conecta.mwb)
 - [Histórico do PRD 1.0](docs/product/archive/PRD-v1.md)
 - [Changelog](CHANGELOG.md)
 
-O arquivo `database/schema.sql` é a fonte oficial da estrutura do banco de dados. O arquivo `database/acai_conecta.mwb` é sua representação visual derivada para consulta no MySQL Workbench e deverá ser regenerado após alterações estruturais no schema. O `.mwb` não representa as restrições `CHECK`; o banco deve ser criado sempre a partir do `schema.sql`.
+O arquivo `database/schema.sql` é a única fonte oficial da estrutura do banco de dados. O antigo modelo visual `.mwb` foi removido (DEC-061); se for preciso um diagrama, gere-o a partir do `schema.sql`.
 
 ## Local de validação
 
@@ -38,11 +38,11 @@ O produto será validado inicialmente em **Cametá, Pará**, com um grupo pequen
 
 ## Situação da implementação
 
-- Interface: três áreas (cliente, batedeira e administração) com 32 testes, tipos e build aprovados; testes de usabilidade concluídos (DEC-045). O acesso da equipe é autenticado no servidor, mas pedidos e catálogo ainda ficam no navegador, sem banco de dados.
-- Arquitetura técnica: [proposta aprovada](docs/product/arquitetura-tecnica.md) (DEC-046), com as ADRs 001 e 002
-- Modelo de dados: schema SQL 0.7, modelo EER, dicionário de dados e [MER inicial](docs/product/mer-eer-inicial.md) alinhados; sessões e tentativas de login decididas na [ADR-001](docs/architecture/ADRs/ADR-001-sessoes-e-tentativas-de-login.md); aprovados (DEC-046)
+- Interface: três áreas (cliente, batedeira e administração) com 47 testes sem banco e 30 com banco, tipos e build aprovados. Contas, sessões, batedeiras, catálogo e pedidos usam o MySQL local (etapa 4 de 7 da ADR-006); sacola e endereços salvos ainda ficam no navegador; não há provedor de pagamento, estorno nem contestação (Épico 9).
+- Arquitetura técnica: [aprovada](docs/product/arquitetura-tecnica.md) (DEC-046) como alvo, com as ADRs 001 (sessões) e 002 (tempo real) aprovadas e ainda não implementadas em `app/`; a ADR-004 (logs) é proposta e a ADR-003 (infraestrutura) está em revisão (DEC-061).
+- Modelo de dados: schema SQL 0.11 (pagamento, estorno, contestação, bairros por batedeira, CPF/CNPJ da batedeira e redefinição de senha; 25/11/2026, validado em MySQL 8.0), dicionário de dados e [MER inicial](docs/product/mer-eer-inicial.md) alinhados; modelo aprovado na versão 0.7 (DEC-046).
 - Backlog: [backlog priorizado do MVP](docs/product/backlog-mvp.md) aprovado (DEC-046)
-- Aplicação: o código em [`app/`](app/README.md) deixou de ser protótipo e passou a ser a aplicação (DEC-053). A versão anterior com banco (DEC-051) permanece apenas no histórico do Git. Pendências principais: persistência e sincronização entre usuários (banco), contas de cliente com senha, política de privacidade e termos, e hospedagem (ADR-003).
+- Aplicação: o código em [`app/`](app/README.md) deixou de ser protótipo e passou a ser a aplicação (DEC-053). A versão anterior com banco (DEC-051) permanece apenas no histórico do Git. Pendências principais: ADRs do provedor Pix e da persistência/hospedagem, banco de dados e sincronização entre usuários, Épico 9 (pagamento, estorno e contestação), política de privacidade e termos, e hospedagem (ADR-003).
 - Piloto: pendente
 
 ## Organização do repositório

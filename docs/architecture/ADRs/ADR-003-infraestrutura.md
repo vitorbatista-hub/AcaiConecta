@@ -3,7 +3,9 @@
 **Estado:** Proposta em revisão (aguarda comparação, prova de conceito e aprovação do responsável pelo projeto)
 **Data:** 2026-11-23 (revisada em 2026-11-23; ver "Revisão da proposta")
 **Responsável pela decisão:** responsável pelo projeto (modelo de hospedagem: PaaS com contêiner; orçamento sem restrição definida); provedor concreto definido a partir de recomendação técnica
-**Relacionados:** PRD 2.6 §18, §24.2 e §26; DEC-049; [ADR-001](ADR-001-sessoes-e-tentativas-de-login.md); [ADR-002](ADR-002-atualizacao-em-tempo-real.md); [arquitetura técnica proposta](../../product/arquitetura-tecnica.md) §8–§10
+**Relacionados:** PRD 2.7 §14, §18, §24.2 e §26; DEC-049; [ADR-001](ADR-001-sessoes-e-tentativas-de-login.md); [ADR-002](ADR-002-atualizacao-em-tempo-real.md); [arquitetura técnica proposta](../../product/arquitetura-tecnica.md) §8–§10
+
+> **Nota de 25/11/2026 (DEC-061):** esta ADR foi escrita antes das DEC-053 e DEC-056 a DEC-060. Ela ainda não considera o provedor de pagamento Pix (webhooks exigem endpoint público estável com TLS) nem a persistência de `app/`, e cita código da versão com banco que hoje só existe no histórico do Git. Deve ser revista junto com a ADR do provedor Pix e a de persistência antes da aprovação. A restrição de SSE vem da ADR-002, aprovada.
 
 ## Contexto
 
@@ -43,7 +45,7 @@ O responsável pelo projeto pediu a revisão da ADR e decidiu **comparar provedo
 1. **A premissa "só a DigitalOcean oferece MySQL gerenciado com backup" estava incompleta.** Ela vale para os PaaS comparados (Railway, Render, Fly.io). Google Cloud (Cloud SQL para MySQL) e Magalu Cloud (DBaaS MySQL) também oferecem. AWS e Azure não foram avaliados nesta revisão.
 2. **A região virou critério.** A [disponibilidade regional da DigitalOcean](https://docs.digitalocean.com/platform/regional-availability/) não lista São Paulo para App Platform, Managed MySQL nem para os demais produtos pesquisados. Uma fonte de terceiros afirma o contrário, sem respaldo na documentação oficial.
 3. **O SSE na App Platform não está confirmado.** Há relatos de [limite de cerca de 100 s por requisição](https://www.digitalocean.com/community/questions/how-to-resolve-the-100s-request-timeout-of-digital-ocean-s-app-is-there-a-way-to-increase-the-timeout-or-something-else) e de [respostas bufferizadas em SSE](https://www.digitalocean.com/community/questions/does-app-platform-support-sse-server-sent-events-application), além de um [pedido de recurso](https://ideas.digitalocean.com/app-platform/p/http-response-streaming-in-app-platform-for-sse-support) para streaming. A documentação oficial de [limites](https://docs.digitalocean.com/products/app-platform/details/limits) não limita conexões simultâneas, mas não trata da duração. Limite de duração é tolerável (a conexão se renova e retoma pelo `Last-Event-ID`); buffering não é, pois anula o alerta imediato (ADR-002) e deixaria só a contingência de reconsulta a cada 10 s.
-4. **O processo precisa ficar vivo.** A aplicação tem tarefas periódicas dentro do processo (expiração de pedidos a cada 10 s e expurgo, `src/instrumentation.ts`). Plataformas que reduzem a zero ou limitam a CPU entre requisições exigem configuração específica (instância mínima, CPU sempre alocada) ou um agendador externo. A confirmar por provedor.
+4. **O processo precisa ficar vivo.** A aplicação tem tarefas periódicas dentro do processo (expiração de pedidos a cada 10 s e expurgo; hoje a expiração roda no cliente e no servidor de `app/`, sem agendador, e o agendador de processo existia na versão com banco, só no histórico do Git). Plataformas que reduzem a zero ou limitam a CPU entre requisições exigem configuração específica (instância mínima, CPU sempre alocada) ou um agendador externo. A confirmar por provedor.
 
 ### Comparação (candidatos)
 
@@ -67,10 +69,10 @@ Cada candidato escolhido sobe a aplicação em um ambiente **descartável, por p
 
 1. **SSE:** conexão aberta por pelo menos 10 minutos, com cortes seguidos de retomada sem perda ou duplicação; primeiro byte imediato (sem buffering); atraso entre o evento e a tela abaixo de 2 s.
 2. **Agendador:** pedido sem resposta expira em até 15 s sem nenhuma requisição em andamento.
-3. **Backup e restauração:** restaurar um backup do próprio provedor em banco temporário e rodar a verificação de `docs/operations/backup-e-restauracao.md`.
+3. **Backup e restauração:** restaurar um backup do próprio provedor em banco temporário e conferir estrutura, contagens e integridade referencial (o runbook e os scripts da versão anterior estão só no histórico do Git e precisam ser refeitos).
 4. **Fotos:** gravar e ler objetos pelo armazenamento S3 do provedor (o driver S3 da aplicação ainda não existe; na prova, testar o armazenamento com ferramenta padrão).
 5. **Latência:** tempo até o primeiro byte, medido de um celular em Cametá, em pelo menos 3 horários.
-6. **Logs:** coletar o JSON da saída padrão e localizar uma requisição por `requisicaoId` (ADR-004).
+6. **Logs:** coletar o JSON da saída padrão e localizar uma requisição por identificador de requisição (ADR-004, proposta).
 7. **Custo:** custo da prova e estimativa mensal para homologação e produção.
 
 O resultado dá a base para aprovar, ajustar ou trocar o provedor. Sem os critérios 1 a 3 atendidos, o candidato não é aprovado.
@@ -87,6 +89,6 @@ O resultado dá a base para aprovar, ajustar ou trocar o provedor. Sem os crité
 
 - Com a aprovação, o item 1.1 do backlog pode começar, e o Dockerfile e a configuração de ambiente fazem parte dele.
 - O custo mensal será estimado após a prova de conceito e registrado aqui; o piloto deve caber em um cluster pequeno por ambiente.
-- A aplicação já isola o armazenamento de fotos atrás de uma interface (`src/server/armazenamento.ts`); o driver S3 compatível será escrito depois da escolha do provedor.
+- O armazenamento de fotos ainda não existe em `app/` (as fotos ficam no navegador, `photo-field.tsx`); a interface e o driver S3 compatível serão escritos depois da escolha do provedor.
 - Um único provedor concentra aplicação, banco e arquivos; mitigado pela portabilidade do item 6.
 - A região do provedor e a transferência internacional de dados passam a ser pendência do gate de privacidade (PRD §17).

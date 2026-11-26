@@ -35,9 +35,9 @@ Confirmar que o problema é relevante e que existe disposição real de batedeir
 
 **Protótipo:** a versão navegável da Fase 2 está no histórico do Git (antes de 24/11/2026); o código em [`../../app/`](../../app/README.md) deixou de ser protótipo e passou a ser a aplicação (DEC-053). Testes de usabilidade considerados satisfatórios em 28/09/2026 (DEC-045).
 
-**Modelo de dados, arquitetura e backlog:** [modelo conceitual e MER inicial](mer-eer-inicial.md), [dicionário de dados](../database/data-dictionary.md), [arquitetura técnica proposta](arquitetura-tecnica.md) e [backlog priorizado do MVP](backlog-mvp.md) aprovados em 28/09/2026 (DEC-046), com as decisões de arquitetura ADR-001 e ADR-002.
+**Modelo de dados, arquitetura e backlog:** [modelo conceitual e MER inicial](mer-eer-inicial.md), [dicionário de dados](../database/data-dictionary.md), [arquitetura técnica proposta](arquitetura-tecnica.md) e [backlog priorizado do MVP](backlog-mvp.md) aprovados em 28/09/2026 (DEC-046), com as decisões de arquitetura ADR-001 e ADR-002 (aprovadas; ainda não implementadas em `app/`, DEC-061).
 
-**PRD:** versão 2.6 aprovada em 28/09/2026 (DEC-044).
+**PRD:** versão 2.6 aprovada em 28/09/2026 (DEC-044), substituída pela 2.7, aprovada em 25/11/2026 (DEC-060).
 
 ### Objetivo
 
@@ -65,7 +65,7 @@ Transformar a visão do produto em uma especificação implementável e testada 
 
 ## Fase 3 — Construção do MVP
 
-**Situação:** Em andamento desde 28/09/2026 (DEC-049). Primeira tarefa: escolher a infraestrutura e registrá-la em ADR; a hospedagem precisa manter conexões abertas (ADR-002).
+**Situação:** Em andamento desde 28/09/2026 (DEC-049). Primeiras tarefas: registrar em ADR o provedor de pagamento Pix, a persistência/hospedagem e a infraestrutura (ADR-003, em revisão); a hospedagem precisa manter conexões abertas (ADR-002). O código local de `app/` já existe (DEC-051, DEC-053); a ADR-003 bloqueia apenas o deploy em homologação e produção e a persistência.
 
 ### Objetivo
 
@@ -80,7 +80,8 @@ Implementar a menor solução confiável capaz de operar pedidos reais durante o
 - catálogo e disponibilidade;
 - pedido e máquina de estados;
 - linha do tempo do pedido e alertas visuais no painel;
-- dinheiro ou Pix na entrega, sem processamento pela plataforma;
+- dinheiro na entrega e Pix on-line por provedor de pagamento, com estorno e contestação (DEC-056, DEC-058);
+- atendimento a bairros urbanos escolhidos por cada batedeira (DEC-057);
 - métricas operacionais;
 - testes e ambientes de homologação e produção.
 

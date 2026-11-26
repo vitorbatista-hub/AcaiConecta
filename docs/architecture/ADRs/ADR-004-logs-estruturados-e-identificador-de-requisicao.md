@@ -1,9 +1,9 @@
 # ADR-004 — Logs estruturados, identificador de requisição e redação de dados
 
-**Estado:** Superada em 24/11/2026 (DEC-053): o código que aplicava esta proposta foi removido com o MVP descartado e ela não foi aprovada. Deverá ser reavaliada junto com a hospedagem (ADR-003). O texto abaixo é mantido como registro histórico.
+**Estado:** Proposta, **não aprovada e não implementada** (o código que a aplicava foi removido com o MVP descartado, DEC-053). Segue como base para a observabilidade da ADR-003; precisa de aprovação antes de ser implementada (DEC-061).
 **Data:** 2026-11-23
 **Responsável pela decisão:** responsável pelo projeto
-**Relacionados:** PRD 2.6 §17, §18.5 e §23; backlog 1.5 e 7.7; [ADR-003](ADR-003-infraestrutura.md) §4; [arquitetura técnica](../../product/arquitetura-tecnica.md) §10
+**Relacionados:** PRD 2.7 §17, §18.5 e §23; backlog 1.5 e 7.7; [ADR-003](ADR-003-infraestrutura.md) §4; [arquitetura técnica](../../product/arquitetura-tecnica.md) §10
 
 ## Contexto
 

@@ -1,7 +1,7 @@
 # Dicionário de dados — MVP reduzido
 
-**Versão do schema:** 0.7
-**Status:** Aprovado em 28/09/2026 (DEC-046)
+**Versão do schema:** 0.11 (PRD 2.7; validado em MySQL 8.0 em 25/11/2026)
+**Status:** Base aprovada em 28/09/2026 (DEC-046); schema 0.11 e este dicionário atualizados em 25/11/2026 (DEC-056 a DEC-061), aguardando revisão do responsável
 **Banco previsto:** MySQL 8+
 **Fonte estrutural oficial:** [`../../database/schema.sql`](../../database/schema.sql)
 
@@ -22,7 +22,7 @@ Este documento descreve o significado funcional dos dados do MVP e a regra de ne
 - Uma batedeira possui horários, bairros atendidos, produtos e pedidos.
 - Um usuário do tipo `CLIENTE` possui até dois endereços ativos (DEC-040) e pedidos.
 - Um usuário pode ter várias sessões; tentativas de login são registradas pelo e-mail informado e pela origem, sem vínculo com o usuário (ADR-001).
-- Um pedido possui itens e uma linha do tempo de eventos.
+- Um pedido possui itens e uma linha do tempo de eventos; pode ter um pagamento (Pix), que pode ter estornos, e contestações (novos no schema 0.8).
 - Ações administrativas relevantes geram eventos de auditoria.
 
 ## Tabelas
@@ -71,6 +71,20 @@ Registro mínimo usado para limitar tentativas de login (PRD §16.2, ADR-001).
 
 Não guarda o IP em texto, o navegador nem a senha digitada. Os registros são expurgados após 24 horas. Limites e tempos de espera estão na ADR-001.
 
+### `redefinicoes_senha` *(novo no schema 0.10)*
+
+Links de redefinição de senha de uso único (PRD §16.2; recuperação de acesso).
+
+| Campo | Significado e regra funcional |
+|---|---|
+| `id` | Identificador interno. |
+| `usuario_id` | Usuário que pediu a redefinição. |
+| `token_hash` | Hash SHA-256 do token enviado no link; o token em si nunca é armazenado. |
+| `criado_em`, `expira_em` | Momento do pedido e fim da validade (30 minutos). |
+| `usada_em` | Preenchido quando a senha é trocada; token usado não vale de novo. Um novo pedido invalida os anteriores ainda não usados. |
+
+Trocar a senha por este link encerra todas as sessões do usuário. Registros expirados ou usados são removidos por rotina periódica. Em produção o link só é enviado quando houver provedor de e-mail (DEC-035, DEC-061).
+
 ### `bairros`
 
 Vocabulário canônico das áreas usadas em endereços e cobertura de entrega.
@@ -79,14 +93,15 @@ Vocabulário canônico das áreas usadas em endereços e cobertura de entrega.
 |---|---|
 | `id` | Identificador interno. |
 | `nome` | Nome único do bairro. |
-| `ativo` | Indica se o bairro aceita novos vínculos e pedidos (DEC-019). |
+| `nome_alternativo` | Nome alternativo opcional exibido entre parênteses (ex.: "São João Batista" para o Centro, DEC-057). |
+| `ativo` | Indica se o bairro faz parte da lista oficial e aceita novos vínculos e pedidos. Deixa de ser habilitação individual pelo administrador (DEC-057). |
 | `criado_em`, `atualizado_em` | Datas de criação e última alteração. |
 
-No piloto, somente o bairro Centro deverá estar habilitado para pedidos, conforme o PRD.
+A lista oficial tem 13 bairros urbanos de Cametá (`bairros_cameta.txt`, DEC-057); a zona rural e as comunidades ribeirinhas ficam fora. Cada batedeira escolhe, na lista, os bairros que atende (`batedeiras_bairros`).
 
 ### `batedeiras`
 
-Cadastro público e estado operacional dos estabelecimentos selecionados.
+Cadastro (feito pela própria batedeira, DEC-054) e estado operacional dos estabelecimentos; a conta nasce `EM_ANALISE` e só recebe pedidos depois de ativada pelo administrador.
 
 | Campo | Significado e regra funcional |
 |---|---|
@@ -95,13 +110,16 @@ Cadastro público e estado operacional dos estabelecimentos selecionados.
 | `nome`, `descricao`, `imagem_url` | Informações públicas do perfil; a imagem segue a DEC-013 e a DEC-038. |
 | `telefone_operacional` | Contato restrito à operação e ao suporte; nunca exibido publicamente (PRD §13.4). |
 | `endereco`, `bairro_id`, `ponto_referencia` | Localização do estabelecimento. |
+| `documento_tipo`, `documento` *(novo no schema 0.9)* | CPF (11 dígitos) ou CNPJ (14 dígitos) da batedeira, só os dígitos, validados pela aplicação (DEC-055). Dado pessoal: nunca devolvido ao próprio usuário, exibido mascarado ao administrador e fora de logs, fixtures e documentação. A plataforma não o confere na Receita; a elegibilidade segue verificada fora do sistema (DEC-048). |
 | `status` | Situação administrativa (PRD §10.1): `EM_ANALISE`, `ATIVA`, `SUSPENSA` ou `DESATIVADA`. |
 | `aberta` | Estado manual de abertura. |
 | `entrega_disponivel` | Disponibilidade de entrega, independente de `aberta`. |
 | `estimativa_minutos_min`, `estimativa_minutos_max` | Faixa estimada de entrega configurada pela batedeira e exibida como faixa (ex.: "25–35 min"); não é promessa de horário exato (PRD §12.6). |
+| `conta_pagamento_id` | Identificador da conta conectada da batedeira no provedor; a plataforma não guarda dados bancários nem documentos de pagamento (DEC-058). |
+| `conta_pagamento_status` | `NAO_CADASTRADA`, `PENDENTE`, `VERIFICADA` ou `RECUSADA`. Somente `VERIFICADA` permite oferecer Pix; nos demais casos, só dinheiro. |
 | `criado_em`, `atualizado_em` | Datas de criação e última alteração. |
 
-Uma batedeira só pode receber novos pedidos quando estiver ativa, aberta, com entrega disponível e atendendo o bairro selecionado.
+Uma batedeira só pode receber novos pedidos quando estiver ativa (o que exige ao menos um bairro atendido ativo, DEC-057), aberta, com entrega disponível e atendendo o bairro selecionado.
 
 ### `horarios_funcionamento`
 
@@ -125,7 +143,8 @@ Cobertura e preço de entrega por batedeira e bairro.
 |---|---|
 | `id` | Identificador interno. |
 | `batedeira_id`, `bairro_id` | Par único de estabelecimento e bairro atendido. |
-| `taxa_entrega_centavos` | Taxa fixa exibida antes do envio; zero representa entrega gratuita (DEC-036). |
+| `taxa_entrega_centavos` | Taxa fixa exibida antes do envio; zero representa entrega gratuita (DEC-036). Definida por bairro e por batedeira (DEC-057). |
+| `estimativa_minutos_min`, `estimativa_minutos_max` | Faixa estimada por bairro (DEC-057); a faixa em `batedeiras` permanece como padrão. |
 | `ativo` | Indica se a cobertura aceita novos pedidos. |
 
 ### `produtos`
@@ -152,7 +171,7 @@ Endereços reutilizáveis de entrega do cliente: no máximo dois ativos, um prin
 |---|---|
 | `id`, `cliente_id` | Identificador e proprietário. `cliente_id` deve apontar para usuário do tipo `CLIENTE`. |
 | `logradouro`, `numero`, `complemento` | Componentes do endereço. |
-| `bairro_id` | Bairro canônico usado para verificar cobertura; no piloto, somente o Centro. |
+| `bairro_id` | Bairro canônico da lista oficial, usado para verificar cobertura e filtrar batedeiras (DEC-057). |
 | `ponto_referencia` | Informação opcional para apoiar a entrega. |
 | `principal` | Endereço sugerido por padrão no pedido. A aplicação garante exatamente um principal quando houver endereço ativo e no máximo dois endereços ativos por cliente; o cliente pode alternar o principal, editar ou remover qualquer um. |
 | `ativo` | Exclusão lógica. |
@@ -168,20 +187,84 @@ Registro central da solicitação e do estado operacional da entrega.
 | `chave_idempotencia` | Token do cliente usado para impedir reenvio duplicado. |
 | `cliente_id`, `batedeira_id` | Participantes do pedido. O telefone de contato é lido de `usuarios.telefone` do cliente, sem cópia no pedido (ver MER, decisões de modelagem). |
 | `endereco_cliente_id` | Referência opcional ao endereço original; pode coexistir com o snapshot histórico. |
-| `status` | Estado operacional definido na máquina de estados do PRD. |
-| `forma_pagamento` | Informação operacional: `DINHEIRO` ou `PIX_NA_ENTREGA` (DEC-030). Não representa confirmação financeira. Protótipo e MER usam os mesmos valores. |
+| `status` | Estado operacional definido na máquina de estados do PRD. Em 0.8 ganha `AGUARDANDO_PAGAMENTO` (Pix escolhido; até 10 minutos para pagar). |
+| `forma_pagamento` | Em 0.7 era `DINHEIRO` ou `PIX_NA_ENTREGA`, obrigatório no envio. Em 0.8 é nulo até o cliente escolher, depois do aceite, entre `DINHEIRO` e `PIX` (DEC-056); `PIX_NA_ENTREGA` deixa de existir. A confirmação do Pix está em `pagamentos`, não aqui. |
+| `escolha_pagamento_expira_em` | Obrigatório em `ACEITO`. Limite de 10 minutos, contado do aceite, para o cliente escolher a forma de pagamento; vencido sem escolha, o pedido é cancelado sem custo (DEC-059). |
 | `subtotal_centavos` | Soma dos itens. |
 | `taxa_entrega_centavos` | Taxa copiada da cobertura vigente no envio. |
-| `total_centavos` | Soma exata do subtotal e da taxa. Base do faturamento do dia exibido ao operador (DEC-043). |
+| `total_centavos` | Soma exata do subtotal e da taxa. Base do faturamento do dia exibido ao operador (DEC-043, DEC-058): dinheiro entra na entrega; Pix, na confirmação do pagamento. |
 | `volume_total_ml` | Soma dos volumes dos itens; deve ser de pelo menos 1.000 ml. |
-| `troco_para_centavos` | Valor da nota informado pelo cliente quando o pagamento for em dinheiro; maior ou igual ao total. |
+| `troco_para_centavos` | Valor da nota informado pelo cliente quando o pagamento for em dinheiro; maior ou igual ao total. Preenchido só depois do aceite. |
 | `observacao` | Instrução limitada do pedido. |
 | `estimativa_minutos_min`, `estimativa_minutos_max` | Faixa copiada no envio. |
-| `endereco_snapshot`, `bairro_snapshot`, `referencia_snapshot` | Endereço preservado para histórico e suporte. |
+| `endereco_snapshot`, `bairro_snapshot`, `referencia_snapshot` | Endereço preservado para histórico e suporte. `endereco_snapshot` guarda rua, número e complemento em um só texto. |
+| `telefone_snapshot` *(novo no schema 0.11)* | Telefone de contato informado no pedido (só dígitos, com DDD); visível à batedeira e ao administrador para a entrega. Pode diferir do telefone da conta. |
 | `criado_em`, `expira_aceite_em` | Criação, que ordena a fila (DEC-010), e limite da janela fixa de cinco minutos para aceite (DEC-031). |
 | `aceito_em`, `finalizado_em`, `atualizado_em` | Marcos do ciclo operacional; apoiam as métricas de tempo (PRD §5.4). |
 
 A criação do pedido, dos itens, do evento inicial e dos snapshots deve ocorrer em uma única transação. A combinação de cliente e chave de idempotência é única.
+
+### `pagamentos` *(novo no schema 0.8)*
+
+Cobrança Pix de um pedido, criada quando o cliente escolhe Pix depois do aceite (DEC-056). No máximo um por pedido; Pix expirado encerra o pedido e o cliente reinicia com outro (DEC-058). Os nomes dos campos externos dependem do provedor (ADR).
+
+| Campo | Significado e regra funcional |
+|---|---|
+| `id`, `pedido_id` | Identificador e pedido (único). |
+| `provedor`, `provedor_pagamento_id` | Provedor e identificador externo da cobrança; único por provedor. |
+| `status` | `PENDENTE`, `CONFIRMADO`, `EXPIRADO` ou `ESTORNADO` (inclui estorno total). |
+| `valor_centavos` | Valor cobrado, igual a `pedidos.total_centavos`. |
+| `expira_em` | Limite de 10 minutos para pagar. |
+| `confirmado_em` | Momento da confirmação pelo provedor; define o dia do Pix no faturamento. |
+| `criado_em`, `atualizado_em` | Datas de criação e última alteração. |
+
+Não guarda chave Pix, dados bancários nem dados do pagador além do necessário. Toda mudança de `status` deve gerar evento em `eventos_pedido` com origem automática (webhook) ou autor humano.
+
+### `estornos` *(novo no schema 0.8)*
+
+Devolução, total ou parcial, de um pagamento confirmado, feita pela batedeira ou pelo administrador (DEC-056, DEC-058).
+
+| Campo | Significado e regra funcional |
+|---|---|
+| `id`, `pagamento_id` | Identificador e pagamento estornado. |
+| `contestacao_id` | Contestação que originou o estorno, quando houver. |
+| `origem` | `CANCELAMENTO_PEDIDO` ou `FALHA_ENTREGA`. |
+| `valor_centavos` | Valor devolvido. |
+| `prazo_em` | Limite de 24 h: contado do cancelamento do pedido pago ou, na falha de entrega, da abertura da contestação. |
+| `status` | `PENDENTE`, `CONCLUIDO` ou `FALHOU`. |
+| `usuario_id` | Operador ou administrador que realizou o estorno. |
+| `provedor_estorno_id` | Identificador externo, quando existir. |
+| `concluido_em` | Data em que o estorno ocorreu; é o dia em que o valor é descontado do faturamento, sem alterar dias fechados. |
+| `criado_em` | Momento da solicitação. |
+
+### `contestacoes` *(novo no schema 0.8)*
+
+Disputa aberta pelo cliente e decidida pelo administrador (PRD §14.3, DEC-058). Uma aberta por pedido por vez.
+
+| Campo | Significado e regra funcional |
+|---|---|
+| `id`, `pedido_id`, `cliente_id` | Identificador, pedido e cliente que abriu. |
+| `motivo` | `PRODUTO_MAU_ESTADO`, `ENTREGA_NAO_RECEBIDA`, `PEDIDO_DIFERENTE`, `PIX_SEM_ANDAMENTO_OU_ESTORNO_NAO_REALIZADO` ou `VALOR_DIFERENTE`. |
+| `descricao` | Texto limitado do cliente; sem dados sensíveis desnecessários. |
+| `status` | `ABERTA`, `PROCEDENTE` ou `IMPROCEDENTE`. |
+| `responder_ate` | Prazo da primeira resposta (1 hora após a abertura no piloto); base do alerta no painel do administrador. |
+| `primeira_resposta_em` | Momento da primeira resposta do administrador. |
+| `decidida_por`, `decidida_em`, `decisao` | Administrador que decidiu, momento e justificativa curta. |
+| `criado_em` | Abertura. Só pode ocorrer a partir da confirmação do pagamento (Pix) ou do aceite (dinheiro) e até 24 h depois da entrega ou da falha. |
+
+### `eventos_webhook` *(novo no schema 0.8)*
+
+Registro de cada notificação recebida do provedor, base da idempotência e da auditoria (DEC-056).
+
+| Campo | Significado e regra funcional |
+|---|---|
+| `id`, `pagamento_id` | Identificador e pagamento relacionado, quando identificado. |
+| `provedor`, `evento_externo_id` | Provedor e identificador do evento; par único: o mesmo evento recebido de novo não é reprocessado. |
+| `tipo` | Tipo do evento (ex.: pagamento confirmado, estorno concluído). |
+| `assinatura_valida` | Resultado da verificação de assinatura; eventos inválidos são registrados e ignorados. |
+| `recebido_em`, `processado_em` | Momentos de recebimento e processamento. |
+
+Não guarda segredos nem o conteúdo bruto além do necessário à auditoria.
 
 ### `itens_pedido`
 
@@ -235,6 +318,7 @@ Trilha das ações administrativas que não pertencem exclusivamente à linha do
 - Usuários, batedeiras, produtos, bairros e endereços devem usar seus estados de desativação sempre que houver histórico relacionado.
 - Pedidos, itens e eventos constituem histórico operacional e não devem ser removidos por fluxos comuns da aplicação.
 - Política provisória (DEC-047): pedidos, itens e eventos são guardados por 5 anos. Na exclusão da conta, nome, telefone, e-mail e endereços do cliente são removidos da conta e dos pedidos antigos (`usuarios`, `enderecos_clientes` e os campos `_snapshot` de endereço), preservando valores, datas e estados.
+- Pagamentos, estornos, contestações e eventos de webhook são histórico financeiro e de auditoria: seguem o prazo de retenção dos pedidos e não são apagados por fluxos comuns; a exclusão da conta não remove valores, datas e estados (DEC-047).
 - Tentativas de login são expurgadas após 24 horas e sessões encerradas ou expiradas, por rotina periódica (ADR-001).
 - A revisão jurídica prevista antes do piloto pode ajustar esses prazos.
 
@@ -244,4 +328,6 @@ Trilha das ações administrativas que não pertencem exclusivamente à linha do
 - Aplicar autorização no servidor e verificar o `tipo` do usuário em todos os vínculos.
 - Impedir alteração de snapshots e valores depois do envio do pedido.
 - Executar transições com controle de concorrência e registrar o evento correspondente na mesma transação.
-- Não tratar `PIX_NA_ENTREGA` como pagamento confirmado ou conciliado pela plataforma.
+- Tratar o Pix como pago somente quando `pagamentos.status` for `CONFIRMADO` por webhook verificado e idempotente; o dinheiro não gera registro de pagamento na plataforma.
+- Executar a confirmação do Pix, a mudança de estado do pedido e o evento correspondente na mesma transação.
+- Calcular o faturamento do dia a partir de `pedidos`, `pagamentos` e `estornos`, sem armazená-lo.

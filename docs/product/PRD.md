@@ -4,9 +4,9 @@
 
 **Autor:** Vitor Benedito Ribeiro Batista  
 **Local inicial:** Cametá/PA  
-**Versão:** 2.6
-**Data:** Setembro de 2026  
-**Status:** Aprovado em 28/09/2026 (DEC-044) — Fase 2, Definição e Prototipação
+**Versão:** 2.7
+**Data:** Novembro de 2026  
+**Status:** Aprovado em 25/11/2026 (DEC-060) — Fase 3, Construção do MVP
 **Documento anterior:** [`archive/PRD-v1.md`](archive/PRD-v1.md) (versão 1.0)
 
 ---
@@ -15,9 +15,9 @@
 
 O **AçaíConecta** é uma plataforma digital que conecta consumidores a batedeiras de açaí tradicional em Cametá/PA. A proposta é reunir, em um único canal, informações hoje dispersas em contatos de WhatsApp, como disponibilidade, localização, preços, produtos e horários, além de estruturar o recebimento e acompanhamento de pedidos.
 
-O produto será validado inicialmente por meio de uma aplicação web responsiva e instalável, com operação limitada ao bairro Centro, em Cametá, e um grupo piloto de 3 a 5 batedeiras. As entregas continuarão sob responsabilidade de cada batedeira, sem frota própria da plataforma.
+O produto será validado inicialmente por meio de uma aplicação web responsiva e instalável, com operação limitada à zona urbana de Cametá (DEC-057), e um grupo piloto de 3 a 5 batedeiras. As entregas continuarão sob responsabilidade de cada batedeira, sem frota própria da plataforma.
 
-A primeira versão não processará pagamentos, documentos ou contestações e não terá cartão, comissão por pedido, roteirização, chat livre ou expansão para outras cidades. O objetivo do MVP é comprovar que consumidores e batedeiras obtêm valor com descoberta centralizada, catálogo padronizado e pedidos estruturados.
+A primeira versão processará o Pix por meio de um provedor de pagamento, com conta conectada da batedeira e contestação decidida pelo administrador (DEC-056, DEC-058), e não terá cartão, comissão por pedido, roteirização, chat livre ou expansão para outras cidades. O objetivo do MVP é comprovar que consumidores e batedeiras obtêm valor com descoberta centralizada, catálogo padronizado e pedidos estruturados.
 
 ---
 
@@ -175,7 +175,8 @@ Responsável por cadastrar ou aprovar batedeiras, revisar informações, prestar
 - adicionar produtos e quantidades ao pedido;
 - incluir observações limitadas por item ou pedido;
 - informar necessidade de troco;
-- escolher dinheiro ou Pix na entrega;
+- depois do aceite do pedido, escolher a forma de pagamento: dinheiro na entrega ou Pix on-line (DEC-056);
+- abrir contestação de um pedido (§14.3);
 - enviar pedido;
 - acompanhar estados do pedido;
 - visualizar atualizações essenciais dentro da aplicação;
@@ -188,7 +189,7 @@ Responsável por cadastrar ou aprovar batedeiras, revisar informações, prestar
 - atualizar estado do estabelecimento: aberto ou fechado;
 - atualizar disponibilidade de entrega separadamente;
 - gerenciar produtos e disponibilidade;
-- escolher os bairros atendidos entre os habilitados pelo administrador e configurar a faixa estimada;
+- escolher, na lista oficial de bairros urbanos, os que atende e configurar a faixa estimada (DEC-057);
 - configurar taxa de entrega por bairro, inclusive gratuita;
 - receber alerta visual de novo pedido enquanto o painel estiver aberto;
 - aceitar ou recusar com motivo;
@@ -199,12 +200,13 @@ Responsável por cadastrar ou aprovar batedeiras, revisar informações, prestar
 
 ### 8.3 Administrador
 
-- cadastrar de forma assistida, ativar, suspender e reativar batedeiras selecionadas para o piloto;
+- revisar os cadastros feitos pelas batedeiras no site (DEC-054) e ativar, suspender e reativar as selecionadas para o piloto;
 - vincular um operador responsável a cada batedeira;
 - consultar pedidos e histórico de estados;
 - prestar suporte e registrar intervenções;
 - moderar imagens e informações públicas;
-- manter a lista oficial de bairros e definir quais estão habilitados para pedidos;
+- manter a lista oficial de bairros urbanos (sem habilitação prévia de cada bairro, DEC-057);
+- acompanhar o cadastro da batedeira no provedor de pagamento, estornar pedidos e decidir contestações, exercendo também a função de suporte (DEC-058);
 - consultar métricas do piloto;
 - acessar trilha de auditoria.
 
@@ -215,8 +217,7 @@ Responsável por cadastrar ou aprovar batedeiras, revisar informações, prestar
 - aplicativo nativo para Android ou iOS;
 - login com Google ou Apple;
 - cartão de crédito ou débito;
-- geração ou conciliação de Pix pela plataforma;
-- devoluções processadas pela plataforma;
+- cartão e outros meios de pagamento além do Pix on-line e do dinheiro;
 - carteira ou saldo interno;
 - chat livre;
 - exposição pública do WhatsApp;
@@ -232,7 +233,7 @@ Responsável por cadastrar ou aprovar batedeiras, revisar informações, prestar
 - cálculo automático avançado de capacidade;
 - cadastro autônomo e envio de documentos pela batedeira;
 - múltiplos operadores por batedeira;
-- fotografia de entrega e contestação formal dentro da aplicação;
+- fotografia de entrega;
 - Web Push, SMS e e-mails transacionais de pedidos.
 
 ---
@@ -243,7 +244,7 @@ Responsável por cadastrar ou aprovar batedeiras, revisar informações, prestar
 
 Uma batedeira poderá estar:
 
-- **Em análise:** cadastro assistido ainda não aprovado; não visível publicamente;
+- **Em análise:** cadastro feito pela batedeira e ainda não ativado pelo administrador; não visível publicamente;
 - **Ativa:** aprovada e autorizada a operar;
 - **Suspensa:** temporariamente indisponível por decisão administrativa;
 - **Desativada:** fora da plataforma.
@@ -272,7 +273,7 @@ Cada batedeira deverá informar:
 
 No MVP, não haverá cálculo por distância ou geolocalização automática. O endereço será validado pelo bairro informado. A taxa aplicável será exibida antes do envio e copiada para o pedido.
 
-O piloto atenderá somente o bairro Centro. Cada pedido deverá totalizar pelo menos 1 litro de açaí; essa validação será feita pelo volume dos itens, não pelo valor monetário do pedido.
+A plataforma atende os bairros da **zona urbana** de Cametá (DEC-057); zona rural e comunidades ribeirinhas ficam fora. O administrador mantém a lista oficial (13 bairros, fonte IBGE, `bairros_cameta.txt`), com nome principal e nome alternativo entre parênteses quando houver, e não habilita bairros individualmente. Cada batedeira escolhe nessa lista os bairros que atende, com taxa e faixa estimada por bairro, e só pode ser ativada com pelo menos um bairro. O cliente escolhe o bairro do endereço na mesma lista e vê primeiro as batedeiras que o atendem, com o filtro aplicado a partir do endereço principal e editável. Cada pedido deverá totalizar pelo menos 1 litro de açaí; essa validação será feita pelo volume dos itens, não pelo valor monetário do pedido.
 
 ---
 
@@ -311,7 +312,7 @@ Cada produto deverá possuir:
 - taxa de entrega;
 - total;
 - endereço e referência;
-- forma de pagamento;
+- forma de pagamento (escolhida depois do aceite) e situação do pagamento;
 - valor de troco, quando aplicável;
 - observações;
 - faixa estimada apresentada;
@@ -324,6 +325,7 @@ Cada produto deverá possuir:
 |---|---|---|
 | `AGUARDANDO_ACEITE` | Pedido enviado e aguardando resposta. | Não |
 | `ACEITO` | Batedeira confirmou que atenderá. | Não |
+| `AGUARDANDO_PAGAMENTO` | Pedido aceito com Pix escolhido; o cliente tem 10 minutos para pagar. | Não |
 | `EM_PREPARO` | Produção iniciada. | Não |
 | `PRONTO` | Pedido pronto para sair para entrega. | Não |
 | `SAIU_PARA_ENTREGA` | Pedido em deslocamento. | Não |
@@ -343,8 +345,13 @@ AGUARDANDO_ACEITE
 └── CANCELADO
 
 ACEITO
-├── EM_PREPARO
+├── AGUARDANDO_PAGAMENTO   (cliente escolheu Pix)
+├── EM_PREPARO             (cliente escolheu dinheiro)
 └── CANCELADO
+
+AGUARDANDO_PAGAMENTO
+├── EM_PREPARO             (Pix confirmado pelo provedor)
+└── CANCELADO              (Pix expirado ou cancelamento operacional)
 
 EM_PREPARO
 ├── PRONTO
@@ -359,7 +366,7 @@ SAIU_PARA_ENTREGA
 └── FALHA_NA_ENTREGA
 ```
 
-Toda transição deverá registrar:
+O pagamento tem situação própria (pendente, confirmado, expirado, estornado), separada do estado do pedido. Toda transição deverá registrar:
 
 - estado anterior e novo estado;
 - data e hora;
@@ -372,17 +379,19 @@ Toda transição deverá registrar:
 - a batedeira deverá aceitar ou recusar o pedido;
 - o prazo para resposta será de 5 minutos durante o piloto;
 - ao expirar, o pedido não poderá ser aceito posteriormente;
+- depois do aceite, o cliente escolhe a forma de pagamento; o cliente tem 10 minutos para escolher; sem escolha, o pedido é encerrado sem custo (`CANCELADO`, motivo "forma de pagamento não escolhida") e a batedeira é avisada (DEC-059);
 - pedidos aguardando aceite deverão gerar alerta destacado;
 - a batedeira deverá selecionar um motivo ao recusar.
 
 ### 12.5 Cancelamento
 
 - o cliente poderá cancelar diretamente apenas em `AGUARDANDO_ACEITE`;
-- após o aceite, a batedeira ou o administrador poderá cancelar antes de `SAIU_PARA_ENTREGA` somente por impossibilidade operacional, com autor e motivo registrados;
+- após o aceite, a batedeira ou o administrador poderá cancelar antes de `SAIU_PARA_ENTREGA` somente por impossibilidade operacional, com autor e motivo registrados; se o pedido já estiver pago, aplica-se o estorno do §14.2;
+- o Pix não pago em 10 minutos cancela o pedido sem custo (motivo "pagamento expirado") e a batedeira é avisada;
 - solicitações do cliente após o aceite serão tratadas pelo suporte e não implicarão cancelamento automático;
 - após `SAIU_PARA_ENTREGA`, problemas serão tratados como falha de entrega ou incidente de suporte, não como cancelamento comum;
 - cancelamentos após aceite serão acompanhados como indicador de qualidade;
-- a plataforma não processará pagamentos ou devoluções no MVP.
+- pagamentos e estornos seguem o §14.
 
 ### 12.6 Fila e estimativa
 
@@ -437,14 +446,42 @@ Durante o piloto, o administrador poderá atuar como canal de contingência. A n
 
 ## 14. Pagamento
 
-### 14.1 MVP
+Decisões: DEC-056 e DEC-058 (Pix on-line); DEC-030 vale apenas para o dinheiro.
 
-Formas informadas no pedido:
+### 14.1 Formas e fluxo
 
-- dinheiro na entrega, com valor para troco quando necessário;
-- Pix na entrega, transferido diretamente pelo cliente à batedeira.
+1. O cliente monta a sacola e envia o pedido, sem escolher a forma de pagamento.
+2. A batedeira aceita ou recusa (prazo de 5 minutos). Recusa e expiração do aceite ocorrem antes do pagamento e não geram estorno.
+3. Depois do aceite, o cliente escolhe:
+   - **dinheiro na entrega**, com valor de troco quando necessário: o pedido segue direto para o preparo e o valor é recolhido na entrega;
+   - **Pix on-line**: o pedido fica em `AGUARDANDO_PAGAMENTO` por até 10 minutos; o provedor confirma o pagamento por webhook (idempotente e auditável) e só então o pedido segue para o preparo. O valor é creditado diretamente na conta conectada da batedeira.
+4. Se o Pix expirar, o pedido é encerrado sem custo e a batedeira é avisada; o cliente reinicia o processo.
 
-A plataforma não gerará QR Code, armazenará chave Pix, confirmará pagamentos, cobrará comissão, custodiará valores ou realizará devoluções. A confirmação e eventuais ajustes financeiros ocorrerão diretamente entre cliente e batedeira durante o piloto.
+A plataforma não custodia valores nem guarda chave Pix, dados bancários ou documentos de pagamento da batedeira: esses dados ficam no provedor.
+
+### 14.2 Estorno
+
+- se a batedeira cancelar um pedido pago, o valor é estornado ao cliente em até 24 horas do cancelamento, pela batedeira ou pelo administrador, depois de analisarem o caso;
+- se o Pix foi pago e a entrega falha (`FALHA_NA_ENTREGA`), o cliente abre a contestação e o estorno ocorre em até 24 horas da abertura, pela batedeira ou pelo administrador;
+- se o provedor permitir o estorno apenas pela plataforma ou apenas pela batedeira, o estorno fica com a batedeira (DEC-058).
+
+### 14.3 Contestação
+
+- motivos aceitos: produto em mau estado (físico ou de sabor); entrega não recebida; pedido diferente do feito; Pix cobrado sem andamento do pedido ou estorno não realizado no prazo; cobrança em valor diferente do exibido;
+- pode ser aberta, no Pix, a partir da confirmação do pagamento e, no dinheiro na entrega, a partir do aceite do pedido, e até 24 horas depois da entrega ou da falha registrada;
+- é decidida pelo administrador, que exerce a função de suporte; primeira resposta em até 1 hora no piloto, com alerta no painel; prazos definitivos serão revistos depois do piloto.
+
+### 14.4 Cadastro da batedeira no provedor
+
+Assistido pelo administrador e concluído pela batedeira no formulário do provedor (conta conectada). A plataforma guarda só o identificador da conta e o status (pendente, verificada, recusada). Enquanto não verificada, a batedeira só aceita pedidos em dinheiro.
+
+### 14.5 Faturamento do dia
+
+O dinheiro entra no faturamento quando o pedido é entregue; o Pix entra quando o pagamento é confirmado. O estorno é descontado no dia em que ocorre, sem alterar dias já fechados (DEC-043, DEC-058).
+
+### 14.6 Pontos em aberto
+
+Escolha do provedor (ADR) e quem assume a tarifa depois do piloto (DEC-021, DEC-034). Durante o piloto, a plataforma paga a tarifa e a batedeira não paga comissão nem mensalidade.
 
 ---
 
@@ -504,7 +541,7 @@ A estratégia de sessões e de limitação de tentativas está registrada na [AD
 
 ## 17. Dados pessoais, segurança e privacidade
 
-O produto poderá tratar nome, telefone, e-mail, endereço e histórico de pedidos. Dados mínimos do operador responsável serão cadastrados de forma assistida.
+O produto poderá tratar nome, telefone, e-mail, endereço e histórico de pedidos. Dados mínimos do operador responsável são informados no cadastro da batedeira (DEC-054); o CPF/CNPJ segue a DEC-055.
 
 Antes do piloto público deverão existir:
 
@@ -524,7 +561,8 @@ Antes do piloto público deverão existir:
 ### 17.1 Minimização
 
 - endereço será solicitado somente quando necessário ao pedido;
-- CPF, CNPJ, documentos e chave Pix não serão coletados pelo sistema no MVP;
+- dados bancários, documentos de pagamento e chave Pix da batedeira são coletados apenas pelo provedor de pagamento, nunca pela plataforma; o CPF/CNPJ do cadastro segue a DEC-055;
+- dados de pagamento e contestação entram na política de privacidade e nos termos (DEC-048);
 - dados não necessários à validação serão adiados;
 - ambientes de teste não deverão utilizar dados pessoais reais.
 
@@ -605,7 +643,8 @@ Critérios:
 - endereço precisa pertencer a um bairro atendido;
 - pedido não pode ser enviado se a entrega estiver indisponível;
 - envio repetido da mesma requisição não cria pedidos duplicados;
-- o pedido inicia em `AGUARDANDO_ACEITE`.
+- o pedido inicia em `AGUARDANDO_ACEITE`;
+- a forma de pagamento não é escolhida no envio, e sim depois do aceite (§14.1).
 
 ### US-03 — Responder pedido
 
@@ -738,7 +777,7 @@ Este documento adota oficialmente as seis fases descritas em [`roadmap.md`](road
 - painel da batedeira;
 - administração;
 - notificações essenciais;
-- dinheiro ou Pix na entrega, sem processamento pela plataforma;
+- pagamento em dinheiro na entrega ou Pix on-line pelo provedor, com estorno e contestação (§14);
 - métricas, testes e ambientes de execução.
 
 ### Fase 4 — Piloto Controlado em Cametá
@@ -794,17 +833,17 @@ Este documento adota oficialmente as seis fases descritas em [`roadmap.md`](road
 - prazo de aceite: cinco minutos durante todo o piloto;
 - comunicação: mensagens predefinidas, linha do tempo e suporte humano;
 - cobrança: piloto gratuito, sem comissão ou mensalidade;
-- pagamento: dinheiro ou Pix na entrega, sem processamento pela plataforma;
-- cadastro de batedeira: assistido, com um operador responsável;
-- entrega: sem fotografia ou contestação formal no sistema.
+- pagamento: dinheiro na entrega ou Pix on-line confirmado pelo provedor; estorno em até 24 h e contestação decidida pelo administrador (DEC-056, DEC-058);
+- cadastro de batedeira: feito pela própria batedeira no site, com CPF/CNPJ e um operador responsável, e ativação pelo administrador (DEC-054, DEC-055);
+- entrega: sem fotografia; contestação formal decidida pelo administrador (DEC-058).
 
 ### 24.2 Gates externos
 
 - confirmar as exigências jurídicas e administrativas aplicáveis às participantes em Cametá;
 - concluir a revisão de privacidade e termos do piloto;
-- escolher infraestrutura de hospedagem, banco, arquivos e observabilidade durante a especificação de engenharia; a estratégia de autenticação já foi definida na ADR-001.
+- escolher infraestrutura de hospedagem, banco, arquivos e observabilidade durante a especificação de engenharia; a estratégia de autenticação já foi definida na ADR-001 (aprovada, ainda não implementada) e o provedor de pagamento Pix será escolhido em ADR própria.
 
-Os gates externos não serão preenchidos por suposição. Eles não impedem o protótipo, mas os dois primeiros impedem o piloto e a escolha de infraestrutura impede o início da construção.
+Os gates externos não serão preenchidos por suposição. Os dois primeiros impedem o piloto; a escolha de infraestrutura e do provedor Pix impede a persistência e o deploy em homologação e produção, mas não o desenvolvimento local de `app/` (DEC-051, DEC-053, DEC-061).
 
 ### 24.3 Baseline tecnológica definida
 
@@ -842,15 +881,16 @@ O MVP estará pronto para implementação quando:
 - política de privacidade e termos publicados;
 - procedimento para incidentes e cancelamentos definido;
 - testes de pedido, expiração, recusa, cancelamento e falha de entrega aprovados;
-- pagamento na entrega e informação de troco compreendidos nos testes de ponta a ponta.
+- pagamento em dinheiro (com troco) e Pix, incluindo expiração, webhook repetido, estorno e contestação, aprovados nos testes de ponta a ponta;
+- provedor escolhido em ADR e cadastro assistido da batedeira testado.
 
 ---
 
 ## 27. Próximos passos
 
-1. Revisar em conjunto o modelo de dados (schema SQL, modelo EER, MER e dicionário de dados), a arquitetura técnica e o backlog priorizado, que já existem em rascunho.
+1. Revisar o modelo de dados (schema SQL, MER e dicionário) e o backlog para incluir pagamento, estorno, contestação, bairros por batedeira e o estado `AGUARDANDO_PAGAMENTO`.
 2. Consolidar o dicionário de métricas do piloto.
-3. Definir as escolhas de infraestrutura e registrá-las como ADRs.
+3. Definir infraestrutura e provedor de pagamento e registrá-los como ADRs.
 4. Obter encaminhamento jurídico, concluir privacidade, termos e política de retenção (§17) e detalhar a preparação do piloto com as 3 batedeiras.
 5. Iniciar a implementação somente após os critérios de prontidão.
 
@@ -868,3 +908,4 @@ O MVP estará pronto para implementação quando:
 | 2.4 | Setembro de 2026 | Pix on-line incorporado ao MVP com expiração, renovação, crédito direto, devolução integral e prazos de contestação. |
 | 2.5 | Setembro de 2026 | MVP reduzido ao núcleo de descoberta e pedidos; pagamentos passam a ocorrer na entrega e integrações financeiras, documentação, fotografia e contestação saem do escopo. |
 | 2.6 | Setembro de 2026 | Incorporadas a DEC-040 (até dois endereços), a DEC-042 (tamanhos de 500 ml e 1 L), a DEC-043 (faturamento do dia) e a ADR-001 (sessões e tentativas de login); papéis de administrador e batedeira na configuração de bairros esclarecidos; próximos passos atualizados. Aprovada em 28/09/2026, depois dos testes de usabilidade (DEC-044, DEC-045). |
+| 2.7 | Novembro de 2026 | Aprovada em 25/11/2026 (DEC-060): Pix on-line com estorno e contestação (DEC-056, DEC-058), atendimento a bairros urbanos escolhidos pela batedeira (DEC-057) e estado `AGUARDANDO_PAGAMENTO`; prazo de 10 minutos para escolher a forma de pagamento (DEC-059). |

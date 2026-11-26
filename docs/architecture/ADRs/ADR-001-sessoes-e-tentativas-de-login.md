@@ -1,9 +1,9 @@
 # ADR-001 — Sessões e tentativas de login persistidas no banco
 
-**Estado:** Superada em 24/11/2026 (DEC-053): a aplicação atual não usa banco; a sessão é um cookie assinado e a limitação de tentativas fica em memória. A decisão pode voltar a valer, ou ser reescrita, quando houver banco de dados. O texto abaixo é mantido como registro histórico.
+**Estado:** Aprovada (DEC-046), **ainda não implementada** em `app/` (DEC-053, DEC-061). A aplicação atual usa cookie assinado e limitação de tentativas em memória, porque não há banco. Esta decisão passa a valer quando a persistência for implementada, com as tabelas `sessoes` e `tentativas_login` do schema 0.8.
 **Data:** 2026-09-28
 **Responsável pela decisão:** responsável pelo projeto, a partir de recomendação técnica
-**Relacionados:** PRD 2.6 §16.2 e §17; DEC-023; DEC-035; [`database/schema.sql`](../../../database/schema.sql) 0.7; [arquitetura técnica proposta](../../product/arquitetura-tecnica.md) §7
+**Relacionados:** PRD 2.7 §16.2 e §17; DEC-023; DEC-035; [`database/schema.sql`](../../../database/schema.sql) 0.7; [arquitetura técnica proposta](../../product/arquitetura-tecnica.md) §7
 
 ## Contexto
 
@@ -20,7 +20,7 @@ O MVP é um monólito Next.js com MySQL (DEC-023). O banco é o único armazenam
    - **por e-mail**, com espera crescente: a partir de 10 falhas, 1 minuto; a partir de 15, 5 minutos; a partir de 20, 15 minutos;
    - **por origem**, com limite de 50 falhas em 15 minutos, que resulta em 15 minutos de espera. O limite é alto de propósito: operadoras móveis compartilham um mesmo IP entre muitos clientes (CGNAT), e um limite baixo bloquearia usuários legítimos.
 5. **Respostas que não revelam contas.** A resposta é igual para e-mail inexistente, senha errada e tentativa em espera. Quando o e-mail não existe, a aplicação calcula mesmo assim um hash de senha, para que o tempo de resposta não revele quais e-mails têm conta.
-6. **Senhas.** A senha é guardada com algoritmo lento (argon2id ou bcrypt), exige no mínimo 8 caracteres e é recusada quando consta em lista de senhas comuns ou vazadas, conforme o NIST SP 800-63B.
+6. **Senhas.** A senha é guardada com algoritmo lento (scrypt, argon2id ou bcrypt; a aplicação usa scrypt, DEC-062), exige no mínimo 8 caracteres e é recusada quando consta em lista de senhas comuns ou vazadas, conforme o NIST SP 800-63B.
 7. **Minimização.** `tentativas_login` não guarda o IP em texto, o navegador nem a senha digitada. A origem é guardada como HMAC-SHA-256 do IP com um segredo do servidor; um hash simples seria reversível, porque o número de endereços IPv4 é pequeno. Os registros são expurgados após 24 horas. Sessões encerradas ou expiradas são removidas por rotina periódica.
 
 Os valores acima são configuráveis e podem ser ajustados na especificação de engenharia ou a partir do comportamento observado no piloto, sem mudar esta decisão.
