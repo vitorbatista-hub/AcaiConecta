@@ -12,7 +12,8 @@ const steps: { status: OrderStatus; label: string }[] = [
 
 /** Trilha visual do caminho feliz do pedido; estados negativos não a exibem. */
 export function OrderProgress({ status }: { status: OrderStatus }) {
-  const current = steps.findIndex(step => step.status === status)
+  // Aguardando pagamento ainda é a etapa "Aceito" da trilha (o pagamento do Pix acontece antes do preparo).
+  const current = steps.findIndex(step => step.status === (status === 'AGUARDANDO_PAGAMENTO' ? 'ACEITO' : status))
   if (current < 0) return null
   return <ol aria-label="Progresso do pedido" className="grid grid-cols-6 gap-1">
     {steps.map((step, index) => {

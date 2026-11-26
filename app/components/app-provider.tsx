@@ -1,13 +1,15 @@
 'use client'
 
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
-import { adminActorName, allowedProductVolumesMl, appendOrder, applyTransition, createOrderSnapshot, expireOrders, seedProducts, seedStores, predefinedMessages, type Actor, type CartItem, type Order, type OrderStatus, type PaymentMethod, type Product, type Store } from '@/lib/domain'
+import { adminActorName, getSchedule, type Actor, type CartItem, type AdminStatus, type Order, type OrderStatus, type PaymentMethod, type Product, type Store } from '@/lib/domain'
+import { usePathname } from 'next/navigation'
+import { parseRange } from '@/lib/store-rules'
 
 import { emptyCustomerSession, restoreCustomerSession, type AccessRequest, type CustomerSession } from '@/lib/customer-session'
 
 type AuditEvent = { id:string; at:string; author:string; entityId:string; action:string; reason:string }
-type AppState = { version:2; stores:Store[]; products:Product[]; orders:Order[]; audit:AuditEvent[]; customer:CustomerSession; supportEmail:string; customerBlocked:boolean; accessRequests:AccessRequest[]; cartsStarted:number }
-type Checkout = { items:CartItem[]; storeId:string; address:Order['address']; phone:string; payment:PaymentMethod; change?:number; note?:string; requestId:string; fee:number }
+type AppState = { version:4; stores:Store[]; products:Product[]; serverAudit:AuditEvent[]; orders:Order[]; audit:AuditEvent[]; customer:CustomerSession; supportEmail:string; customerBlocked:boolean; accessRequests:AccessRequest[]; cartsStarted:number }
+type Checkout = { items:CartItem[]; storeId:string; address:Order['address']; phone:string; note?:string; requestId:string; fee:number }
 type AppContextValue = AppState & {
   now:number
   updateCustomer:(patch:Partial<CustomerSession>)=>void
@@ -16,16 +18,22 @@ type AppContextValue = AppState & {
   requestAccessRecovery:(contact:string,reason:string)=>void
   resolveAccessRequest:(id:string)=>void
   trackCartStarted:()=>void
-  submitOrder:(input:Checkout)=>Order
-  transition:(id:string,to:OrderStatus,actor:Actor,reason?:string)=>void
-  message:(id:string,text:string,actor:Actor)=>void
-  updateStore:(store:Store,reason?:string)=>void
-  registerStore:(profile:{id:string;name:string;operator:string;address:string;document?:string})=>void
-  saveProduct:(product:Product)=>void
+  /** Pedidos ficam no servidor: o preço e a taxa são recalculados lá. O `actor` é só para a interface; o servidor usa a sessão. */
+  submitOrder:(input:Checkout)=>Promise<Order>
+  transition:(id:string,to:OrderStatus,actor:Actor,reason?:string)=>Promise<void>
+  choosePayment:(id:string,method:PaymentMethod,actor:Actor,change?:number)=>Promise<void>
+  message:(id:string,text:string,actor:Actor)=>Promise<void>
+  refreshOrders:()=>Promise<void>
+  /** Operador: salva abertura, entrega, faixa, bairros atendidos e horários da própria batedeira (servidor). */
+  saveStoreSettings:(store:Store)=>Promise<void>
+  /** Administrador: altera a situação da batedeira, com motivo e auditoria (servidor). */
+  changeStoreStatus:(id:string,status:AdminStatus,reason:string,eligibilityConfirmed:boolean)=>Promise<void>
+  saveProduct:(product:Product)=>Promise<void>
+  refreshCatalog:()=>Promise<void>
 }
 const Context = createContext<AppContextValue|null>(null)
 const storageKey='acaiconecta-state-v1'
-const initialState=():AppState=>({version:2,stores:structuredClone(seedStores),products:structuredClone(seedProducts),orders:[],audit:[],customer:emptyCustomerSession(),supportEmail:'',customerBlocked:false,accessRequests:[],cartsStarted:0})
+const initialState=():AppState=>({version:4,stores:[],products:[],serverAudit:[],orders:[],audit:[],customer:emptyCustomerSession(),supportEmail:'',customerBlocked:false,accessRequests:[],cartsStarted:0})
 
 export function AppProvider({children}:{children:React.ReactNode}) {
   const [state,setState]=useState<AppState>(initialState)
@@ -33,99 +41,121 @@ export function AppProvider({children}:{children:React.ReactNode}) {
   const [ready,setReady]=useState(false)
   const [now,setNow]=useState(0)
   const [storageWarning,setStorageWarning]=useState('')
+  const pathname=usePathname()
   function commit(next:AppState) {
     current.current=next
     setState(next)
-    try { sessionStorage.setItem(storageKey,JSON.stringify(next)) }
+    // Batedeiras, produtos e auditoria do servidor vêm da API: não são guardados no navegador.
+    const { stores:_stores, products:_products, serverAudit:_serverAudit, orders:_orders, ...persisted }=next
+    try { sessionStorage.setItem(storageKey,JSON.stringify(persisted)) }
     catch { setStorageWarning('Armazenamento da sessão indisponível. Seus dados serão mantidos somente enquanto esta página estiver aberta.') }
   }
   useEffect(()=>{
     try {
       const raw=sessionStorage.getItem(storageKey)
       if(raw) {
-        const saved=JSON.parse(raw) as AppState
-        if(saved.version!==2 || !Array.isArray(saved.stores) || !Array.isArray(saved.products) || !Array.isArray(saved.orders) || !Array.isArray(saved.audit)) throw new Error('Sessão inválida')
-        current.current={...initialState(),...saved,customer:restoreCustomerSession(saved.customer),orders:expireOrders(saved.orders)}
-        commit(current.current)
+        const saved=JSON.parse(raw) as Partial<AppState>
+        // Versões antigas (que guardavam catálogo no navegador) são descartadas sem aviso: o catálogo agora vem do servidor.
+        if(saved.version===4) {
+          if(!Array.isArray(saved.audit)) throw new Error('Sessão inválida')
+          current.current={...initialState(),...saved,stores:[],products:[],serverAudit:[],orders:[],customer:restoreCustomerSession(saved.customer)}
+          commit(current.current)
+        }
       }
     } catch { setStorageWarning('Não foi possível restaurar a sessão anterior. Os dados iniciais foram carregados novamente.') }
     setReady(true)
     setNow(Date.now())
     const timer=window.setInterval(()=>{
-      const time=Date.now()
-      setNow(time)
-      const previous=current.current
-      const orders=expireOrders(previous.orders,time)
-      if(orders.some((order,index)=>order!==previous.orders[index])) commit({...previous,orders})
+      setNow(Date.now())
     },1000)
     return ()=>window.clearInterval(timer)
   },[])
 
-  function submitOrder(input:Checkout) {
+  async function refreshCatalog() {
+    try {
+      const response=await fetch('/api/catalogo',{cache:'no-store'})
+      const data=response.ok?await response.json() as {stores:Store[];products:Product[];audit:AuditEvent[]}:{stores:[],products:[],audit:[]}
+      const next={...current.current,stores:data.stores,products:data.products,serverAudit:data.audit}
+      current.current=next
+      setState(next)
+    } catch { /* sem rede: mantém o que já está na tela */ }
+  }
+  async function refreshOrders() {
+    try {
+      const response=await fetch('/api/pedidos',{cache:'no-store'})
+      if(!response.ok) { if(current.current.orders.length) { current.current={...current.current,orders:[]}; setState(current.current) } return }
+      const data=await response.json() as {orders:Order[]}
+      current.current={...current.current,orders:data.orders}
+      setState(current.current)
+    } catch { /* sem rede: mantém o que já está na tela */ }
+  }
+  // Pedidos: leitura ao abrir cada área e a cada 5 s com a aba visível (tempo real por SSE vem na etapa 6 da ADR-006).
+  useEffect(()=>{
+    if(!ready||!/^\/(cliente|operador|admin)(\/|$)/.test(pathname)) return
+    void refreshOrders()
+    const timer=window.setInterval(()=>{ if(document.visibilityState==='visible') void refreshOrders() },5000)
+    const onFocus=()=>void refreshOrders()
+    window.addEventListener('focus',onFocus)
+    return ()=>{ window.clearInterval(timer); window.removeEventListener('focus',onFocus) }
+  },[ready,pathname])
+  // Lê o catálogo do servidor ao abrir e a cada troca de página (depois do login, por exemplo) e ao voltar para a aba.
+  useEffect(()=>{
+    if(!ready) return
+    void refreshCatalog()
+    const onFocus=()=>void refreshCatalog()
+    window.addEventListener('focus',onFocus)
+    return ()=>window.removeEventListener('focus',onFocus)
+  },[ready,pathname])
+
+  async function post<T>(url:string,body:unknown):Promise<T> {
+    const response=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+    const data=await response.json().catch(()=>({})) as T&{error?:string}
+    if(!response.ok) throw new Error(data.error??'Não foi possível concluir. Tente novamente.')
+    return data
+  }
+  async function submitOrder(input:Checkout) {
     const data=current.current
     if(data.customerBlocked) throw new Error('Conta bloqueada. Acesse Ajuda para orientação de recuperação.')
     if(!data.customer.signedIn) throw new Error('Entre na sua conta antes de enviar o pedido.')
-    const previous=data.orders.find(o=>o.requestId===input.requestId&&o.customerId==='customer-001')
-    if(previous) return previous
-    const store=data.stores.find(s=>s.id===input.storeId)
-    if(!store) throw new Error('Batedeira não encontrada.')
-    const items=input.items.map(item=>{
-      const product=data.products.find(p=>p.id===item.product.id)
-      if(!product) throw new Error('Um produto foi removido. Revise a sacola.')
-      if(product.priceCents!==item.product.priceCents||product.volumeMl!==item.product.volumeMl||product.name!==item.product.name) throw new Error('O catálogo mudou. Remova e adicione novamente os itens para revisar os valores.')
-      return {...item,product}
-    })
-    if(input.fee!==store.deliveryFeeCents) throw new Error('A taxa de entrega mudou. Revise o total antes de confirmar.')
-    const order={...createOrderSnapshot(items,store,input.address,input.phone,input.payment,input.change,input.note),storeName:store.name}
-    commit({...data,orders:appendOrder(data.orders,order,input.requestId),customer:{...data.customer,cart:[],storeId:null,note:'',change:'',requestId:''}})
+    const { order }=await post<{order:Order}>('/api/pedidos',{storeId:input.storeId,requestId:input.requestId,phone:input.phone,note:input.note,address:input.address,feeCents:input.fee,items:input.items.map(item=>({productId:item.product.id,quantity:item.quantity,note:item.note,unitPriceCents:item.product.priceCents}))})
+    const next={...current.current,orders:[order,...current.current.orders.filter(o=>o.id!==order.id)],customer:{...current.current.customer,cart:[],storeId:null,note:'',requestId:''}}
+    commit(next)
     return order
   }
-  function transition(id:string,to:OrderStatus,actor:Actor,reason?:string) {
-    const data=current.current
-    const order=data.orders.find(o=>o.id===id)
-    if(!order) throw new Error('Pedido não encontrado.')
-    const updated=applyTransition(order,to,actor,reason)
-    const audit=actor.role==='admin'?[...data.audit,{id:crypto.randomUUID(),at:new Date().toISOString(),author:actor.name,entityId:id,action:'Cancelamento operacional',reason:reason??''}]:data.audit
-    commit({...data,audit,orders:data.orders.map(o=>o.id===id?updated:o)})
+  async function transition(id:string,to:OrderStatus,actor:Actor,reason?:string) {
+    await post(`/api/pedidos/${encodeURIComponent(id)}/transicao`,{to,reason})
+    await refreshOrders()
+    if(actor.role==='admin') await refreshCatalog()
   }
-  function message(id:string,text:string,actor:Actor) {
-    const data=current.current
-    const order=data.orders.find(o=>o.id===id)
-    if(!order) throw new Error('Pedido não encontrado.')
-    if(actor.role!=='admin'&&(actor.role!=='operador'||actor.storeId!==order.storeId)) throw new Error('Perfil sem permissão para esta ação.')
-    if(!text.trim()||text.length>500) throw new Error('Informe uma intervenção de até 500 caracteres.')
-    if(actor.role==='operador'&&!predefinedMessages.includes(text)) throw new Error('Escolha uma mensagem predefinida.')
-    const at=new Date().toISOString()
-    const updated={...order,timeline:[...order.timeline,{to:order.status,at,author:actor.name,message:text}]}
-    const audit=actor.role==='admin'?[...data.audit,{id:crypto.randomUUID(),at,author:actor.name,entityId:id,action:'Intervenção administrativa',reason:text}]:data.audit
-    commit({...data,audit,orders:data.orders.map(o=>o.id===id?updated:o)})
+  async function choosePayment(id:string,method:PaymentMethod,_actor:Actor,change?:number) {
+    await post(`/api/pedidos/${encodeURIComponent(id)}/pagamento`,{method,changeForCents:change})
+    await refreshOrders()
   }
-  function updateStore(store:Store,reason?:string) {
-    const data=current.current
-    const existing=data.stores.find(s=>s.id===store.id)
-    if(!store.name.trim()||!store.operator.trim()||!store.address.trim()) throw new Error('Informe nome, endereço e operador responsável.')
-    if(store.schedule?.some(h=>!Number.isInteger(h.day)||h.day<0||h.day>6||!/^([01]\d|2[0-3]):[0-5]\d$/.test(h.opens)||!/^([01]\d|2[0-3]):[0-5]\d$/.test(h.closes)||h.opens>=h.closes)) throw new Error('Revise os horários: o fechamento deve ser após a abertura, no mesmo dia.')
-    if(!Number.isSafeInteger(store.deliveryFeeCents)||store.deliveryFeeCents<0) throw new Error('Informe uma taxa válida em centavos.')
-    if((!existing||existing.adminStatus!==store.adminStatus)&&!reason?.trim()) throw new Error('Informe o motivo administrativo.')
-    const audit=reason?[...data.audit,{id:crypto.randomUUID(),at:new Date().toISOString(),author:adminActorName,entityId:store.id,action:existing?'Alteração da batedeira':'Cadastro assistido',reason}]:data.audit
-    const normalized=store
-    commit({...data,audit,stores:existing?data.stores.map(s=>s.id===store.id?normalized:s):[...data.stores,normalized]})
+  async function message(id:string,text:string,actor:Actor) {
+    await post(`/api/pedidos/${encodeURIComponent(id)}/mensagem`,{text})
+    await refreshOrders()
+    if(actor.role==='admin') await refreshCatalog()
   }
-  function registerStore(profile:{id:string;name:string;operator:string;address:string;document?:string}) {
-    const data=current.current
-    if(data.stores.some(s=>s.id===profile.id)) return
-    const store:Store={id:profile.id,name:profile.name,owner:profile.operator,operator:profile.operator,address:profile.address,document:profile.document,neighborhood:'Centro',image:'/images/acai-tradicional.webp',adminStatus:'EM_ANALISE',isOpen:false,deliveryAvailable:false,accepts500ml:false,hours:'09h às 18h',estimatedRange:'25–35 min',deliveryFeeCents:0,createdAt:new Date().toISOString()}
-    const event={id:crypto.randomUUID(),at:store.createdAt,author:profile.operator,entityId:store.id,action:'Cadastro de batedeira',reason:'Autocadastro pelo site; aguardando análise'}
-    commit({...data,stores:[...data.stores,store],audit:[...data.audit,event]})
+  async function send(url:string,method:string,body:unknown) {
+    const response=await fetch(url,{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+    const data=await response.json().catch(()=>({})) as {error?:string}
+    if(!response.ok) throw new Error(data.error??'Não foi possível salvar. Tente novamente.')
+    await refreshCatalog()
   }
-  function saveProduct(product:Product) {
-    if(!product.name.trim()||product.name.length>150||!(allowedProductVolumesMl as readonly number[]).includes(product.volumeMl)||!Number.isSafeInteger(product.priceCents)||product.priceCents<1) throw new Error('Informe nome, um dos tamanhos padrão (500 ml ou 1.000 ml) e preço maior que zero.')
-    const data=current.current
-    const updated={...product,updatedAt:new Date().toISOString()}
-    commit({...data,products:data.products.some(p=>p.id===product.id)?data.products.map(p=>p.id===product.id?updated:p):[...data.products,updated]})
+  async function saveStoreSettings(store:Store) {
+    const estimate=parseRange(store.estimatedRange)
+    if(!estimate) throw new Error('Informe uma faixa válida, com máximo maior ou igual ao mínimo.')
+    const coverage=store.coverage.map(c=>({neighborhood:c.neighborhood,feeCents:c.feeCents,...(parseRange(c.estimatedRange)??{min:0,max:0})}))
+    await send('/api/operador/loja','PUT',{isOpen:store.isOpen,deliveryAvailable:store.deliveryAvailable,estimate,coverage,schedule:getSchedule(store)})
+  }
+  async function changeStoreStatus(id:string,status:AdminStatus,reason:string,eligibilityConfirmed:boolean) {
+    await send('/api/admin/batedeiras/situacao','POST',{id,status,reason,eligibilityConfirmed})
+  }
+  async function saveProduct(product:Product) {
+    await send('/api/operador/produtos','POST',{id:product.id,name:product.name,description:product.description??'',volumeMl:product.volumeMl,priceCents:product.priceCents,active:product.active,available:product.available,showUnavailable:product.showUnavailable})
   }
   function updateCustomer(patch:Partial<CustomerSession>) {
-    if(patch.signedIn && current.current.customerBlocked) throw new Error('Conta bloqueada. Procure o suporte do piloto.')
+    if(patch.signedIn && current.current.customerBlocked) throw new Error('Conta bloqueada. Procure o suporte do AçaíConecta.')
     commit({...current.current,customer:{...current.current.customer,...patch}})
   }
   function configureSupport(email:string) {
@@ -157,7 +187,7 @@ export function AppProvider({children}:{children:React.ReactNode}) {
   function trackCartStarted() {
     if(!current.current.customer.cart.length) commit({...current.current,cartsStarted:current.current.cartsStarted+1})
   }
-  const value={...state,now,updateCustomer,configureSupport,setCustomerBlocked,requestAccessRecovery,resolveAccessRequest,trackCartStarted,submitOrder,transition,message,updateStore,registerStore,saveProduct}
+  const value={...state,now,updateCustomer,configureSupport,setCustomerBlocked,requestAccessRecovery,resolveAccessRequest,trackCartStarted,submitOrder,transition,choosePayment,message,refreshOrders,saveStoreSettings,changeStoreStatus,saveProduct,refreshCatalog,audit:[...state.serverAudit,...state.audit].sort((a,b)=>Date.parse(a.at)-Date.parse(b.at))}
   return <Context.Provider value={value}>{storageWarning&&<p role="alert" className="bg-accent/20 p-3 text-sm">{storageWarning}</p>}{ready?children:<p role="status" className="p-8">Carregando…</p>}</Context.Provider>
 }
 export function useApp() {

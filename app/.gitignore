@@ -12,3 +12,6 @@ next-env.d.ts
 
 # Contas cadastradas pelo site (dados pessoais): nunca versionar
 .data
+
+# Cliente Prisma gerado (pnpm db:gerar): não versionar
+lib/generated

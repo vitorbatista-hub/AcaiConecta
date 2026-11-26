@@ -2,10 +2,11 @@ import type { Order, OrderStatus } from './domain'
 
 export const orderGuidance: Record<OrderStatus, string> = {
   AGUARDANDO_ACEITE: 'A batedeira tem até 5 minutos para responder. Você pode cancelar enquanto aguarda.',
-  ACEITO: 'A batedeira aceitou seu pedido. O próximo passo é iniciar o preparo.',
+  ACEITO: 'A batedeira aceitou seu pedido. Escolha a forma de pagamento em até 10 minutos; sem escolha, o pedido é encerrado sem custo.',
+  AGUARDANDO_PAGAMENTO: 'Pague o Pix em até 10 minutos. Quando o pagamento for confirmado, a batedeira começa o preparo.',
   EM_PREPARO: 'Seu açaí está sendo preparado pela batedeira.',
   PRONTO: 'Seu pedido está pronto e aguarda a saída para entrega.',
-  SAIU_PARA_ENTREGA: 'Seu pedido está a caminho. Prepare o pagamento e acompanhe as mensagens.',
+  SAIU_PARA_ENTREGA: 'Seu pedido está a caminho. Se escolheu dinheiro, prepare o pagamento; acompanhe as mensagens.',
   ENTREGUE: 'A batedeira registrou a entrega. Se houver algum problema, acesse a ajuda.',
   RECUSADO: 'A batedeira não poderá atender. Consulte o motivo e escolha outra opção.',
   EXPIRADO: 'A batedeira não respondeu no prazo. Este pedido não será atendido; você pode fazer outro.',
@@ -15,7 +16,7 @@ export const orderGuidance: Record<OrderStatus, string> = {
 
 export function orderTone(status: OrderStatus) {
   if (['RECUSADO', 'EXPIRADO', 'CANCELADO', 'FALHA_NA_ENTREGA'].includes(status)) return 'negative' as const
-  if (status === 'AGUARDANDO_ACEITE') return 'pending' as const
+  if (status === 'AGUARDANDO_ACEITE' || status === 'AGUARDANDO_PAGAMENTO') return 'pending' as const
   if (status === 'EM_PREPARO') return 'preparing' as const
   if (status === 'ENTREGUE') return 'delivered' as const
   return 'confirmed' as const
@@ -46,15 +47,18 @@ function dayKey(ms: number, timeZone = 'America/Belem') {
   return new Intl.DateTimeFormat('en-CA', { timeZone }).format(new Date(ms))
 }
 
-// Faturamento do dia: total, com taxa de entrega, dos pedidos criados hoje que não terminaram sem venda.
-const unbilledStatuses = new Set<OrderStatus>(['RECUSADO', 'EXPIRADO', 'CANCELADO', 'FALHA_NA_ENTREGA'])
+// Faturamento do dia (DEC-043, DEC-058), com taxa de entrega: dinheiro conta quando o pedido é entregue;
+// Pix conta quando o pagamento é confirmado. Estorno ainda não existe nesta versão e, quando existir,
+// será descontado no dia em que ocorrer.
+const isToday = (iso: string | undefined, today: string) => !!iso && dayKey(Date.parse(iso)) === today
+const billedDay = (order: Order) => order.payment === 'PIX' ? order.paidAt : order.timeline.find(event => event.to === 'ENTREGUE')?.at
 
 export function storeDailyMetrics(orders: Order[], storeId: string, now = Date.now()) {
   const today = dayKey(now)
   const storeOrders = orders.filter(order => order.storeId === storeId)
   const deliveredToday = storeOrders.filter(order => order.status === 'ENTREGUE' && order.timeline.some(event => event.to === 'ENTREGUE' && dayKey(Date.parse(event.at)) === today))
   const acceptedToday = storeOrders.filter(order => order.timeline.some(event => event.to === 'ACEITO' && dayKey(Date.parse(event.at)) === today))
-  const billedToday = storeOrders.filter(order => !unbilledStatuses.has(order.status) && dayKey(Date.parse(order.createdAt)) === today)
+  const billedToday = storeOrders.filter(order => order.payment !== undefined && isToday(billedDay(order), today))
   return {
     revenueCents: billedToday.reduce((sum, order) => sum + order.totalCents, 0),
     deliveredToday: deliveredToday.length,

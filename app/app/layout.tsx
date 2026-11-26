@@ -5,8 +5,15 @@ import { themeInitScript } from '@/components/theme-switcher'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'AçaíConecta - Açaí tradicional em Cametá/PA',
-  description: 'Conectando consumidores a batedeiras de açaí tradicional de Cametá',
+  title: { default: 'AçaíConecta - Açaí tradicional em Cametá/PA', template: '%s | AçaíConecta' },
+  description: 'Peça açaí tradicional batido na hora pelas batedeiras de Cametá/PA. A partir de 1 litro, com entrega e pagamento direto à batedeira.',
+  openGraph: {
+    type: 'website',
+    locale: 'pt_BR',
+    siteName: 'AçaíConecta',
+    title: 'AçaíConecta - Açaí tradicional em Cametá/PA',
+    description: 'Conectamos você às batedeiras de açaí tradicional de Cametá. Peça a partir de 1 litro e pague por Pix ou em dinheiro na entrega.',
+  },
   icons: {
     icon: [
       {

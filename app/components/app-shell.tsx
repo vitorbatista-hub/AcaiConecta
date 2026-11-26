@@ -94,7 +94,7 @@ export function AppFrame({ profile, children }: { profile: Profile; children: Re
 }
 
 export function StatusPill({ status, label }: { status: 'open' | 'closed' | 'busy' | 'ready' | 'preparing' | 'delivered' | 'confirmed' | 'pending' | 'negative'; label?: string }) {
-  const labels = { open: 'Aberto agora', closed: 'Fechado', busy: 'Movimento alto', ready: 'Pronto', preparing: 'Preparando', delivered: 'Entregue', confirmed: 'Confirmado', pending: 'Pendente', negative: 'Não concluído' }
+  const labels = { open: 'Aberta agora', closed: 'Fechada', busy: 'Movimento alto', ready: 'Pronto', preparing: 'Preparando', delivered: 'Entregue', confirmed: 'Confirmado', pending: 'Pendente', negative: 'Não concluído' }
   const colors = { open: 'bg-secondary/15 text-secondary', closed: 'bg-muted text-muted-foreground', busy: 'bg-accent/20 text-foreground', ready: 'bg-secondary/15 text-secondary', preparing: 'bg-accent/20 text-foreground', delivered: 'bg-muted text-muted-foreground', confirmed: 'bg-primary/10 text-primary', pending: 'bg-accent/20 text-foreground', negative: 'bg-destructive/10 text-destructive' }
   return <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${colors[status]}`}><span className="size-1.5 rounded-full bg-current" />{label || labels[status]}</span>
 }

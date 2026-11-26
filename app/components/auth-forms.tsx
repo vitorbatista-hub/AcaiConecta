@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { KeyRound } from 'lucide-react'
 import { useApp } from './app-provider'
 import { sessionPatchFromProfile, type ProfileAddress } from '@/lib/customer-session'
+import { neighborhoodLabel, officialNeighborhoods } from '@/lib/neighborhoods'
 
 type Result = { role?: string; redirect?: string; error?: string; message?: string }
 
@@ -71,6 +72,10 @@ export function LoginForm() {
   </section>
 }
 
+function BairroSelect({ value, onChange, label }: { value: string; onChange: (event: React.ChangeEvent<HTMLSelectElement>) => void; label: string }) {
+  return <label>{label}<select className="form-field" required value={value} onChange={onChange}><option value="">Escolha o bairro</option>{officialNeighborhoods.map(item => <option key={item.name} value={item.name}>{neighborhoodLabel(item.name)}</option>)}</select></label>
+}
+
 type Kind = 'cliente' | 'batedeira'
 export function RegisterForm() {
   const ctx = useApp()
@@ -78,8 +83,8 @@ export function RegisterForm() {
   const [kind, setKind] = useState<Kind>('cliente')
   const [error, setError] = useState('')
   const [pending, setPending] = useState(false)
-  const [form, setForm] = useState({ name: '', phone: '', email: '', password: '', storeName: '', address: '', document: '', street: '', number: '', complement: '', reference: '' })
-  const set = (key: keyof typeof form) => (event: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [key]: event.target.value })
+  const [form, setForm] = useState({ name: '', phone: '', email: '', password: '', storeName: '', address: '', document: '', street: '', number: '', neighborhood: '', complement: '', reference: '' })
+  const set = (key: keyof typeof form) => (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setForm({ ...form, [key]: event.target.value })
 
   async function submit(event: React.FormEvent) {
     event.preventDefault()
@@ -105,7 +110,8 @@ export function RegisterForm() {
       {kind === 'batedeira' && <>
         <label>CPF ou CNPJ<input className="form-field" required inputMode="numeric" maxLength={18} autoComplete="off" value={form.document} onChange={set('document')} /><span className="text-xs text-muted-foreground">Usado apenas pela administração para conferir a elegibilidade da batedeira.</span></label>
         <label>Nome da batedeira<input className="form-field" required maxLength={150} autoComplete="organization" value={form.storeName} onChange={set('storeName')} /></label>
-        <label>Endereço (rua e número)<input className="form-field" required maxLength={180} autoComplete="street-address" value={form.address} onChange={set('address')} /><span className="text-xs text-muted-foreground">O piloto atende somente o bairro Centro, em Cametá/PA.</span></label>
+        <label>Endereço (rua e número)<input className="form-field" required maxLength={180} autoComplete="street-address" value={form.address} onChange={set('address')} /></label>
+        <BairroSelect value={form.neighborhood} onChange={set('neighborhood')} label="Bairro da batedeira" />
       </>}
       <label>{kind === 'batedeira' ? 'Nome do responsável' : 'Nome'}<input className="form-field" required maxLength={150} autoComplete="name" value={form.name} onChange={set('name')} /></label>
       <label>Telefone com DDD<input className="form-field" required type="tel" maxLength={20} autoComplete="tel-national" value={form.phone} onChange={set('phone')} /></label>
@@ -114,7 +120,8 @@ export function RegisterForm() {
         <label>Número<input className="form-field" required maxLength={20} value={form.number} onChange={set('number')} /></label>
         <label>Complemento (opcional)<input className="form-field" maxLength={100} value={form.complement} onChange={set('complement')} /></label>
         <label>Ponto de referência (opcional)<input className="form-field" maxLength={255} value={form.reference} onChange={set('reference')} /></label>
-        <p className="text-xs text-muted-foreground">Bairro: Centro, Cametá/PA (área do piloto). Você poderá editar o endereço depois.</p>
+        <BairroSelect value={form.neighborhood} onChange={set('neighborhood')} label="Bairro" />
+        <p className="text-xs text-muted-foreground">Atendemos os bairros da zona urbana de Cametá/PA. Você poderá editar o endereço depois.</p>
       </fieldset>}
       <label>E-mail<input className="form-field" required type="email" maxLength={254} autoComplete="username" value={form.email} onChange={set('email')} /></label>
       <label>Senha<input className="form-field" required type="password" maxLength={200} autoComplete="new-password" value={form.password} onChange={set('password')} /><span className="text-xs text-muted-foreground">Mínimo de 8 caracteres.</span></label>

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
-import { consumeResetToken } from '@/lib/accounts-store'
-import { clientIp, hashPassword, registerFailure, sameOrigin, tooManyAttempts } from '@/lib/staff-auth'
+import { consumeResetToken } from '@/lib/accounts'
+import { clientIp, hashPassword, sameOrigin } from '@/lib/auth'
+import { registerFailure, tooManyAttempts } from '@/lib/rate-limit'
 
 export const dynamic = 'force-dynamic'
 const json = (body: object, status = 200) => NextResponse.json(body, { status, headers: { 'Cache-Control': 'no-store' } })

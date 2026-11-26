@@ -8,12 +8,21 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "node --test --test-isolation=none tests/*.test.mjs",
-    "acesso:gerar": "node scripts/gerar-acesso.mjs"
+    "postinstall": "prisma generate",
+    "db:subir": "docker compose up -d --wait",
+    "db:parar": "docker compose stop",
+    "db:migrar": "prisma migrate deploy",
+    "db:introspectar": "prisma db pull && prisma generate",
+    "db:gerar": "prisma generate",
+    "test:db": "node --test --test-isolation=none tests/db/*.test.mjs",
+    "db:semear": "node scripts/semear.mjs",
+    "acesso:criar": "node scripts/criar-admin.mjs"
   },
   "dependencies": {
+    "@prisma/adapter-mariadb": "7.10.1",
+    "@prisma/client": "7.10.1",
     "lucide-react": "^1.16.0",
     "next": "16.3.3",
-    "qrcode": "^1.5.4",
     "react": "^19",
     "react-dom": "^19",
     "shadcn": "^4.11.0",
@@ -22,10 +31,10 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^24",
-    "@types/qrcode": "^1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "postcss": "^8.5",
+    "prisma": "7.10.1",
     "sharp": "^0.35.4",
     "tailwindcss": "^4.3.3",
     "typescript": "5.7.3"

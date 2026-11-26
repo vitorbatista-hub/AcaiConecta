@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { LogOut } from 'lucide-react'
 
-export type StaffInfo = { email: string; role: 'admin' | 'operador'; storeId?: string; name: string; store?: { id: string; name: string; address: string } }
+export type StaffInfo = { email: string; role: 'admin' | 'operador'; storeId?: string; name: string; store?: { id: string; name: string; address: string; neighborhood?: string } }
 
 // A sessão vive em cookie httpOnly emitido pelo servidor; aqui só se consulta quem está conectado.
 export function useStaffSession(role: StaffInfo['role']) {

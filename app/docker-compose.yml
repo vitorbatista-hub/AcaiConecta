@@ -1,0 +1,24 @@
+# MySQL 8 local para desenvolvimento (ADR-006, DEC-062). Nada aqui serve para produção.
+# Copie .env.example para .env e preencha as senhas antes de subir: pnpm db:subir
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: acaiconecta-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?defina MYSQL_ROOT_PASSWORD no .env}
+      MYSQL_DATABASE: acai_conecta
+      MYSQL_USER: acai
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?defina MYSQL_PASSWORD no .env}
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_0900_ai_ci", "--default-time-zone=+00:00"]
+    ports:
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - acaiconecta-mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+volumes:
+  acaiconecta-mysql:

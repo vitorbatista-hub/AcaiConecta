@@ -1,4 +1,5 @@
-import type { CartItem, Order, PaymentMethod } from './domain'
+import type { CartItem, Order } from './domain'
+import { isOfficialNeighborhood } from './neighborhoods.ts'
 
 export type SavedAddress = Order['address'] & { id: string; primary: boolean }
 // DEC-040: one primary and at most one secondary address per customer.
@@ -9,8 +10,6 @@ export type CustomerSession = {
   cart: CartItem[]
   storeId: string | null
   note: string
-  payment: PaymentMethod
-  change: string
   address: Order['address']
   addresses: SavedAddress[]
   phone: string
@@ -22,15 +21,15 @@ export type CustomerSession = {
 
 export function emptyCustomerSession(): CustomerSession {
   return {
-    cart: [], storeId: null, note: '', payment: 'PIX_NA_ENTREGA', change: '',
-    address: { street: '', number: '', neighborhood: 'Centro', complement: '', reference: '' },
+    cart: [], storeId: null, note: '',
+    address: { street: '', number: '', neighborhood: '', complement: '', reference: '' },
     addresses: [], phone: '', name: '', email: '', signedIn: false, requestId: '',
   }
 }
 
 export function saveAddress(addresses: SavedAddress[], address: SavedAddress): SavedAddress[] {
-  if (!address.street.trim() || !address.number.trim() || address.neighborhood !== 'Centro') {
-    throw new Error('Informe rua, número e bairro Centro para salvar o endereço.')
+  if (!address.street.trim() || !address.number.trim() || !isOfficialNeighborhood(address.neighborhood)) {
+    throw new Error('Informe rua, número e um bairro da zona urbana de Cametá para salvar o endereço.')
   }
   if (address.street.length > 180 || address.number.length > 20 || (address.complement?.length ?? 0) > 100 || (address.reference?.length ?? 0) > 255) {
     throw new Error('Revise o tamanho dos campos do endereço.')
@@ -51,8 +50,7 @@ export function restoreCustomerSession(value: unknown): CustomerSession {
   if (!value || typeof value !== 'object') return emptyCustomerSession()
   const candidate = value as Partial<CustomerSession>
   if (!Array.isArray(candidate.cart) || !Array.isArray(candidate.addresses) || candidate.addresses.length > maxSavedAddresses || !candidate.address ||
-    !['PIX_NA_ENTREGA', 'DINHEIRO'].includes(candidate.payment ?? '') ||
-    ['note', 'change', 'phone', 'name', 'email', 'requestId'].some(key => typeof candidate[key as keyof CustomerSession] !== 'string') ||
+    ['note', 'phone', 'name', 'email', 'requestId'].some(key => typeof candidate[key as keyof CustomerSession] !== 'string') ||
     typeof candidate.signedIn !== 'boolean' ||
     (candidate.storeId !== null && typeof candidate.storeId !== 'string') ||
     !candidate.cart.every(item => item?.product && typeof item.product.id === 'string' && typeof item.product.name === 'string' && Number.isInteger(item.quantity) && item.quantity > 0 && Number.isSafeInteger(item.product.priceCents) && Number.isInteger(item.product.volumeMl)) ||
@@ -64,14 +62,14 @@ export function restoreCustomerSession(value: unknown): CustomerSession {
   return Object.fromEntries(Object.keys(defaults).map(key => [key, candidate[key as keyof CustomerSession]])) as CustomerSession
 }
 
-export type ProfileAddress = { street: string; number: string; complement?: string; reference?: string }
+export type ProfileAddress = { street: string; number: string; neighborhood?: string; complement?: string; reference?: string }
 /** Endereço informado no cadastro vira o endereço principal, sem sobrescrever endereços que o cliente já salvou. */
 export function sessionPatchFromProfile(profile: { name: string; email: string; phone?: string; address?: ProfileAddress }, current: CustomerSession): Partial<CustomerSession> {
   const patch: Partial<CustomerSession> = { signedIn: true, name: profile.name, email: profile.email, phone: profile.phone ?? '' }
   if (profile.address && current.addresses.length === 0) {
-    const address: SavedAddress = { id: 'cadastro', primary: true, street: profile.address.street, number: profile.address.number, complement: profile.address.complement ?? '', reference: profile.address.reference ?? '', neighborhood: 'Centro' }
+    const address: SavedAddress = { id: 'cadastro', primary: true, street: profile.address.street, number: profile.address.number, complement: profile.address.complement ?? '', reference: profile.address.reference ?? '', neighborhood: profile.address.neighborhood ?? 'Centro' }
     patch.addresses = [address]
-    if (!current.address.street) patch.address = { street: address.street, number: address.number, neighborhood: 'Centro', complement: address.complement, reference: address.reference }
+    if (!current.address.street) patch.address = { street: address.street, number: address.number, neighborhood: address.neighborhood, complement: address.complement, reference: address.reference }
   }
   return patch
 }

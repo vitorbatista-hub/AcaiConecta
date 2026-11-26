@@ -1,16 +1,14 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { SESSION_COOKIE, sessionSecret, verifySession } from '@/lib/staff-auth'
+import { SESSION_COOKIE } from '@/lib/auth'
 
-// Cada área exige sessão assinada com o papel correspondente; sem ela, redireciona para a entrada.
-const areas = [['/admin', 'admin'], ['/operador', 'operador'], ['/cliente', 'cliente']] as const
+// Checagem otimista: sem o cookie de sessão, as áreas privadas redirecionam para a entrada.
+// A validação real (sessão no banco, papel e conta ativa) é feita no servidor em cada layout de área e em cada rota de API.
+const areas = ['/admin', '/operador', '/cliente']
 
 export function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname
-  const role = areas.find(([prefix]) => path === prefix || path.startsWith(`${prefix}/`))?.[1]
-  if (!role) return NextResponse.next()
-  let session = null
-  try { session = verifySession(request.cookies.get(SESSION_COOKIE)?.value, sessionSecret()) } catch { /* sem segredo: bloqueia */ }
-  if (session?.role === role) return NextResponse.next()
+  if (!areas.some(prefix => path === prefix || path.startsWith(`${prefix}/`))) return NextResponse.next()
+  if (request.cookies.get(SESSION_COOKIE)?.value) return NextResponse.next()
   const url = request.nextUrl.clone()
   url.pathname = '/entrar'
   url.search = ''

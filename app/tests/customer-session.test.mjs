@@ -1,7 +1,8 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { emptyCustomerSession, restoreCustomerSession, saveAddress, removeAddress, maxSavedAddresses } from '../lib/customer-session.ts'
-import { seedProducts, createOrderId } from '../lib/domain.ts'
+import { createOrderId } from '../lib/domain.ts'
+import { seedProducts } from './fixtures.ts'
 
 const baseTime = Date.now()
 const minutesAgo = m => new Date(baseTime - m * 60_000).toISOString()
@@ -9,7 +10,7 @@ const orderFixture = {
   id: 'AC-1040', customerId: 'customer-001', storeId: 'store-001',
   items: [{ productId: 'store-001-tipo15-1000', name: 'Açaí de 15 · 1 litro', quantity: 1, volumeMl: 1000, unitPriceCents: 1500 }],
   subtotalCents: 1500, deliveryFeeCents: 0, totalCents: 1500,
-  address: { street: 'Rua Nova', number: '120', neighborhood: 'Centro' }, phone: '91988880000', payment: 'PIX_NA_ENTREGA',
+  address: { street: 'Rua Nova', number: '120', neighborhood: 'Centro' }, phone: '91988880000', payment: 'DINHEIRO',
   status: 'EM_PREPARO', createdAt: minutesAgo(12), estimatedRange: '25–35 min', acceptedDeadline: minutesAgo(7),
   timeline: [
     { to: 'AGUARDANDO_ACEITE', at: minutesAgo(12), author: 'cliente' },
@@ -20,7 +21,7 @@ const orderFixture = {
 import { formatDuration, orderGuidance, orderTone, pilotMetrics, storeDailyMetrics } from '../lib/order-presentation.ts'
 
 test('restaura sacola e preenchimento sem guardar senha', () => {
-  const session = { ...emptyCustomerSession(), cart: [{ product: seedProducts[0], quantity: 2, note: 'Sem açúcar' }], storeId: seedProducts[0].storeId, phone: '91900000000', payment: 'DINHEIRO', change: '50', note: 'Casa azul' }
+  const session = { ...emptyCustomerSession(), cart: [{ product: seedProducts[0], quantity: 2, note: 'Sem açúcar' }], storeId: seedProducts[0].storeId, phone: '91900000000', note: 'Casa azul' }
   assert.deepEqual(restoreCustomerSession(JSON.parse(JSON.stringify(session))), session)
   assert.equal('password' in session, false)
   assert.equal('password' in restoreCustomerSession({ ...session, password: 'discard-me' }), false)
@@ -38,6 +39,7 @@ test('endereços têm no máximo um principal e mantêm alternativa após remoç
   assert.equal(removeAddress(addresses, 'b')[0].primary, true)
   assert.equal(addresses.find(address => address.id === 'a').primary, false)
   assert.throws(() => saveAddress(addresses, { ...first, neighborhood: 'Outro' }))
+  assert.doesNotThrow(() => saveAddress([], { ...first, neighborhood: 'Aldeia' }))
 })
 
 test('cliente mantém no máximo dois endereços, alterna o principal e edita sem ultrapassar o limite', () => {
@@ -105,20 +107,30 @@ test('métricas de apoio calculam tempos médios, motivos e recorrência', () =>
   assert.equal(pilotMetrics([]).avgResponseMs, null)
 })
 
-test('faturamento do dia soma pedidos criados hoje, com taxa, exceto os que terminaram sem venda', () => {
+test('faturamento do dia: dinheiro conta na entrega, Pix na confirmação do pagamento (DEC-058)', () => {
   const base = structuredClone(orderFixture)
   const now = Date.parse('2026-09-28T15:00:00Z')
   const today = new Date(now - 60 * 60_000).toISOString()
   const yesterday = new Date(now - 24 * 60 * 60_000).toISOString()
-  const order = (id, status, createdAt, totalCents) => ({ ...base, id, status, createdAt, totalCents, timeline: [{ to: 'AGUARDANDO_ACEITE', at: createdAt, author: 'cliente' }] })
+  const delivered = at => [{ to: 'AGUARDANDO_ACEITE', at, author: 'cliente' }, { from: 'SAIU_PARA_ENTREGA', to: 'ENTREGUE', at, author: 'Operador' }]
+  const order = (id, status, payment, totalCents, extra = {}) => ({ ...base, id, status, payment, totalCents, createdAt: yesterday, timeline: [{ to: 'AGUARDANDO_ACEITE', at: yesterday, author: 'cliente' }], ...extra })
   const orders = [
-    order('AC-1', 'AGUARDANDO_ACEITE', today, 3450),
-    order('AC-2', 'ENTREGUE', today, 4000),
-    ...['RECUSADO', 'EXPIRADO', 'CANCELADO', 'FALHA_NA_ENTREGA'].map((status, i) => order(`AC-X${i}`, status, today, 9999)),
-    order('AC-3', 'ENTREGUE', yesterday, 5000),
-    { ...order('AC-4', 'ACEITO', today, 7000), storeId: 'outra-batedeira' },
+    order('AC-1', 'ENTREGUE', 'DINHEIRO', 3450, { timeline: delivered(today) }),
+    order('AC-2', 'EM_PREPARO', 'PIX', 4000, { paidAt: today }),
+    order('AC-3', 'EM_PREPARO', 'DINHEIRO', 9999),
+    order('AC-4', 'AGUARDANDO_PAGAMENTO', 'PIX', 9999),
+    order('AC-5', 'ENTREGUE', 'DINHEIRO', 5000, { timeline: delivered(yesterday) }),
+    order('AC-6', 'EM_PREPARO', 'PIX', 5000, { paidAt: yesterday }),
+    order('AC-7', 'ACEITO', undefined, 9999),
+    { ...order('AC-8', 'EM_PREPARO', 'PIX', 7000, { paidAt: today }), storeId: 'outra-batedeira' },
   ]
   assert.equal(storeDailyMetrics(orders, base.storeId, now).revenueCents, 7450)
+})
+
+test('mensagens do pedido cobrem a espera pelo pagamento', () => {
+  assert.match(orderGuidance.ACEITO, /10 minutos/)
+  assert.match(orderGuidance.AGUARDANDO_PAGAMENTO, /Pix/)
+  assert.equal(orderTone('AGUARDANDO_PAGAMENTO'), 'pending')
 })
 
 test('formatDuration indica ausência de dados e formata minutos e segundos', () => {

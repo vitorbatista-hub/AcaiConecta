@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { LogOut, MapPin, UserRound } from 'lucide-react'
 import { useApp } from './app-provider'
 import { maxSavedAddresses, removeAddress, saveAddress, type SavedAddress } from '@/lib/customer-session'
+import { neighborhoodLabel, officialNeighborhoods } from '@/lib/neighborhoods'
 
 export function CustomerAccount({ onDone }: { onDone?: () => void }) {
   const ctx = useApp()
@@ -34,13 +35,14 @@ function AddressCard({ address }: { address: SavedAddress }) {
   }}>
     <p className="font-bold">Editar endereço {label.toLowerCase()}</p>
     <label>Rua<input className="form-field" required maxLength={180} value={draft.street} onChange={event => setDraft({ ...draft, street: event.target.value })} /></label>
+    <label>Bairro<select className="form-field" required value={draft.neighborhood} onChange={event => setDraft({ ...draft, neighborhood: event.target.value })}>{officialNeighborhoods.map(item => <option key={item.name} value={item.name}>{neighborhoodLabel(item.name)}</option>)}</select></label>
     <label>Número<input className="form-field" required maxLength={20} value={draft.number} onChange={event => setDraft({ ...draft, number: event.target.value })} /></label>
     <label>Complemento (opcional)<input className="form-field" maxLength={100} value={draft.complement ?? ''} onChange={event => setDraft({ ...draft, complement: event.target.value })} /></label>
     <label>Ponto de referência (opcional)<input className="form-field" maxLength={255} value={draft.reference ?? ''} onChange={event => setDraft({ ...draft, reference: event.target.value })} /></label>
     {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
     <div className="flex flex-wrap gap-2"><button className="btn-primary">Salvar endereço</button><button type="button" className="btn" onClick={() => { setDraft(null); setError('') }}>Cancelar</button></div>
   </form>
-  return <div className={`rounded-2xl border p-4 ${address.primary ? 'border-primary/40 bg-primary/5' : 'bg-background'}`}><div className="flex items-start justify-between gap-3"><p className="font-semibold">{address.street}, {address.number}<span className="block text-sm font-normal text-muted-foreground">Centro, Cametá/PA{address.complement ? ` · ${address.complement}` : ''}</span></p><span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${address.primary ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>{label}</span></div><div className="mt-3 flex flex-wrap gap-2">
+  return <div className={`rounded-2xl border p-4 ${address.primary ? 'border-primary/40 bg-primary/5' : 'bg-background'}`}><div className="flex items-start justify-between gap-3"><p className="font-semibold">{address.street}, {address.number}<span className="block text-sm font-normal text-muted-foreground">{neighborhoodLabel(address.neighborhood)}, Cametá/PA{address.complement ? ` · ${address.complement}` : ''}</span></p><span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${address.primary ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>{label}</span></div><div className="mt-3 flex flex-wrap gap-2">
     <button className="btn" onClick={() => setDraft(address)}>Editar</button>
     <button className="btn" onClick={() => ctx.updateCustomer({ addresses: saveAddress(addresses, { ...address, primary: true }), address })} disabled={address.primary}>Tornar principal</button>
     <button className="btn" onClick={() => ctx.updateCustomer({ addresses: removeAddress(addresses, address.id) })}>Remover endereço</button>
