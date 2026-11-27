@@ -18,7 +18,7 @@ test('o banco migrado tem exatamente as tabelas do schema.sql', async () => {
 
 test('as migrações estão registradas e aplicadas', async () => {
   const linhas = await db.$queryRaw`SELECT migration_name AS nome, finished_at AS fim FROM _prisma_migrations ORDER BY migration_name`
-  assert.deepEqual(linhas.map(l => l.nome), ['0001_schema_inicial', '0002_redefinicoes_senha', '0003_pedidos_telefone'])
+  assert.deepEqual(linhas.map(l => l.nome), ['0001_schema_inicial', '0002_redefinicoes_senha', '0003_pedidos_telefone', '0004_configuracoes_plataforma'])
   assert.ok(linhas.every(l => l.fim))
 })
 

@@ -13,8 +13,8 @@ test('as migrações seguem a numeração sequencial e têm SQL', () => {
   for (const nome of migracoes) assert.ok(readFileSync(new URL(`${nome}/migration.sql`, raiz), 'utf8').trim().length > 0, nome)
 })
 
-test('o schema.sql tem as 18 tabelas esperadas e nenhuma migração apaga dados', () => {
+test('o schema.sql tem as 19 tabelas esperadas e nenhuma migração apaga dados', () => {
   const tabelas = [...schema.matchAll(/CREATE TABLE (\w+)/g)].map(m => m[1])
-  assert.equal(tabelas.length, 18)
+  assert.equal(tabelas.length, 19)
   for (const nome of migracoes) assert.doesNotMatch(readFileSync(new URL(`${nome}/migration.sql`, raiz), 'utf8'), /\b(DROP\s+(TABLE|DATABASE|COLUMN)|TRUNCATE|DELETE\s+FROM)\b/i, `${nome} é destrutiva`)
 })

@@ -63,7 +63,6 @@ export default function ClientePage() {
     const store = ctx.stores.find(store => store.id === product.storeId)
     if (!store || !isStoreOrderable(store) || !product.active || !product.available) { notify('Produto indisponível no momento.', 'error'); return }
     if (customer.storeId && customer.storeId !== product.storeId && !replace) { setReplacement(product); return }
-    if (!customer.cart.length) ctx.trackCartStarted()
     const cart = replace ? [] : customer.cart
     const existing = cart.find(item => item.product.id === product.id)
     setCart(existing ? cart.map(item => item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item) : [...cart, { product, quantity: 1 }], product.storeId)

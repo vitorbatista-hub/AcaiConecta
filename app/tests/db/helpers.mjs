@@ -6,6 +6,7 @@ export async function cleanTestData(db) {
   await db.eventos_pedido.deleteMany({ where: { pedido_id: { in: orders } } })
   await db.itens_pedido.deleteMany({ where: { pedido_id: { in: orders } } })
   await db.pedidos.deleteMany({ where: { id: { in: orders } } })
+  await db.configuracoes_plataforma.deleteMany({ where: { atualizado_por: { in: ids } } })
   await db.eventos_auditoria.deleteMany({ where: { usuario_id: { in: ids } } })
   await db.produtos.deleteMany({ where: { batedeira_id: { in: stores } } })
   await db.batedeiras.deleteMany({ where: { id: { in: stores } } })

@@ -96,6 +96,11 @@ export async function listOrders(session: Session): Promise<Order[]> {
   return rows.map(toOrder)
 }
 
+/** Todos os pedidos, sem o limite da listagem: base das métricas. Quem chama garante que é o administrador. */
+export async function allOrders(): Promise<Order[]> {
+  return (await db.pedidos.findMany({ include: orderInclude })).map(toOrder)
+}
+
 export type CreateInput = { storeId: string; items: { productId: string; quantity: number; note?: string; unitPriceCents?: number }[]; address: Order['address']; phone: string; note?: string; requestId: string; feeCents?: number }
 const text = (value: unknown, max: number) => (typeof value === 'string' ? value.trim().slice(0, max) : '')
 

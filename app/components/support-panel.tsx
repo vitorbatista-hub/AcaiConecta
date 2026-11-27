@@ -17,7 +17,7 @@ export function SupportButton({ orderId }: { orderId?: string }) {
         <section><h3 className="font-black">Atraso, falha ou divergência</h3><p className="text-muted-foreground">Informe o código do pedido e o que aconteceu ao responsável pelo atendimento.</p></section>
         {orderId && <div className="rounded-2xl bg-muted p-4"><p className="break-all font-bold">Pedido {orderId}</p><button className="btn mt-2" onClick={async () => { try { await navigator.clipboard.writeText(orderId); setCopied(true) } catch { setCopied(false) } }}>{copied ? 'Código copiado' : 'Copiar código'}</button><p className="text-xs">Você também pode selecionar e copiar o código acima.</p></div>}
         {supportEmail ? <a className="btn-primary inline-flex items-center" href={`mailto:${supportEmail}?subject=${encodeURIComponent(orderId ? `Ajuda com o pedido ${orderId}` : 'Ajuda com acesso ao AçaíConecta')}`}>Abrir e-mail para o suporte</a> : <div className="rounded-xl border border-border p-4"><p className="font-bold">Canal de atendimento</p><p>O contato de suporte ainda não foi configurado. Procure diretamente a batedeira informando o código do pedido.</p></div>}
-        <p className="text-xs text-muted-foreground">Problemas de acesso também são tratados pelo suporte. A recuperação de acesso é assistida pelo suporte.</p>
+        <p className="text-xs text-muted-foreground">Para redefinir a senha, use “Esqueceu a senha?” na tela de entrada.</p>
       </div>
     </Modal>}
   </>

@@ -54,10 +54,10 @@ export async function catalogFor(userId: bigint, role: Role): Promise<{ stores: 
     return row ? { stores: [toStore(row)], products: row.produtos.map(toProduct), audit: [] } : { stores: [], products: [], audit: [] }
   }
   const rows = await db.batedeiras.findMany({ include: storeInclude, orderBy: { criado_em: 'desc' } })
-  const events = await db.eventos_auditoria.findMany({ where: { entidade_tipo: { in: ['batedeira', 'pedido', 'cliente'] } }, include: { usuarios: true }, orderBy: { criado_em: 'asc' } })
+  const events = await db.eventos_auditoria.findMany({ where: { entidade_tipo: { in: ['batedeira', 'pedido', 'cliente', 'plataforma'] } }, include: { usuarios: true }, orderBy: { criado_em: 'asc' } })
   const orderCodes = new Map((await db.pedidos.findMany({ where: { id: { in: events.filter(e => e.entidade_tipo === 'pedido').map(e => e.entidade_id) } }, select: { id: true, codigo: true } })).map(o => [o.id, o.codigo]))
   const customerNames = new Map((await db.usuarios.findMany({ where: { id: { in: events.filter(e => e.entidade_tipo === 'cliente').map(e => e.entidade_id) } }, select: { id: true, nome: true } })).map(u => [u.id, u.nome]))
-  const entityLabel = (type: string, id: bigint) => (type === 'pedido' ? orderCodes.get(id) : type === 'cliente' ? customerNames.get(id) : undefined) ?? String(id)
+  const entityLabel = (type: string, id: bigint) => (type === 'pedido' ? orderCodes.get(id) : type === 'cliente' ? customerNames.get(id) : type === 'plataforma' ? 'Plataforma' : undefined) ?? String(id)
   const audit = events.map(event => ({ id: `db-${event.id}`, at: event.criado_em.toISOString(), author: event.usuarios.nome, entityId: entityLabel(event.entidade_tipo, event.entidade_id), action: event.acao, reason: String((event.detalhes as { reason?: string } | null)?.reason ?? '') }))
   return { stores: rows.map(row => toStore(row, { admin: true })), products: [], audit }
 }

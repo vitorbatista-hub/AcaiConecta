@@ -1,9 +1,10 @@
 -- AçaíConecta
 -- Schema inicial do MVP reduzido para MySQL 8+
--- Versão: 0.11
+-- Versão: 0.12
 -- Atualização: novembro de 2026 (PRD 2.7; DEC-056 a DEC-062; 0.9 acrescenta o CPF/CNPJ da batedeira, DEC-055;
 --   0.10 acrescenta redefinicoes_senha para o link de redefinição de senha, guardado só como hash;
---   0.11 acrescenta pedidos.telefone_snapshot, o telefone de contato informado no pedido)
+--   0.11 acrescenta pedidos.telefone_snapshot, o telefone de contato informado no pedido;
+--   0.12 acrescenta configuracoes_plataforma, com o contato de suporte)
 --
 -- Convenções:
 --   - identificadores BIGINT AUTO_INCREMENT;
@@ -523,6 +524,20 @@ CREATE TABLE eventos_webhook (
 ) ENGINE = InnoDB;
 
 CREATE INDEX idx_eventos_webhook_pagamento ON eventos_webhook (pagamento_id, recebido_em);
+
+-- Linha única com a configuração da plataforma (contato de suporte, PRD §8.3).
+CREATE TABLE configuracoes_plataforma (
+    id TINYINT UNSIGNED NOT NULL,
+    email_suporte VARCHAR(254) NULL,
+    atualizado_por BIGINT UNSIGNED NOT NULL,
+    atualizado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT pk_configuracoes_plataforma PRIMARY KEY (id),
+    CONSTRAINT fk_configuracoes_usuario FOREIGN KEY (atualizado_por)
+        REFERENCES usuarios (id) ON UPDATE RESTRICT ON DELETE RESTRICT,
+    CONSTRAINT ck_configuracoes_linha_unica CHECK (id = 1)
+) ENGINE = InnoDB;
 
 CREATE TABLE eventos_auditoria (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,

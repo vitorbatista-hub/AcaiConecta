@@ -1,22 +1,21 @@
 'use client'
 
 import { createContext, useContext, useEffect, useRef, useState } from 'react'
-import { adminActorName, getSchedule, type Actor, type CartItem, type AdminStatus, type Order, type OrderStatus, type PaymentMethod, type Product, type Store } from '@/lib/domain'
+import { getSchedule, type Actor, type CartItem, type AdminStatus, type Order, type OrderStatus, type PaymentMethod, type Product, type Store } from '@/lib/domain'
 import { usePathname } from 'next/navigation'
 import { parseRange } from '@/lib/store-rules'
 
-import { emptyCustomerSession, restoreCustomerSession, type AccessRequest, type CustomerSession } from '@/lib/customer-session'
+import { emptyCustomerSession, restoreCustomerSession, type CustomerSession } from '@/lib/customer-session'
 
 type AuditEvent = { id:string; at:string; author:string; entityId:string; action:string; reason:string }
-type AppState = { version:4; stores:Store[]; products:Product[]; serverAudit:AuditEvent[]; orders:Order[]; audit:AuditEvent[]; customer:CustomerSession; supportEmail:string; accessRequests:AccessRequest[]; cartsStarted:number }
+type AppState = { version:4; stores:Store[]; products:Product[]; serverAudit:AuditEvent[]; orders:Order[]; customer:CustomerSession; supportEmail:string }
 type Checkout = { items:CartItem[]; storeId:string; address:Order['address']; phone:string; note?:string; requestId:string; fee:number }
 type AppContextValue = AppState & {
+  audit:AuditEvent[]
   now:number
   updateCustomer:(patch:Partial<CustomerSession>)=>void
-  configureSupport:(email:string)=>void
-  requestAccessRecovery:(contact:string,reason:string)=>void
-  resolveAccessRequest:(id:string)=>void
-  trackCartStarted:()=>void
+  /** Administrador: define ou remove o e-mail de suporte (servidor, com auditoria). */
+  configureSupport:(email:string)=>Promise<void>
   /** Pedidos ficam no servidor: o preço e a taxa são recalculados lá. O `actor` é só para a interface; o servidor usa a sessão. */
   submitOrder:(input:Checkout)=>Promise<Order>
   transition:(id:string,to:OrderStatus,actor:Actor,reason?:string)=>Promise<void>
@@ -32,7 +31,7 @@ type AppContextValue = AppState & {
 }
 const Context = createContext<AppContextValue|null>(null)
 const storageKey='acaiconecta-state-v1'
-const initialState=():AppState=>({version:4,stores:[],products:[],serverAudit:[],orders:[],audit:[],customer:emptyCustomerSession(),supportEmail:'',accessRequests:[],cartsStarted:0})
+const initialState=():AppState=>({version:4,stores:[],products:[],serverAudit:[],orders:[],customer:emptyCustomerSession(),supportEmail:''})
 
 export function AppProvider({children}:{children:React.ReactNode}) {
   const [state,setState]=useState<AppState>(initialState)
@@ -44,9 +43,8 @@ export function AppProvider({children}:{children:React.ReactNode}) {
   function commit(next:AppState) {
     current.current=next
     setState(next)
-    // Batedeiras, produtos e auditoria do servidor vêm da API: não são guardados no navegador.
-    const { stores:_stores, products:_products, serverAudit:_serverAudit, orders:_orders, ...persisted }=next
-    try { sessionStorage.setItem(storageKey,JSON.stringify(persisted)) }
+    // O restante vem da API: no navegador ficam só a sacola e o pedido em andamento.
+    try { sessionStorage.setItem(storageKey,JSON.stringify({version:next.version,customer:next.customer})) }
     catch { setStorageWarning('Armazenamento da sessão indisponível. Seus dados serão mantidos somente enquanto esta página estiver aberta.') }
   }
   useEffect(()=>{
@@ -56,8 +54,7 @@ export function AppProvider({children}:{children:React.ReactNode}) {
         const saved=JSON.parse(raw) as Partial<AppState>
         // Versões antigas (que guardavam catálogo no navegador) são descartadas sem aviso: o catálogo agora vem do servidor.
         if(saved.version===4) {
-          if(!Array.isArray(saved.audit)) throw new Error('Sessão inválida')
-          current.current={...initialState(),...saved,stores:[],products:[],serverAudit:[],orders:[],customer:restoreCustomerSession(saved.customer)}
+          current.current={...initialState(),customer:restoreCustomerSession(saved.customer)}
           commit(current.current)
         }
       }
@@ -77,6 +74,14 @@ export function AppProvider({children}:{children:React.ReactNode}) {
       const next={...current.current,stores:data.stores,products:data.products,serverAudit:data.audit}
       current.current=next
       setState(next)
+    } catch { /* sem rede: mantém o que já está na tela */ }
+  }
+  async function refreshSupport() {
+    try {
+      const response=await fetch('/api/suporte',{cache:'no-store'})
+      const data=response.ok?await response.json() as {email:string}:{email:''}
+      current.current={...current.current,supportEmail:data.email}
+      setState(current.current)
     } catch { /* sem rede: mantém o que já está na tela */ }
   }
   async function refreshOrders() {
@@ -101,7 +106,8 @@ export function AppProvider({children}:{children:React.ReactNode}) {
   useEffect(()=>{
     if(!ready) return
     void refreshCatalog()
-    const onFocus=()=>void refreshCatalog()
+    void refreshSupport()
+    const onFocus=()=>{ void refreshCatalog(); void refreshSupport() }
     window.addEventListener('focus',onFocus)
     return ()=>window.removeEventListener('focus',onFocus)
   },[ready,pathname])
@@ -155,31 +161,11 @@ export function AppProvider({children}:{children:React.ReactNode}) {
   function updateCustomer(patch:Partial<CustomerSession>) {
     commit({...current.current,customer:{...current.current.customer,...patch}})
   }
-  function configureSupport(email:string) {
-    const value=email.trim()
-    if(value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) throw new Error('Informe um e-mail válido para o suporte.')
-    const event={id:crypto.randomUUID(),at:new Date().toISOString(),author:adminActorName,entityId:'pilot',action:'Contato de suporte atualizado',reason:value?'Canal de atendimento configurado':'Canal removido'}
-    commit({...current.current,supportEmail:value,audit:[...current.current.audit,event]})
+  async function configureSupport(email:string) {
+    await send('/api/admin/suporte','PUT',{email})
+    await refreshSupport()
   }
-  function requestAccessRecovery(contact:string,reason:string) {
-    if(!contact.trim()||!reason.trim()) throw new Error('Informe um contato e o motivo da solicitação.')
-    if(contact.length>254||reason.length>255) throw new Error('Revise o tamanho dos campos.')
-    const request:AccessRequest={id:crypto.randomUUID(),contact:contact.trim(),reason:reason.trim(),createdAt:new Date().toISOString(),resolved:false}
-    commit({...current.current,accessRequests:[request,...current.current.accessRequests]})
-  }
-  function resolveAccessRequest(id:string) {
-    const data=current.current
-    const request=data.accessRequests.find(item=>item.id===id)
-    if(!request) throw new Error('Solicitação não encontrada.')
-    if(request.resolved) throw new Error('Solicitação já concluída.')
-    const at=new Date().toISOString()
-    const event={id:crypto.randomUUID(),at,author:adminActorName,entityId:'customer-001',action:'Recuperação de acesso concedida',reason:`Solicitação de ${request.contact}: ${request.reason}`}
-    commit({...data,accessRequests:data.accessRequests.map(item=>item.id===id?{...item,resolved:true,resolvedAt:at}:item),audit:[...data.audit,event]})
-  }
-  function trackCartStarted() {
-    if(!current.current.customer.cart.length) commit({...current.current,cartsStarted:current.current.cartsStarted+1})
-  }
-  const value={...state,now,updateCustomer,configureSupport,requestAccessRecovery,resolveAccessRequest,trackCartStarted,submitOrder,transition,choosePayment,message,refreshOrders,saveStoreSettings,changeStoreStatus,saveProduct,refreshCatalog,audit:[...state.serverAudit,...state.audit].sort((a,b)=>Date.parse(a.at)-Date.parse(b.at))}
+  const value={...state,now,updateCustomer,configureSupport,submitOrder,transition,choosePayment,message,refreshOrders,saveStoreSettings,changeStoreStatus,saveProduct,refreshCatalog,audit:state.serverAudit}
   return <Context.Provider value={value}>{storageWarning&&<p role="alert" className="bg-accent/20 p-3 text-sm">{storageWarning}</p>}{ready?children:<p role="status" className="p-8">Carregando…</p>}</Context.Provider>
 }
 export function useApp() {

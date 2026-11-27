@@ -5,7 +5,6 @@ export type SavedAddress = Order['address'] & { id: string; primary: boolean }
 // DEC-040: one primary and at most one secondary address per customer.
 export const maxSavedAddresses = 2
 export const savedAddressLimitMessage = 'Você já tem 2 endereços salvos (principal e secundário). Edite ou remova um deles.'
-export type AccessRequest = { id: string; contact: string; reason: string; createdAt: string; resolved: boolean; resolvedAt?: string }
 export type CustomerSession = {
   cart: CartItem[]
   storeId: string | null

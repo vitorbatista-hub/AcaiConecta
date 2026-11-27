@@ -137,9 +137,22 @@ test('formatDuration indica ausência de dados e formata minutos e segundos', ()
   assert.equal(formatDuration(null), 'Sem dados')
   assert.equal(formatDuration(45_000), '45s')
   assert.equal(formatDuration(125_000), '2min 5s')
+  assert.equal(formatDuration(3_599_000), '59min 59s')
+  assert.equal(formatDuration(3_600_000), '1h 0min')
+  assert.equal(formatDuration(7_530_000), '2h 5min')
 })
 
 test('saudação usa só o primeiro nome', () => {
   assert.equal(greeting('  Vitor Batista '), 'Olá, Vitor!')
   assert.equal(greeting(''), 'Olá!')
+})
+
+test('recompra conta só a segunda entrega em até 30 dias; entregas por batedeira cobrem 7 dias', () => {
+  const day = 86_400_000, now = Date.parse('2026-11-26T12:00:00Z')
+  const delivery = (customerId, storeId, daysAgo) => { const at = new Date(now - daysAgo * day).toISOString(); return { customerId, storeId, status: 'ENTREGUE', createdAt: at, timeline: [{ to: 'ENTREGUE', at }] } }
+  const metrics = pilotMetrics([delivery('a', '1', 1), delivery('a', '1', 20), delivery('b', '2', 2), delivery('b', '2', 60)], now)
+  assert.equal(metrics.returningCustomers, 1)
+  assert.equal(metrics.recurrenceRate, 0.5)
+  assert.deepEqual(metrics.deliveredLastWeekByStore, { 1: 1, 2: 1 })
+  assert.equal(metrics.activeStoresLastWeek, 2)
 })

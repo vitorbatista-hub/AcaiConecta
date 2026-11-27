@@ -22,11 +22,13 @@ export function orderTone(status: OrderStatus) {
   return 'confirmed' as const
 }
 
+/** A partir de 1 hora mostra horas e minutos (sem segundos); abaixo disso, minutos e segundos. */
 export function formatDuration(ms: number | null) {
   if (ms === null || !Number.isFinite(ms)) return 'Sem dados'
   const totalSeconds = Math.round(ms / 1000)
   const minutes = Math.floor(totalSeconds / 60)
   const seconds = totalSeconds % 60
+  if (minutes >= 60) return `${Math.floor(minutes / 60)}h ${minutes % 60}min`
   return minutes > 0 ? `${minutes}min ${seconds}s` : `${seconds}s`
 }
 
@@ -83,12 +85,18 @@ export function pilotMetrics(orders: Order[], now = Date.now()) {
     const deliveredAt = order.timeline.find(event => event.to === 'ENTREGUE')
     return deliveredAt ? [Date.parse(deliveredAt.at) - Date.parse(order.createdAt)] : []
   })
-  const deliveredByCustomer = new Map<string, number>()
-  for (const order of delivered) deliveredByCustomer.set(order.customerId, (deliveredByCustomer.get(order.customerId) ?? 0) + 1)
-  const returningCustomers = [...deliveredByCustomer.values()].filter(count => count > 1).length
-  const activeStoresLastWeek = new Set(orders
-    .filter(order => order.timeline.some(event => event.to === 'ENTREGUE' && now - Date.parse(event.at) <= 7 * 86_400_000))
-    .map(order => order.storeId)).size
+  // Recompra (PRD §5.2): clientes com duas entregas separadas por no máximo 30 dias.
+  const deliveryTimes = new Map<string, number[]>()
+  for (const order of delivered) {
+    const event = order.timeline.find(event => event.to === 'ENTREGUE')
+    if (event) deliveryTimes.set(order.customerId, [...(deliveryTimes.get(order.customerId) ?? []), Date.parse(event.at)])
+  }
+  const returningCustomers = [...deliveryTimes.values()].filter(times => times.sort((a, b) => a - b).some((time, i) => i > 0 && time - times[i - 1] <= 30 * 86_400_000)).length
+  const deliveredLastWeekByStore: Record<string, number> = {}
+  for (const order of delivered) {
+    if (order.timeline.some(event => event.to === 'ENTREGUE' && now - Date.parse(event.at) <= 7 * 86_400_000)) deliveredLastWeekByStore[order.storeId] = (deliveredLastWeekByStore[order.storeId] ?? 0) + 1
+  }
+  const activeStoresLastWeek = Object.keys(deliveredLastWeekByStore).length
   return {
     sent: orders.length, accepted: accepted.length, responded: responded.length,
     delivered: delivered.length,
@@ -106,8 +114,9 @@ export function pilotMetrics(orders: Order[], now = Date.now()) {
     failureReasons: reasonCounts(orders, 'FALHA_NA_ENTREGA'),
     activeCustomers: new Set(orders.map(order => order.customerId)).size,
     returningCustomers,
-    recurrenceRate: deliveredByCustomer.size ? returningCustomers / deliveredByCustomer.size : null,
+    recurrenceRate: deliveryTimes.size ? returningCustomers / deliveryTimes.size : null,
     activeStoresLastWeek,
+    deliveredLastWeekByStore,
   }
 }
 
