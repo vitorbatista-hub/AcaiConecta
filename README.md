@@ -6,19 +6,19 @@ O produto pretende centralizar informações hoje dispersas, como disponibilidad
 
 ## Estado atual
 
-As fases 1 — Descoberta e Validação do Problema e 2 — Definição e Prototipação do Produto foram concluídas. O projeto está na Fase 3 — Construção do MVP (DEC-049). O código da aplicação ainda não foi iniciado.
+As fases 1 — Descoberta e Validação do Problema e 2 — Definição e Prototipação do Produto foram concluídas. O projeto está na Fase 3 — Construção do MVP (DEC-049). A aplicação web está em [`app/`](app/README.md) (DEC-053).
 
 Os trabalhos atuais incluem:
 
-- escolha da infraestrutura de hospedagem, banco, arquivos e observabilidade, a registrar em ADR (primeira tarefa da fase);
+- escolha da infraestrutura de hospedagem, banco, arquivos e observabilidade e do provedor de pagamento Pix, a registrar em ADR;
+- pagamento (Pix on-line e dinheiro), estorno, contestação e atendimento a bairros urbanos, decididos em 25/11/2026 (DEC-056 a DEC-059); PRD 2.7 aprovado em 25/11/2026 (DEC-060);
 - implementação do backlog priorizado do MVP;
 - política de privacidade e termos de uso, obrigatórios antes do piloto.
 
 ## Documentação
 
-- [Protótipo web em elaboração — status, execução e pendências](prototypes/web/README.md)
-- [Vitrine opcional do protótipo no v0 — pode estar defasada em relação ao repositório (DEC-041)](https://v0.app/vitors-projects-edcbface/chat/acaiconecta-jAWnqGHlb8w)
-- [PRD vigente (2.6, aprovado)](docs/product/PRD.md)
+- [Aplicação web — execução, acesso da equipe e limitações](app/README.md)
+- [PRD (2.8)](docs/product/PRD.md)
 - [Roadmap](docs/product/roadmap.md)
 - [Registro de decisões](docs/product/decisions.md)
 - [Decisões de arquitetura (ADRs)](docs/architecture/ADRs/)
@@ -27,11 +27,10 @@ Os trabalhos atuais incluem:
 - [Fluxo atual de pedido e entrega](docs/research/current-order-flow.md)
 - [Schema SQL do MVP](database/schema.sql)
 - [Dicionário de dados do MVP](docs/database/data-dictionary.md)
-- [Modelo EER para MySQL Workbench (schema 0.7)](database/acai_conecta.mwb)
 - [Histórico do PRD 1.0](docs/product/archive/PRD-v1.md)
 - [Changelog](CHANGELOG.md)
 
-O arquivo `database/schema.sql` é a fonte oficial da estrutura do banco de dados. O arquivo `database/acai_conecta.mwb` é sua representação visual derivada para consulta no MySQL Workbench e deverá ser regenerado após alterações estruturais no schema. O `.mwb` não representa as restrições `CHECK`; o banco deve ser criado sempre a partir do `schema.sql`.
+O arquivo `database/schema.sql` é a única fonte oficial da estrutura do banco de dados. O antigo modelo visual `.mwb` foi removido (DEC-061); se for preciso um diagrama, gere-o a partir do `schema.sql`.
 
 ## Local de validação
 
@@ -39,21 +38,21 @@ O produto será validado inicialmente em **Cametá, Pará**, com um grupo pequen
 
 ## Situação da implementação
 
-- Protótipo: três perfis navegáveis com dados simulados; tipos, 24 testes e build aprovados; testes de usabilidade concluídos (DEC-045); verificação automatizada em navegador das telas mais recentes pendente (ver [README do protótipo](prototypes/web/README.md))
-- Arquitetura técnica: [proposta aprovada](docs/product/arquitetura-tecnica.md) (DEC-046), com as ADRs 001 e 002
-- Modelo de dados: schema SQL 0.7, modelo EER, dicionário de dados e [MER inicial](docs/product/mer-eer-inicial.md) alinhados; sessões e tentativas de login decididas na [ADR-001](docs/architecture/ADRs/ADR-001-sessoes-e-tentativas-de-login.md); aprovados (DEC-046)
+- Interface: três áreas (cliente, batedeira e administração) com 54 testes sem banco e 41 com banco, tipos e build aprovados. Contas, sessões, batedeiras, catálogo, pedidos, administração, suporte e métricas usam o MySQL local (etapa 5 de 7 da ADR-006); só a sacola fica no navegador. Não há provedor de pagamento, estorno nem contestação (Épico 9, adiado pela DEC-066), serviço de e-mail (DEC-064) nem envio de documentos (DEC-065).
+- Arquitetura técnica: [aprovada](docs/product/arquitetura-tecnica.md) (DEC-046) como alvo; ADR-001 (sessões) implementada em parte, ADR-002 (tempo real) e ADR-004 (logs) aprovadas e não implementadas, ADR-003 (infraestrutura) em revisão, ADR-005 (Pix) adiada e ADR-006 (persistência) em andamento.
+- Modelo de dados: schema SQL 0.12, dicionário de dados e [MER inicial](docs/product/mer-eer-inicial.md) alinhados; modelo aprovado na versão 0.7 (DEC-046).
 - Backlog: [backlog priorizado do MVP](docs/product/backlog-mvp.md) aprovado (DEC-046)
-- Aplicação: não iniciada
+- Aplicação: o código em [`app/`](app/README.md) deixou de ser protótipo e passou a ser a aplicação (DEC-053). A versão anterior com banco (DEC-051) permanece apenas no histórico do Git. Pendências principais: tempo real, logs, hospedagem (ADR-003), serviço de e-mail, documentos da batedeira, Pix (Épico 9) e política de privacidade e termos.
 - Piloto: pendente
 
 ## Organização do repositório
 
 - `docs/`: documentação vigente de produto, pesquisa, banco de dados e arquitetura (ADRs).
 - `docs/product/archive/`: documentos históricos, sem autoridade sobre os requisitos vigentes.
-- `database/`: schema SQL oficial e modelo visual derivado.
-- `prototypes/web/`: código e recursos do protótipo web em elaboração, com dependências próprias e dados simulados.
+- `database/`: schema SQL oficial.
+- `app/`: código da aplicação web, com dependências próprias.
 
-O protótipo serve à exploração visual da Fase 2. Suas telas e simulações não substituem o PRD nem representam aprovação das regras de negócio ou da arquitetura do MVP.
+As regras de negócio vigentes são as do PRD e de `docs/product/decisions.md`; a interface não as substitui.
 
 ## Princípio de desenvolvimento
 

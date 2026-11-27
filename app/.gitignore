@@ -1,0 +1,17 @@
+# Dependências e build
+node_modules
+.next
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store
+
+# Variáveis de ambiente e segredos: nunca versionar valores reais
+.env
+.env.*
+!.env.example
+
+# Contas cadastradas pelo site (dados pessoais): nunca versionar
+.data
+
+# Cliente Prisma gerado (pnpm db:gerar): não versionar
+lib/generated

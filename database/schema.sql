@@ -1,14 +1,19 @@
 -- AçaíConecta
 -- Schema inicial do MVP reduzido para MySQL 8+
--- Versão: 0.7
--- Atualização: setembro de 2026
+-- Versão: 0.12
+-- Atualização: novembro de 2026 (PRD 2.7; DEC-056 a DEC-062; 0.9 acrescenta o CPF/CNPJ da batedeira, DEC-055;
+--   0.10 acrescenta redefinicoes_senha para o link de redefinição de senha, guardado só como hash;
+--   0.11 acrescenta pedidos.telefone_snapshot, o telefone de contato informado no pedido;
+--   0.12 acrescenta configuracoes_plataforma, com o contato de suporte)
 --
 -- Convenções:
 --   - identificadores BIGINT AUTO_INCREMENT;
 --   - valores monetários em centavos e volumes em mililitros;
 --   - somente entrega, com pedido mínimo total de 1 litro;
---   - dinheiro ou Pix na entrega, sem processamento financeiro pela plataforma;
---   - bairros canônicos e taxa de entrega explícita;
+--   - forma de pagamento escolhida depois do aceite: dinheiro na entrega ou Pix on-line
+--     confirmado pelo provedor, com estorno e contestação; a plataforma não guarda
+--     chave Pix, dados bancários nem documentos de pagamento;
+--   - bairros urbanos canônicos, escolhidos por batedeira, com taxa e faixa por bairro;
 --   - um operador responsável por batedeira durante o piloto.
 --   - dias da semana numerados de 0 (domingo) a 6 (sábado).
 --
@@ -22,7 +27,18 @@
 --   - sessões guardam somente o hash do token; tentativas de login guardam a origem
 --     apenas como HMAC do IP e são expurgadas após 24 horas (ADR-001);
 --   - estados de pedido seguem exclusivamente as transições definidas no PRD;
---   - subtotal, volume e snapshots do pedido são calculados em uma transação única.
+--   - subtotal, volume e snapshots do pedido são calculados em uma transação única;
+--   - uma batedeira só é ativada com ao menos um bairro atendido ativo (DEC-057);
+--   - Pix só é oferecido quando conta_pagamento_status = 'VERIFICADA' (DEC-058);
+--   - a confirmação do Pix, a mudança de estado do pedido e o evento correspondente
+--     ocorrem na mesma transação; webhooks repetidos não são reprocessados;
+--   - o prazo de 10 minutos para escolher a forma de pagamento e o de 10 minutos para
+--     pagar o Pix são aplicados pela aplicação a partir de pedidos.escolha_pagamento_expira_em
+--     e pagamentos.expira_em (DEC-056, DEC-059);
+--   - o faturamento do dia é calculado, não armazenado (DEC-043, DEC-058);
+--   - a soma dos estornos de um pagamento não ultrapassa pagamentos.valor_centavos;
+--   - usuario_id em estornos referencia OPERADOR ou ADMINISTRADOR; decidida_por em
+--     contestacoes referencia um ADMINISTRADOR.
 
 CREATE DATABASE IF NOT EXISTS acai_conecta
     CHARACTER SET utf8mb4
@@ -82,9 +98,28 @@ CREATE INDEX idx_tentativas_login_email_janela
 CREATE INDEX idx_tentativas_login_origem_janela
     ON tentativas_login (origem_hash, criado_em);
 
+CREATE TABLE redefinicoes_senha (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    usuario_id BIGINT UNSIGNED NOT NULL,
+    token_hash CHAR(64) NOT NULL,
+    criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expira_em TIMESTAMP NOT NULL,
+    usada_em TIMESTAMP NULL,
+
+    CONSTRAINT pk_redefinicoes_senha PRIMARY KEY (id),
+    CONSTRAINT uq_redefinicoes_senha_token UNIQUE (token_hash),
+    CONSTRAINT fk_redefinicoes_senha_usuario FOREIGN KEY (usuario_id)
+        REFERENCES usuarios (id) ON UPDATE RESTRICT ON DELETE CASCADE,
+    CONSTRAINT ck_redefinicoes_senha_expiracao CHECK (expira_em > criado_em)
+) ENGINE = InnoDB;
+
+CREATE INDEX idx_redefinicoes_senha_usuario
+    ON redefinicoes_senha (usuario_id, usada_em, expira_em);
+
 CREATE TABLE bairros (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     nome VARCHAR(100) NOT NULL,
+    nome_alternativo VARCHAR(100) NULL,
     ativo BOOLEAN NOT NULL DEFAULT TRUE,
     criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     atualizado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -103,15 +138,21 @@ CREATE TABLE batedeiras (
     endereco VARCHAR(255) NOT NULL,
     bairro_id BIGINT UNSIGNED NOT NULL,
     ponto_referencia VARCHAR(255) NULL,
+    documento_tipo ENUM('CPF', 'CNPJ') NOT NULL,
+    documento VARCHAR(14) NOT NULL,
     status ENUM('EM_ANALISE', 'ATIVA', 'SUSPENSA', 'DESATIVADA') NOT NULL DEFAULT 'EM_ANALISE',
     aberta BOOLEAN NOT NULL DEFAULT FALSE,
     entrega_disponivel BOOLEAN NOT NULL DEFAULT FALSE,
     estimativa_minutos_min SMALLINT UNSIGNED NOT NULL,
     estimativa_minutos_max SMALLINT UNSIGNED NOT NULL,
+    conta_pagamento_id VARCHAR(100) NULL,
+    conta_pagamento_status ENUM('NAO_CADASTRADA', 'PENDENTE', 'VERIFICADA', 'RECUSADA')
+        NOT NULL DEFAULT 'NAO_CADASTRADA',
     criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     atualizado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
     CONSTRAINT pk_batedeiras PRIMARY KEY (id),
+    CONSTRAINT uq_batedeiras_conta_pagamento UNIQUE (conta_pagamento_id),
     CONSTRAINT uq_batedeiras_responsavel UNIQUE (responsavel_id),
     CONSTRAINT fk_batedeiras_responsavel FOREIGN KEY (responsavel_id)
         REFERENCES usuarios (id) ON UPDATE RESTRICT ON DELETE RESTRICT,
@@ -120,6 +161,13 @@ CREATE TABLE batedeiras (
     CONSTRAINT ck_batedeiras_estimativa CHECK (
         estimativa_minutos_min > 0
         AND estimativa_minutos_max >= estimativa_minutos_min
+    ),
+    CONSTRAINT ck_batedeiras_documento CHECK (
+        (documento_tipo = 'CPF' AND CHAR_LENGTH(documento) = 11)
+        OR (documento_tipo = 'CNPJ' AND CHAR_LENGTH(documento) = 14)
+    ),
+    CONSTRAINT ck_batedeiras_conta_pagamento CHECK (
+        conta_pagamento_status = 'NAO_CADASTRADA' OR conta_pagamento_id IS NOT NULL
     )
 ) ENGINE = InnoDB;
 
@@ -151,6 +199,8 @@ CREATE TABLE batedeiras_bairros (
     batedeira_id BIGINT UNSIGNED NOT NULL,
     bairro_id BIGINT UNSIGNED NOT NULL,
     taxa_entrega_centavos INT UNSIGNED NOT NULL DEFAULT 0,
+    estimativa_minutos_min SMALLINT UNSIGNED NOT NULL,
+    estimativa_minutos_max SMALLINT UNSIGNED NOT NULL,
     ativo BOOLEAN NOT NULL DEFAULT TRUE,
 
     CONSTRAINT pk_batedeiras_bairros PRIMARY KEY (id),
@@ -158,7 +208,11 @@ CREATE TABLE batedeiras_bairros (
     CONSTRAINT fk_batedeiras_bairros_batedeira FOREIGN KEY (batedeira_id)
         REFERENCES batedeiras (id) ON UPDATE RESTRICT ON DELETE CASCADE,
     CONSTRAINT fk_batedeiras_bairros_bairro FOREIGN KEY (bairro_id)
-        REFERENCES bairros (id) ON UPDATE RESTRICT ON DELETE RESTRICT
+        REFERENCES bairros (id) ON UPDATE RESTRICT ON DELETE RESTRICT,
+    CONSTRAINT ck_batedeiras_bairros_estimativa CHECK (
+        estimativa_minutos_min > 0
+        AND estimativa_minutos_max >= estimativa_minutos_min
+    )
 ) ENGINE = InnoDB;
 
 CREATE INDEX idx_batedeiras_bairros_busca
@@ -220,11 +274,11 @@ CREATE TABLE pedidos (
     batedeira_id BIGINT UNSIGNED NOT NULL,
     endereco_cliente_id BIGINT UNSIGNED NULL,
     status ENUM(
-        'AGUARDANDO_ACEITE', 'ACEITO', 'EM_PREPARO', 'PRONTO',
-        'SAIU_PARA_ENTREGA', 'ENTREGUE', 'RECUSADO', 'EXPIRADO',
+        'AGUARDANDO_ACEITE', 'ACEITO', 'AGUARDANDO_PAGAMENTO', 'EM_PREPARO',
+        'PRONTO', 'SAIU_PARA_ENTREGA', 'ENTREGUE', 'RECUSADO', 'EXPIRADO',
         'CANCELADO', 'FALHA_NA_ENTREGA'
     ) NOT NULL DEFAULT 'AGUARDANDO_ACEITE',
-    forma_pagamento ENUM('DINHEIRO', 'PIX_NA_ENTREGA') NOT NULL,
+    forma_pagamento ENUM('DINHEIRO', 'PIX') NULL,
     subtotal_centavos INT UNSIGNED NOT NULL,
     taxa_entrega_centavos INT UNSIGNED NOT NULL,
     total_centavos INT UNSIGNED NOT NULL,
@@ -236,9 +290,11 @@ CREATE TABLE pedidos (
     endereco_snapshot VARCHAR(255) NOT NULL,
     bairro_snapshot VARCHAR(100) NOT NULL,
     referencia_snapshot VARCHAR(255) NULL,
+    telefone_snapshot VARCHAR(20) NOT NULL,
     criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     expira_aceite_em TIMESTAMP NOT NULL,
     aceito_em TIMESTAMP NULL,
+    escolha_pagamento_expira_em TIMESTAMP NULL,
     finalizado_em TIMESTAMP NULL,
     atualizado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
@@ -264,7 +320,16 @@ CREATE TABLE pedidos (
         estimativa_minutos_min > 0
         AND estimativa_minutos_max >= estimativa_minutos_min
     ),
-    CONSTRAINT ck_pedidos_expiracao_aceite CHECK (expira_aceite_em > criado_em)
+    CONSTRAINT ck_pedidos_expiracao_aceite CHECK (expira_aceite_em > criado_em),
+    CONSTRAINT ck_pedidos_forma_pagamento CHECK (
+        (status NOT IN ('AGUARDANDO_PAGAMENTO', 'EM_PREPARO', 'PRONTO',
+                        'SAIU_PARA_ENTREGA', 'ENTREGUE', 'FALHA_NA_ENTREGA')
+         OR forma_pagamento IS NOT NULL)
+        AND (status <> 'AGUARDANDO_PAGAMENTO' OR forma_pagamento = 'PIX')
+    ),
+    CONSTRAINT ck_pedidos_escolha_pagamento CHECK (
+        status <> 'ACEITO' OR escolha_pagamento_expira_em IS NOT NULL
+    )
 ) ENGINE = InnoDB;
 
 CREATE INDEX idx_pedidos_cliente_criacao
@@ -273,6 +338,8 @@ CREATE INDEX idx_pedidos_batedeira_fila
     ON pedidos (batedeira_id, status, criado_em);
 CREATE INDEX idx_pedidos_expiracao
     ON pedidos (status, expira_aceite_em);
+CREATE INDEX idx_pedidos_expiracao_escolha_pagamento
+    ON pedidos (status, escolha_pagamento_expira_em);
 
 CREATE TABLE itens_pedido (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -309,16 +376,18 @@ CREATE TABLE eventos_pedido (
     tipo ENUM(
         'PEDIDO_CRIADO', 'STATUS_ALTERADO', 'PEDIDO_RECUSADO',
         'PEDIDO_CANCELADO', 'MENSAGEM_OPERACIONAL',
-        'INTERVENCAO_ADMINISTRATIVA'
+        'INTERVENCAO_ADMINISTRATIVA', 'PAGAMENTO_ESCOLHIDO',
+        'PAGAMENTO_CONFIRMADO', 'PAGAMENTO_EXPIRADO', 'ESTORNO_REGISTRADO',
+        'CONTESTACAO_ABERTA', 'CONTESTACAO_DECIDIDA'
     ) NOT NULL,
     status_anterior ENUM(
-        'AGUARDANDO_ACEITE', 'ACEITO', 'EM_PREPARO', 'PRONTO',
-        'SAIU_PARA_ENTREGA', 'ENTREGUE', 'RECUSADO', 'EXPIRADO',
+        'AGUARDANDO_ACEITE', 'ACEITO', 'AGUARDANDO_PAGAMENTO', 'EM_PREPARO',
+        'PRONTO', 'SAIU_PARA_ENTREGA', 'ENTREGUE', 'RECUSADO', 'EXPIRADO',
         'CANCELADO', 'FALHA_NA_ENTREGA'
     ) NULL,
     status_novo ENUM(
-        'AGUARDANDO_ACEITE', 'ACEITO', 'EM_PREPARO', 'PRONTO',
-        'SAIU_PARA_ENTREGA', 'ENTREGUE', 'RECUSADO', 'EXPIRADO',
+        'AGUARDANDO_ACEITE', 'ACEITO', 'AGUARDANDO_PAGAMENTO', 'EM_PREPARO',
+        'PRONTO', 'SAIU_PARA_ENTREGA', 'ENTREGUE', 'RECUSADO', 'EXPIRADO',
         'CANCELADO', 'FALHA_NA_ENTREGA'
     ) NULL,
     motivo VARCHAR(255) NULL,
@@ -341,6 +410,134 @@ CREATE TABLE eventos_pedido (
 
 CREATE INDEX idx_eventos_pedido_linha_tempo
     ON eventos_pedido (pedido_id, criado_em);
+
+CREATE TABLE pagamentos (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    pedido_id BIGINT UNSIGNED NOT NULL,
+    provedor VARCHAR(30) NOT NULL,
+    provedor_pagamento_id VARCHAR(100) NULL,
+    status ENUM('PENDENTE', 'CONFIRMADO', 'EXPIRADO', 'ESTORNADO') NOT NULL DEFAULT 'PENDENTE',
+    valor_centavos INT UNSIGNED NOT NULL,
+    expira_em TIMESTAMP NOT NULL,
+    confirmado_em TIMESTAMP NULL,
+    criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    atualizado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT pk_pagamentos PRIMARY KEY (id),
+    CONSTRAINT uq_pagamentos_pedido UNIQUE (pedido_id),
+    CONSTRAINT uq_pagamentos_provedor_id UNIQUE (provedor, provedor_pagamento_id),
+    CONSTRAINT fk_pagamentos_pedido FOREIGN KEY (pedido_id)
+        REFERENCES pedidos (id) ON UPDATE RESTRICT ON DELETE RESTRICT,
+    CONSTRAINT ck_pagamentos_valor CHECK (valor_centavos > 0),
+    CONSTRAINT ck_pagamentos_expiracao CHECK (expira_em > criado_em),
+    CONSTRAINT ck_pagamentos_confirmacao CHECK (
+        status NOT IN ('CONFIRMADO', 'ESTORNADO') OR confirmado_em IS NOT NULL
+    )
+) ENGINE = InnoDB;
+
+CREATE INDEX idx_pagamentos_expiracao ON pagamentos (status, expira_em);
+CREATE INDEX idx_pagamentos_confirmacao ON pagamentos (confirmado_em);
+
+CREATE TABLE contestacoes (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    pedido_id BIGINT UNSIGNED NOT NULL,
+    cliente_id BIGINT UNSIGNED NOT NULL,
+    motivo ENUM(
+        'PRODUTO_MAU_ESTADO', 'ENTREGA_NAO_RECEBIDA', 'PEDIDO_DIFERENTE',
+        'PIX_SEM_ANDAMENTO_OU_ESTORNO_NAO_REALIZADO', 'VALOR_DIFERENTE'
+    ) NOT NULL,
+    descricao VARCHAR(500) NULL,
+    status ENUM('ABERTA', 'PROCEDENTE', 'IMPROCEDENTE') NOT NULL DEFAULT 'ABERTA',
+    responder_ate TIMESTAMP NOT NULL,
+    primeira_resposta_em TIMESTAMP NULL,
+    decidida_por BIGINT UNSIGNED NULL,
+    decidida_em TIMESTAMP NULL,
+    decisao VARCHAR(500) NULL,
+    criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    pedido_aberto_id BIGINT UNSIGNED
+        GENERATED ALWAYS AS (IF(status = 'ABERTA', pedido_id, NULL)) STORED,
+
+    CONSTRAINT pk_contestacoes PRIMARY KEY (id),
+    CONSTRAINT uq_contestacoes_aberta_por_pedido UNIQUE (pedido_aberto_id),
+    CONSTRAINT fk_contestacoes_pedido FOREIGN KEY (pedido_id)
+        REFERENCES pedidos (id) ON UPDATE RESTRICT ON DELETE RESTRICT,
+    CONSTRAINT fk_contestacoes_cliente FOREIGN KEY (cliente_id)
+        REFERENCES usuarios (id) ON UPDATE RESTRICT ON DELETE RESTRICT,
+    CONSTRAINT fk_contestacoes_decisor FOREIGN KEY (decidida_por)
+        REFERENCES usuarios (id) ON UPDATE RESTRICT ON DELETE RESTRICT,
+    CONSTRAINT ck_contestacoes_prazo CHECK (responder_ate > criado_em),
+    CONSTRAINT ck_contestacoes_decisao CHECK (
+        status = 'ABERTA'
+        OR (decidida_por IS NOT NULL AND decidida_em IS NOT NULL AND decisao IS NOT NULL)
+    )
+) ENGINE = InnoDB;
+
+CREATE INDEX idx_contestacoes_fila ON contestacoes (status, responder_ate);
+CREATE INDEX idx_contestacoes_pedido ON contestacoes (pedido_id);
+
+CREATE TABLE estornos (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    pagamento_id BIGINT UNSIGNED NOT NULL,
+    contestacao_id BIGINT UNSIGNED NULL,
+    origem ENUM('CANCELAMENTO_PEDIDO', 'FALHA_ENTREGA') NOT NULL,
+    valor_centavos INT UNSIGNED NOT NULL,
+    prazo_em TIMESTAMP NOT NULL,
+    status ENUM('PENDENTE', 'CONCLUIDO', 'FALHOU') NOT NULL DEFAULT 'PENDENTE',
+    usuario_id BIGINT UNSIGNED NULL,
+    provedor_estorno_id VARCHAR(100) NULL,
+    concluido_em TIMESTAMP NULL,
+    criado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT pk_estornos PRIMARY KEY (id),
+    CONSTRAINT fk_estornos_pagamento FOREIGN KEY (pagamento_id)
+        REFERENCES pagamentos (id) ON UPDATE RESTRICT ON DELETE RESTRICT,
+    CONSTRAINT fk_estornos_contestacao FOREIGN KEY (contestacao_id)
+        REFERENCES contestacoes (id) ON UPDATE RESTRICT ON DELETE RESTRICT,
+    CONSTRAINT fk_estornos_usuario FOREIGN KEY (usuario_id)
+        REFERENCES usuarios (id) ON UPDATE RESTRICT ON DELETE RESTRICT,
+    CONSTRAINT ck_estornos_valor CHECK (valor_centavos > 0),
+    CONSTRAINT ck_estornos_conclusao CHECK (
+        status <> 'CONCLUIDO' OR (concluido_em IS NOT NULL AND usuario_id IS NOT NULL)
+    )
+) ENGINE = InnoDB;
+
+CREATE INDEX idx_estornos_pagamento ON estornos (pagamento_id);
+CREATE INDEX idx_estornos_prazo ON estornos (status, prazo_em);
+CREATE INDEX idx_estornos_conclusao ON estornos (concluido_em);
+
+CREATE TABLE eventos_webhook (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    pagamento_id BIGINT UNSIGNED NULL,
+    provedor VARCHAR(30) NOT NULL,
+    evento_externo_id VARCHAR(100) NOT NULL,
+    tipo VARCHAR(100) NOT NULL,
+    assinatura_valida BOOLEAN NOT NULL,
+    recebido_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    processado_em TIMESTAMP NULL,
+
+    CONSTRAINT pk_eventos_webhook PRIMARY KEY (id),
+    -- A assinatura entra na chave para que um evento forjado com o mesmo identificador
+    -- não bloqueie o evento legítimo.
+    CONSTRAINT uq_eventos_webhook_evento UNIQUE (provedor, evento_externo_id, assinatura_valida),
+    CONSTRAINT fk_eventos_webhook_pagamento FOREIGN KEY (pagamento_id)
+        REFERENCES pagamentos (id) ON UPDATE RESTRICT ON DELETE RESTRICT
+) ENGINE = InnoDB;
+
+CREATE INDEX idx_eventos_webhook_pagamento ON eventos_webhook (pagamento_id, recebido_em);
+
+-- Linha única com a configuração da plataforma (contato de suporte, PRD §8.3).
+CREATE TABLE configuracoes_plataforma (
+    id TINYINT UNSIGNED NOT NULL,
+    email_suporte VARCHAR(254) NULL,
+    atualizado_por BIGINT UNSIGNED NOT NULL,
+    atualizado_em TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT pk_configuracoes_plataforma PRIMARY KEY (id),
+    CONSTRAINT fk_configuracoes_usuario FOREIGN KEY (atualizado_por)
+        REFERENCES usuarios (id) ON UPDATE RESTRICT ON DELETE RESTRICT,
+    CONSTRAINT ck_configuracoes_linha_unica CHECK (id = 1)
+) ENGINE = InnoDB;
 
 CREATE TABLE eventos_auditoria (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,

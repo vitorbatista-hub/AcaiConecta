@@ -11,3 +11,6 @@ AGENTS.md
 # Arquivos do sistema operacional
 .DS_Store
 Thumbs.db
+
+# Credenciais locais (nunca versionar)
+credenciais_acaiconecta.txt

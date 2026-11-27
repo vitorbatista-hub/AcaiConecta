@@ -1,0 +1,2 @@
+# Não edite à mão. O provedor é fixo para este projeto (MySQL).
+provider = "mysql"

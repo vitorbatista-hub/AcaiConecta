@@ -1,0 +1,503 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model bairros {
+  id                 BigInt               @id @default(autoincrement()) @db.UnsignedBigInt
+  nome               String               @unique(map: "uq_bairros_nome") @db.VarChar(100)
+  nome_alternativo   String?              @db.VarChar(100)
+  ativo              Boolean              @default(true)
+  criado_em          DateTime             @default(now()) @db.Timestamp(0)
+  atualizado_em      DateTime             @default(now()) @db.Timestamp(0)
+  batedeiras         batedeiras[]
+  batedeiras_bairros batedeiras_bairros[]
+  enderecos_clientes enderecos_clientes[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model batedeiras {
+  id                     BigInt                            @id @default(autoincrement()) @db.UnsignedBigInt
+  responsavel_id         BigInt                            @unique(map: "uq_batedeiras_responsavel") @db.UnsignedBigInt
+  nome                   String                            @db.VarChar(150)
+  descricao              String?                           @db.VarChar(500)
+  telefone_operacional   String?                           @db.VarChar(20)
+  imagem_url             String?                           @db.VarChar(2048)
+  endereco               String                            @db.VarChar(255)
+  bairro_id              BigInt                            @db.UnsignedBigInt
+  ponto_referencia       String?                           @db.VarChar(255)
+  documento_tipo         batedeiras_documento_tipo
+  documento              String                            @db.VarChar(14)
+  status                 batedeiras_status                 @default(EM_ANALISE)
+  aberta                 Boolean                           @default(false)
+  entrega_disponivel     Boolean                           @default(false)
+  estimativa_minutos_min Int                               @db.UnsignedSmallInt
+  estimativa_minutos_max Int                               @db.UnsignedSmallInt
+  conta_pagamento_id     String?                           @unique(map: "uq_batedeiras_conta_pagamento") @db.VarChar(100)
+  conta_pagamento_status batedeiras_conta_pagamento_status @default(NAO_CADASTRADA)
+  criado_em              DateTime                          @default(now()) @db.Timestamp(0)
+  atualizado_em          DateTime                          @default(now()) @db.Timestamp(0)
+  bairros                bairros                           @relation(fields: [bairro_id], references: [id], onUpdate: Restrict, map: "fk_batedeiras_bairro")
+  usuarios               usuarios                          @relation(fields: [responsavel_id], references: [id], onUpdate: Restrict, map: "fk_batedeiras_responsavel")
+  batedeiras_bairros     batedeiras_bairros[]
+  horarios_funcionamento horarios_funcionamento[]
+  pedidos                pedidos[]
+  produtos               produtos[]
+
+  @@index([bairro_id], map: "idx_batedeiras_bairro")
+  @@index([status, aberta, entrega_disponivel], map: "idx_batedeiras_status_disponibilidade")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model batedeiras_bairros {
+  id                     BigInt     @id @default(autoincrement()) @db.UnsignedBigInt
+  batedeira_id           BigInt     @db.UnsignedBigInt
+  bairro_id              BigInt     @db.UnsignedBigInt
+  taxa_entrega_centavos  Int        @default(0) @db.UnsignedInt
+  estimativa_minutos_min Int        @db.UnsignedSmallInt
+  estimativa_minutos_max Int        @db.UnsignedSmallInt
+  ativo                  Boolean    @default(true)
+  bairros                bairros    @relation(fields: [bairro_id], references: [id], onUpdate: Restrict, map: "fk_batedeiras_bairros_bairro")
+  batedeiras             batedeiras @relation(fields: [batedeira_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_batedeiras_bairros_batedeira")
+
+  @@unique([batedeira_id, bairro_id], map: "uq_batedeiras_bairros")
+  @@index([bairro_id, ativo], map: "idx_batedeiras_bairros_busca")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model contestacoes {
+  id                                           BigInt              @id @default(autoincrement()) @db.UnsignedBigInt
+  pedido_id                                    BigInt              @db.UnsignedBigInt
+  cliente_id                                   BigInt              @db.UnsignedBigInt
+  motivo                                       contestacoes_motivo
+  descricao                                    String?             @db.VarChar(500)
+  status                                       contestacoes_status @default(ABERTA)
+  responder_ate                                DateTime            @db.Timestamp(0)
+  primeira_resposta_em                         DateTime?           @db.Timestamp(0)
+  decidida_por                                 BigInt?             @db.UnsignedBigInt
+  decidida_em                                  DateTime?           @db.Timestamp(0)
+  decisao                                      String?             @db.VarChar(500)
+  criado_em                                    DateTime            @default(now()) @db.Timestamp(0)
+  pedido_aberto_id                             BigInt?             @unique(map: "uq_contestacoes_aberta_por_pedido") @db.UnsignedBigInt
+  usuarios_contestacoes_cliente_idTousuarios   usuarios            @relation("contestacoes_cliente_idTousuarios", fields: [cliente_id], references: [id], onUpdate: Restrict, map: "fk_contestacoes_cliente")
+  usuarios_contestacoes_decidida_porTousuarios usuarios?           @relation("contestacoes_decidida_porTousuarios", fields: [decidida_por], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_contestacoes_decisor")
+  pedidos                                      pedidos             @relation(fields: [pedido_id], references: [id], onUpdate: Restrict, map: "fk_contestacoes_pedido")
+  estornos                                     estornos[]
+
+  @@index([cliente_id], map: "fk_contestacoes_cliente")
+  @@index([decidida_por], map: "fk_contestacoes_decisor")
+  @@index([status, responder_ate], map: "idx_contestacoes_fila")
+  @@index([pedido_id], map: "idx_contestacoes_pedido")
+}
+
+model enderecos_clientes {
+  id               BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  cliente_id       BigInt    @db.UnsignedBigInt
+  logradouro       String    @db.VarChar(180)
+  numero           String    @db.VarChar(20)
+  complemento      String?   @db.VarChar(100)
+  bairro_id        BigInt    @db.UnsignedBigInt
+  ponto_referencia String?   @db.VarChar(255)
+  principal        Boolean   @default(false)
+  ativo            Boolean   @default(true)
+  criado_em        DateTime  @default(now()) @db.Timestamp(0)
+  atualizado_em    DateTime  @default(now()) @db.Timestamp(0)
+  bairros          bairros   @relation(fields: [bairro_id], references: [id], onUpdate: Restrict, map: "fk_enderecos_bairro")
+  usuarios         usuarios  @relation(fields: [cliente_id], references: [id], onUpdate: Restrict, map: "fk_enderecos_cliente")
+  pedidos          pedidos[]
+
+  @@index([bairro_id], map: "fk_enderecos_bairro")
+  @@index([cliente_id, ativo, principal], map: "idx_enderecos_cliente")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model estornos {
+  id                  BigInt          @id @default(autoincrement()) @db.UnsignedBigInt
+  pagamento_id        BigInt          @db.UnsignedBigInt
+  contestacao_id      BigInt?         @db.UnsignedBigInt
+  origem              estornos_origem
+  valor_centavos      Int             @db.UnsignedInt
+  prazo_em            DateTime        @db.Timestamp(0)
+  status              estornos_status @default(PENDENTE)
+  usuario_id          BigInt?         @db.UnsignedBigInt
+  provedor_estorno_id String?         @db.VarChar(100)
+  concluido_em        DateTime?       @db.Timestamp(0)
+  criado_em           DateTime        @default(now()) @db.Timestamp(0)
+  contestacoes        contestacoes?   @relation(fields: [contestacao_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_estornos_contestacao")
+  pagamentos          pagamentos      @relation(fields: [pagamento_id], references: [id], onUpdate: Restrict, map: "fk_estornos_pagamento")
+  usuarios            usuarios?       @relation(fields: [usuario_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_estornos_usuario")
+
+  @@index([contestacao_id], map: "fk_estornos_contestacao")
+  @@index([usuario_id], map: "fk_estornos_usuario")
+  @@index([concluido_em], map: "idx_estornos_conclusao")
+  @@index([pagamento_id], map: "idx_estornos_pagamento")
+  @@index([status, prazo_em], map: "idx_estornos_prazo")
+}
+
+model eventos_auditoria {
+  id            BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  usuario_id    BigInt   @db.UnsignedBigInt
+  acao          String   @db.VarChar(100)
+  entidade_tipo String   @db.VarChar(100)
+  entidade_id   BigInt   @db.UnsignedBigInt
+  detalhes      Json?
+  criado_em     DateTime @default(now()) @db.Timestamp(0)
+  usuarios      usuarios @relation(fields: [usuario_id], references: [id], onUpdate: Restrict, map: "fk_eventos_auditoria_usuario")
+
+  @@index([entidade_tipo, entidade_id, criado_em], map: "idx_eventos_auditoria_entidade")
+  @@index([usuario_id, criado_em], map: "idx_eventos_auditoria_usuario")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model eventos_pedido {
+  id              BigInt                          @id @default(autoincrement()) @db.UnsignedBigInt
+  pedido_id       BigInt                          @db.UnsignedBigInt
+  usuario_id      BigInt?                         @db.UnsignedBigInt
+  origem_processo String?                         @db.VarChar(100)
+  tipo            eventos_pedido_tipo
+  status_anterior eventos_pedido_status_anterior?
+  status_novo     eventos_pedido_status_novo?
+  motivo          String?                         @db.VarChar(255)
+  mensagem        String?                         @db.VarChar(500)
+  criado_em       DateTime                        @default(now()) @db.Timestamp(0)
+  pedidos         pedidos                         @relation(fields: [pedido_id], references: [id], onUpdate: Restrict, map: "fk_eventos_pedido")
+  usuarios        usuarios?                       @relation(fields: [usuario_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_eventos_usuario")
+
+  @@index([usuario_id], map: "fk_eventos_usuario")
+  @@index([pedido_id, criado_em], map: "idx_eventos_pedido_linha_tempo")
+}
+
+model eventos_webhook {
+  id                BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
+  pagamento_id      BigInt?     @db.UnsignedBigInt
+  provedor          String      @db.VarChar(30)
+  evento_externo_id String      @db.VarChar(100)
+  tipo              String      @db.VarChar(100)
+  assinatura_valida Boolean
+  recebido_em       DateTime    @default(now()) @db.Timestamp(0)
+  processado_em     DateTime?   @db.Timestamp(0)
+  pagamentos        pagamentos? @relation(fields: [pagamento_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "fk_eventos_webhook_pagamento")
+
+  @@unique([provedor, evento_externo_id, assinatura_valida], map: "uq_eventos_webhook_evento")
+  @@index([pagamento_id, recebido_em], map: "idx_eventos_webhook_pagamento")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model horarios_funcionamento {
+  id              BigInt     @id @default(autoincrement()) @db.UnsignedBigInt
+  batedeira_id    BigInt     @db.UnsignedBigInt
+  dia_semana      Int        @db.UnsignedTinyInt
+  hora_abertura   DateTime   @db.Time(0)
+  hora_fechamento DateTime   @db.Time(0)
+  ativo           Boolean    @default(true)
+  batedeiras      batedeiras @relation(fields: [batedeira_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_horarios_batedeira")
+
+  @@unique([batedeira_id, dia_semana, hora_abertura, hora_fechamento], map: "uq_horarios_intervalo")
+  @@index([batedeira_id, dia_semana, ativo], map: "idx_horarios_batedeira_dia")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model itens_pedido {
+  id                          BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  pedido_id                   BigInt    @db.UnsignedBigInt
+  produto_id                  BigInt?   @db.UnsignedBigInt
+  nome_produto_snapshot       String    @db.VarChar(150)
+  unidade_snapshot            String    @db.VarChar(50)
+  volume_unitario_ml_snapshot Int       @db.UnsignedSmallInt
+  preco_unitario_centavos     Int       @db.UnsignedInt
+  quantidade                  Int       @db.UnsignedSmallInt
+  subtotal_centavos           Int       @db.UnsignedInt
+  observacao                  String?   @db.VarChar(300)
+  pedidos                     pedidos   @relation(fields: [pedido_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_itens_pedido_pedido")
+  produtos                    produtos? @relation(fields: [produto_id], references: [id], onUpdate: Restrict, map: "fk_itens_pedido_produto")
+
+  @@index([produto_id], map: "fk_itens_pedido_produto")
+  @@index([pedido_id], map: "idx_itens_pedido_pedido")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model pagamentos {
+  id                    BigInt            @id @default(autoincrement()) @db.UnsignedBigInt
+  pedido_id             BigInt            @unique(map: "uq_pagamentos_pedido") @db.UnsignedBigInt
+  provedor              String            @db.VarChar(30)
+  provedor_pagamento_id String?           @db.VarChar(100)
+  status                pagamentos_status @default(PENDENTE)
+  valor_centavos        Int               @db.UnsignedInt
+  expira_em             DateTime          @db.Timestamp(0)
+  confirmado_em         DateTime?         @db.Timestamp(0)
+  criado_em             DateTime          @default(now()) @db.Timestamp(0)
+  atualizado_em         DateTime          @default(now()) @db.Timestamp(0)
+  estornos              estornos[]
+  eventos_webhook       eventos_webhook[]
+  pedidos               pedidos           @relation(fields: [pedido_id], references: [id], onUpdate: Restrict, map: "fk_pagamentos_pedido")
+
+  @@unique([provedor, provedor_pagamento_id], map: "uq_pagamentos_provedor_id")
+  @@index([confirmado_em], map: "idx_pagamentos_confirmacao")
+  @@index([status, expira_em], map: "idx_pagamentos_expiracao")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model pedidos {
+  id                          BigInt                   @id @default(autoincrement()) @db.UnsignedBigInt
+  codigo                      String                   @unique(map: "uq_pedidos_codigo") @db.VarChar(24)
+  chave_idempotencia          String                   @db.VarChar(64)
+  cliente_id                  BigInt                   @db.UnsignedBigInt
+  batedeira_id                BigInt                   @db.UnsignedBigInt
+  endereco_cliente_id         BigInt?                  @db.UnsignedBigInt
+  status                      pedidos_status           @default(AGUARDANDO_ACEITE)
+  forma_pagamento             pedidos_forma_pagamento?
+  subtotal_centavos           Int                      @db.UnsignedInt
+  taxa_entrega_centavos       Int                      @db.UnsignedInt
+  total_centavos              Int                      @db.UnsignedInt
+  volume_total_ml             Int                      @db.UnsignedInt
+  troco_para_centavos         Int?                     @db.UnsignedInt
+  observacao                  String?                  @db.VarChar(500)
+  estimativa_minutos_min      Int                      @db.UnsignedSmallInt
+  estimativa_minutos_max      Int                      @db.UnsignedSmallInt
+  endereco_snapshot           String                   @db.VarChar(255)
+  bairro_snapshot             String                   @db.VarChar(100)
+  referencia_snapshot         String?                  @db.VarChar(255)
+  telefone_snapshot           String                   @db.VarChar(20)
+  criado_em                   DateTime                 @default(now()) @db.Timestamp(0)
+  expira_aceite_em            DateTime                 @db.Timestamp(0)
+  aceito_em                   DateTime?                @db.Timestamp(0)
+  escolha_pagamento_expira_em DateTime?                @db.Timestamp(0)
+  finalizado_em               DateTime?                @db.Timestamp(0)
+  atualizado_em               DateTime                 @default(now()) @db.Timestamp(0)
+  contestacoes                contestacoes[]
+  eventos_pedido              eventos_pedido[]
+  itens_pedido                itens_pedido[]
+  pagamentos                  pagamentos?
+  batedeiras                  batedeiras               @relation(fields: [batedeira_id], references: [id], onUpdate: Restrict, map: "fk_pedidos_batedeira")
+  usuarios                    usuarios                 @relation(fields: [cliente_id], references: [id], onUpdate: Restrict, map: "fk_pedidos_cliente")
+  enderecos_clientes          enderecos_clientes?      @relation(fields: [endereco_cliente_id], references: [id], onUpdate: Restrict, map: "fk_pedidos_endereco")
+
+  @@unique([cliente_id, chave_idempotencia], map: "uq_pedidos_cliente_idempotencia")
+  @@index([endereco_cliente_id], map: "fk_pedidos_endereco")
+  @@index([batedeira_id, status, criado_em], map: "idx_pedidos_batedeira_fila")
+  @@index([cliente_id, criado_em], map: "idx_pedidos_cliente_criacao")
+  @@index([status, expira_aceite_em], map: "idx_pedidos_expiracao")
+  @@index([status, escolha_pagamento_expira_em], map: "idx_pedidos_expiracao_escolha_pagamento")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model produtos {
+  id                         BigInt         @id @default(autoincrement()) @db.UnsignedBigInt
+  batedeira_id               BigInt         @db.UnsignedBigInt
+  nome                       String         @db.VarChar(150)
+  descricao                  String?        @db.VarChar(500)
+  unidade                    String         @db.VarChar(50)
+  volume_ml                  Int            @db.UnsignedSmallInt
+  preco_centavos             Int            @db.UnsignedInt
+  imagem_url                 String?        @db.VarChar(2048)
+  disponivel                 Boolean        @default(true)
+  exibir_quando_indisponivel Boolean        @default(false)
+  ativo                      Boolean        @default(true)
+  criado_em                  DateTime       @default(now()) @db.Timestamp(0)
+  atualizado_em              DateTime       @default(now()) @db.Timestamp(0)
+  itens_pedido               itens_pedido[]
+  batedeiras                 batedeiras     @relation(fields: [batedeira_id], references: [id], onUpdate: Restrict, map: "fk_produtos_batedeira")
+
+  @@index([batedeira_id, ativo, disponivel], map: "idx_produtos_catalogo")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model sessoes {
+  id           BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  usuario_id   BigInt    @db.UnsignedBigInt
+  token_hash   String    @unique(map: "uq_sessoes_token") @db.Char(64)
+  criado_em    DateTime  @default(now()) @db.Timestamp(0)
+  expira_em    DateTime  @db.Timestamp(0)
+  encerrada_em DateTime? @db.Timestamp(0)
+  usuarios     usuarios  @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_sessoes_usuario")
+
+  @@index([usuario_id, encerrada_em, expira_em], map: "idx_sessoes_usuario_ativas")
+}
+
+model tentativas_login {
+  id          BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  email       String   @db.VarChar(254)
+  origem_hash String   @db.Char(64)
+  sucesso     Boolean
+  criado_em   DateTime @default(now()) @db.Timestamp(0)
+
+  @@index([email, criado_em], map: "idx_tentativas_login_email_janela")
+  @@index([origem_hash, criado_em], map: "idx_tentativas_login_origem_janela")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model usuarios {
+  id                                               BigInt                     @id @default(autoincrement()) @db.UnsignedBigInt
+  nome                                             String                     @db.VarChar(150)
+  email                                            String                     @unique(map: "uq_usuarios_email") @db.VarChar(254)
+  telefone                                         String?                    @db.VarChar(20)
+  senha_hash                                       String                     @db.VarChar(255)
+  tipo                                             usuarios_tipo
+  status                                           usuarios_status            @default(ATIVO)
+  criado_em                                        DateTime                   @default(now()) @db.Timestamp(0)
+  atualizado_em                                    DateTime                   @default(now()) @db.Timestamp(0)
+  batedeiras                                       batedeiras?
+  configuracoes_plataforma                         configuracoes_plataforma[]
+  contestacoes_contestacoes_cliente_idTousuarios   contestacoes[]             @relation("contestacoes_cliente_idTousuarios")
+  contestacoes_contestacoes_decidida_porTousuarios contestacoes[]             @relation("contestacoes_decidida_porTousuarios")
+  enderecos_clientes                               enderecos_clientes[]
+  estornos                                         estornos[]
+  eventos_auditoria                                eventos_auditoria[]
+  eventos_pedido                                   eventos_pedido[]
+  pedidos                                          pedidos[]
+  redefinicoes_senha                               redefinicoes_senha[]
+  sessoes                                          sessoes[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model redefinicoes_senha {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  usuario_id BigInt    @db.UnsignedBigInt
+  token_hash String    @unique(map: "uq_redefinicoes_senha_token") @db.Char(64)
+  criado_em  DateTime  @default(now()) @db.Timestamp(0)
+  expira_em  DateTime  @db.Timestamp(0)
+  usada_em   DateTime? @db.Timestamp(0)
+  usuarios   usuarios  @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "fk_redefinicoes_senha_usuario")
+
+  @@index([usuario_id, usada_em, expira_em], map: "idx_redefinicoes_senha_usuario")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model configuracoes_plataforma {
+  id             Int      @id @db.UnsignedTinyInt
+  email_suporte  String?  @db.VarChar(254)
+  atualizado_por BigInt   @db.UnsignedBigInt
+  atualizado_em  DateTime @default(now()) @db.Timestamp(0)
+  usuarios       usuarios @relation(fields: [atualizado_por], references: [id], onUpdate: Restrict, map: "fk_configuracoes_usuario")
+
+  @@index([atualizado_por], map: "fk_configuracoes_usuario")
+}
+
+enum contestacoes_motivo {
+  PRODUTO_MAU_ESTADO
+  ENTREGA_NAO_RECEBIDA
+  PEDIDO_DIFERENTE
+  PIX_SEM_ANDAMENTO_OU_ESTORNO_NAO_REALIZADO
+  VALOR_DIFERENTE
+}
+
+enum estornos_origem {
+  CANCELAMENTO_PEDIDO
+  FALHA_ENTREGA
+}
+
+enum eventos_pedido_tipo {
+  PEDIDO_CRIADO
+  STATUS_ALTERADO
+  PEDIDO_RECUSADO
+  PEDIDO_CANCELADO
+  MENSAGEM_OPERACIONAL
+  INTERVENCAO_ADMINISTRATIVA
+  PAGAMENTO_ESCOLHIDO
+  PAGAMENTO_CONFIRMADO
+  PAGAMENTO_EXPIRADO
+  ESTORNO_REGISTRADO
+  CONTESTACAO_ABERTA
+  CONTESTACAO_DECIDIDA
+}
+
+enum pagamentos_status {
+  PENDENTE
+  CONFIRMADO
+  EXPIRADO
+  ESTORNADO
+}
+
+enum contestacoes_status {
+  ABERTA
+  PROCEDENTE
+  IMPROCEDENTE
+}
+
+enum eventos_pedido_status_anterior {
+  AGUARDANDO_ACEITE
+  ACEITO
+  AGUARDANDO_PAGAMENTO
+  EM_PREPARO
+  PRONTO
+  SAIU_PARA_ENTREGA
+  ENTREGUE
+  RECUSADO
+  EXPIRADO
+  CANCELADO
+  FALHA_NA_ENTREGA
+}
+
+enum usuarios_tipo {
+  CLIENTE
+  OPERADOR
+  ADMINISTRADOR
+}
+
+enum estornos_status {
+  PENDENTE
+  CONCLUIDO
+  FALHOU
+}
+
+enum eventos_pedido_status_novo {
+  AGUARDANDO_ACEITE
+  ACEITO
+  AGUARDANDO_PAGAMENTO
+  EM_PREPARO
+  PRONTO
+  SAIU_PARA_ENTREGA
+  ENTREGUE
+  RECUSADO
+  EXPIRADO
+  CANCELADO
+  FALHA_NA_ENTREGA
+}
+
+enum pedidos_status {
+  AGUARDANDO_ACEITE
+  ACEITO
+  AGUARDANDO_PAGAMENTO
+  EM_PREPARO
+  PRONTO
+  SAIU_PARA_ENTREGA
+  ENTREGUE
+  RECUSADO
+  EXPIRADO
+  CANCELADO
+  FALHA_NA_ENTREGA
+}
+
+enum usuarios_status {
+  ATIVO
+  BLOQUEADO
+  DESATIVADO
+}
+
+enum pedidos_forma_pagamento {
+  DINHEIRO
+  PIX
+}
+
+enum batedeiras_documento_tipo {
+  CPF
+  CNPJ
+}
+
+enum batedeiras_status {
+  EM_ANALISE
+  ATIVA
+  SUSPENSA
+  DESATIVADA
+}
+
+enum batedeiras_conta_pagamento_status {
+  NAO_CADASTRADA
+  PENDENTE
+  VERIFICADA
+  RECUSADA
+}
