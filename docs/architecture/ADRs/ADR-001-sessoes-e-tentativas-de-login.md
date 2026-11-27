@@ -1,6 +1,6 @@
 # ADR-001 — Sessões e tentativas de login persistidas no banco
 
-**Estado:** Aprovada (DEC-046), **ainda não implementada** em `app/` (DEC-053, DEC-061). A aplicação atual usa cookie assinado e limitação de tentativas em memória, porque não há banco. Esta decisão passa a valer quando a persistência for implementada, com as tabelas `sessoes` e `tentativas_login` do schema 0.8.
+**Estado:** Aprovada (DEC-046) e **implementada** em `app/` desde 25/11/2026 (ADR-006, etapa 2), **exceto** a recusa de senhas comuns ou vazadas (item 6), ainda pendente. A recuperação de acesso passou a ser feita pelo próprio usuário por e-mail (DEC-064), o que substitui a menção à recuperação assistida abaixo.
 **Data:** 2026-09-28
 **Responsável pela decisão:** responsável pelo projeto, a partir de recomendação técnica
 **Relacionados:** PRD 2.7 §16.2 e §17; DEC-023; DEC-035; [`database/schema.sql`](../../../database/schema.sql) 0.7; [arquitetura técnica proposta](../../product/arquitetura-tecnica.md) §7

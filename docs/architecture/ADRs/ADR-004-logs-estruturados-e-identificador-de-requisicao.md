@@ -1,6 +1,6 @@
 # ADR-004 — Logs estruturados, identificador de requisição e redação de dados
 
-**Estado:** Proposta, **não aprovada e não implementada** (o código que a aplicava foi removido com o MVP descartado, DEC-053). Segue como base para a observabilidade da ADR-003; precisa de aprovação antes de ser implementada (DEC-061).
+**Estado:** Aprovada em 26/11/2026 pelo responsável pelo projeto, **ainda não implementada** (o código anterior foi removido com o MVP descartado, DEC-053). Será implementada depois da etapa 5 da ADR-006 e antes de publicar o site.
 **Data:** 2026-11-23
 **Responsável pela decisão:** responsável pelo projeto
 **Relacionados:** PRD 2.7 §17, §18.5 e §23; backlog 1.5 e 7.7; [ADR-003](ADR-003-infraestrutura.md) §4; [arquitetura técnica](../../product/arquitetura-tecnica.md) §10
@@ -9,7 +9,7 @@
 
 O PRD exige registro centralizado de erros, identificação de requisições e pedidos para o suporte e alertas para falhas críticas (§18.5), sem coletar nem expor dados pessoais além do necessário (§17). Sem isso, um erro durante o piloto fica invisível até o usuário reclamar, e um caso relatado por telefone não pode ser ligado ao registro correspondente. A ADR-003 prevê logs estruturados em JSON na saída padrão, coletados pela plataforma, e deixa a escolha de um serviço de rastreamento de erros em aberto.
 
-## Decisão proposta
+## Decisão
 
 1. **Formato.** Uma linha JSON por evento, escrita em `stdout` (informação) e `stderr` (aviso e erro), com `ts`, `nivel`, `evento`, `requisicaoId` e campos próprios do evento. Nível mínimo por `LOG_LEVEL` (`info` por padrão; silencioso nos testes). Sem biblioteca de log nova: a plataforma já coleta a saída padrão.
 2. **Identificador de requisição.** O `proxy` dá a cada requisição um `x-request-id` (UUID), repassa-o ao servidor e o devolve na resposta. Um identificador recebido só é aceito se tiver de 8 a 64 caracteres simples (letras, dígitos e hífen), para impedir injeção de linhas falsas no log.

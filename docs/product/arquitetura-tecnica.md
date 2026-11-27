@@ -83,7 +83,7 @@ Decisão registrada na [ADR-002](../architecture/ADRs/ADR-002-atualizacao-em-tem
 - Sessão de servidor opaca (cookie `httpOnly`), persistida no banco, com token novo a cada login e duração de 30 dias renováveis para cliente e 12 horas para operador e administrador (ADR-001), sem login social (fora do escopo, PRD §16.2).
 - Cadastro do cliente com e-mail e senha; senha sempre armazenada como hash (nunca texto puro) com algoritmo lento (scrypt, argon2id ou bcrypt; a aplicação usa scrypt, DEC-062), mínimo de 8 caracteres e recusa de senhas comuns ou vazadas (ADR-001).
 - Limitação de tentativas de login e encerramento de sessão (PRD §16.2) implementados na camada de domínio, não em serviço terceirizado — volume do piloto não justifica um provedor de identidade externo. Sessões e tentativas ficam no banco, com o token armazenado somente como hash, conforme a [ADR-001](../architecture/ADRs/ADR-001-sessoes-e-tentativas-de-login.md) (tabelas `sessoes` e `tentativas_login`, schema 0.8), com limitação por e-mail e por origem.
-- Recuperação de acesso assistida pelo administrador durante o piloto (PRD §16.2), sem fluxo de "esqueci minha senha" automatizado por e-mail — coerente com a exclusão de e-mail transacional do MVP (DEC-035). O fluxo `/esqueci-senha` de `app/` só funciona em desenvolvimento e fica sem efeito em produção até haver nova decisão (DEC-061).
+- Recuperação de senha pelo próprio usuário, por link de uso único enviado por e-mail (PRD §16.2, DEC-064). O fluxo `/esqueci-senha` de `app/` já gera o link; falta o serviço de e-mail, a escolher antes do piloto.
 
 ## 8. Armazenamento de arquivos (fotos)
 

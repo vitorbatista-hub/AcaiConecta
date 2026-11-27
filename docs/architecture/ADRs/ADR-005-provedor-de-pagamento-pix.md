@@ -1,6 +1,7 @@
 # ADR-005 — Provedor de pagamento Pix
 
 **Estado:** Proposta em elaboração (25/11/2026). **Não aprovada**: a comparação abaixo tem lacunas que só a documentação completa, a conta de teste (sandbox) e uma cotação do provedor fecham. O provedor **não** está escolhido.
+**Adiada:** a escolha fica para antes do piloto, sem contratação agora (DEC-066, 26/11/2026).
 **Data:** 2026-11-25
 **Responsável pela decisão:** responsável pelo projeto, a partir de recomendação técnica
 **Relacionados:** PRD 2.7 §14; DEC-056, DEC-058, DEC-059, DEC-060; backlog 9.1 a 9.8; [ADR-003](ADR-003-infraestrutura.md); [arquitetura técnica](../../product/arquitetura-tecnica.md) §2

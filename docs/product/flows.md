@@ -97,8 +97,8 @@ Este documento transforma as regras do [PRD vigente](PRD.md) e do [registro de d
 
 ### Cadastro e operação do piloto
 
-1. O administrador confirma externamente a elegibilidade de uma batedeira previamente selecionada.
-2. A batedeira se cadastra pelo site (DEC-054), informando CPF ou CNPJ válido (DEC-055) e o operador responsável; a conta nasce em análise. O administrador revisa o cadastro e inicia o cadastro assistido dela no provedor de pagamento, concluído pela própria batedeira. Alvará, licença e documentos de elegibilidade não entram no sistema (DEC-048).
+1. O administrador seleciona as batedeiras do piloto.
+2. A batedeira se cadastra pelo site (DEC-054), informando CPF ou CNPJ válido (DEC-055) e o operador responsável, e envia os documentos exigidos (DEC-065, ainda não implementado); a conta nasce em análise. O administrador confere o cadastro e os documentos e inicia o cadastro assistido dela no provedor de pagamento, concluído pela própria batedeira.
 3. Mantém a lista oficial de bairros urbanos (13 bairros, sem habilitação individual) e revisa perfil, localização e cobertura da batedeira.
 4. Ativa a batedeira quando os requisitos aplicáveis estiverem atendidos, incluindo ao menos um bairro atendido.
 5. Registra em auditoria as ações de ativação, suspensão, reativação e alterações administrativas relevantes.

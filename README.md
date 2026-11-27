@@ -18,7 +18,7 @@ Os trabalhos atuais incluem:
 ## Documentação
 
 - [Aplicação web — execução, acesso da equipe e limitações](app/README.md)
-- [PRD (2.7, aprovado)](docs/product/PRD.md)
+- [PRD (2.8)](docs/product/PRD.md)
 - [Roadmap](docs/product/roadmap.md)
 - [Registro de decisões](docs/product/decisions.md)
 - [Decisões de arquitetura (ADRs)](docs/architecture/ADRs/)
@@ -38,18 +38,18 @@ O produto será validado inicialmente em **Cametá, Pará**, com um grupo pequen
 
 ## Situação da implementação
 
-- Interface: três áreas (cliente, batedeira e administração) com 52 testes sem banco e 39 com banco, tipos e build aprovados. Contas, sessões, batedeiras, catálogo e pedidos usam o MySQL local (etapa 4 de 7 da ADR-006); a administração de contas de cliente (listar, bloquear e reativar) também usa o banco; a sacola, o suporte e as solicitações de recuperação de acesso ainda ficam no navegador; não há provedor de pagamento, estorno nem contestação (Épico 9).
-- Arquitetura técnica: [aprovada](docs/product/arquitetura-tecnica.md) (DEC-046) como alvo, com as ADRs 001 (sessões) e 002 (tempo real) aprovadas e ainda não implementadas em `app/`; a ADR-004 (logs) é proposta e a ADR-003 (infraestrutura) está em revisão (DEC-061).
-- Modelo de dados: schema SQL 0.11 (pagamento, estorno, contestação, bairros por batedeira, CPF/CNPJ da batedeira e redefinição de senha; 25/11/2026, validado em MySQL 8.0), dicionário de dados e [MER inicial](docs/product/mer-eer-inicial.md) alinhados; modelo aprovado na versão 0.7 (DEC-046).
+- Interface: três áreas (cliente, batedeira e administração) com 54 testes sem banco e 41 com banco, tipos e build aprovados. Contas, sessões, batedeiras, catálogo, pedidos, administração, suporte e métricas usam o MySQL local (etapa 5 de 7 da ADR-006); só a sacola fica no navegador. Não há provedor de pagamento, estorno nem contestação (Épico 9, adiado pela DEC-066), serviço de e-mail (DEC-064) nem envio de documentos (DEC-065).
+- Arquitetura técnica: [aprovada](docs/product/arquitetura-tecnica.md) (DEC-046) como alvo; ADR-001 (sessões) implementada em parte, ADR-002 (tempo real) e ADR-004 (logs) aprovadas e não implementadas, ADR-003 (infraestrutura) em revisão, ADR-005 (Pix) adiada e ADR-006 (persistência) em andamento.
+- Modelo de dados: schema SQL 0.12, dicionário de dados e [MER inicial](docs/product/mer-eer-inicial.md) alinhados; modelo aprovado na versão 0.7 (DEC-046).
 - Backlog: [backlog priorizado do MVP](docs/product/backlog-mvp.md) aprovado (DEC-046)
-- Aplicação: o código em [`app/`](app/README.md) deixou de ser protótipo e passou a ser a aplicação (DEC-053). A versão anterior com banco (DEC-051) permanece apenas no histórico do Git. Pendências principais: ADRs do provedor Pix e da persistência/hospedagem, banco de dados e sincronização entre usuários, Épico 9 (pagamento, estorno e contestação), política de privacidade e termos, e hospedagem (ADR-003).
+- Aplicação: o código em [`app/`](app/README.md) deixou de ser protótipo e passou a ser a aplicação (DEC-053). A versão anterior com banco (DEC-051) permanece apenas no histórico do Git. Pendências principais: tempo real, logs, hospedagem (ADR-003), serviço de e-mail, documentos da batedeira, Pix (Épico 9) e política de privacidade e termos.
 - Piloto: pendente
 
 ## Organização do repositório
 
 - `docs/`: documentação vigente de produto, pesquisa, banco de dados e arquitetura (ADRs).
 - `docs/product/archive/`: documentos históricos, sem autoridade sobre os requisitos vigentes.
-- `database/`: schema SQL oficial e modelo visual derivado.
+- `database/`: schema SQL oficial.
 - `app/`: código da aplicação web, com dependências próprias.
 
 As regras de negócio vigentes são as do PRD e de `docs/product/decisions.md`; a interface não as substitui.

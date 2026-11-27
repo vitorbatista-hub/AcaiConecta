@@ -1,7 +1,7 @@
 # Backlog priorizado do MVP — AçaíConecta
 
 **Status:** Aprovado em 28/09/2026 (DEC-046) como ordem de trabalho da Fase 3. Estimativas e divisão em sprints ficam para o planejamento da Fase 3.
-**Base:** [PRD 2.7](PRD.md) §8 (escopo funcional), §19 (histórias e critérios de aceite), §25–26 (critérios de prontidão e de lançamento), [decisions.md](decisions.md), [arquitetura-tecnica.md](arquitetura-tecnica.md) e [mer-eer-inicial.md](mer-eer-inicial.md), e a aplicação em `app/`.
+**Base:** [PRD 2.8](PRD.md) §8 (escopo funcional), §19 (histórias e critérios de aceite), §25–26 (critérios de prontidão e de lançamento), [decisions.md](decisions.md), [arquitetura-tecnica.md](arquitetura-tecnica.md) e [mer-eer-inicial.md](mer-eer-inicial.md), e a aplicação em `app/`.
 
 > **Nota de 25/11/2026 (DEC-053, DEC-061):** a ordem e as prioridades abaixo continuam sendo a referência, mas a aplicação atual em `app/` cobre apenas parte dos itens, sem banco de dados nem tempo real: o acesso por perfil (login, cadastro de cliente e de batedeira, redefinição de senha) e as telas de cliente, operador e administrador existem com pedidos e catálogo no navegador. Itens que dependem de persistência, SSE, logs, backup e hospedagem seguem **pendentes**. Onde o backlog diz "já prototipado", leia "já implementado em `app/`, ainda sem banco": a lógica deve ser portada, não reescrita.
 
@@ -75,11 +75,12 @@ Cada item referencia a história de usuário (US-xx) ou a seção do PRD que o o
 | 5.1 | Cadastro da batedeira (autocadastro pelo site, DEC-054, com CPF/CNPJ, DEC-055) + vínculo de um operador responsável e ativação pelo administrador | P0 | US-05, DEC-033, DEC-054 | Sem isso não existe batedeira nenhuma para operar o piloto. A conta nasce `EM_ANALISE`; a elegibilidade é verificada fora do sistema (DEC-048). |
 | 5.2 | Ativar, suspender e reativar batedeira, com auditoria | P0 | US-05 | Tabela `eventos_auditoria` ([dicionário de dados](../database/data-dictionary.md#eventos_auditoria)). **Feito:** (situação e auditoria no banco em 25/11/2026). |
 | 5.3 | Consultar pedidos e histórico de estados de qualquer batedeira | P1 | PRD §8.3 | |
-| 5.4 | Registrar intervenções de suporte (mensagem, cancelamento administrativo) | P1 | PRD §8.3, §13.4 | Já implementado em `app/` (`/admin?view=pedidos`), portar fluxo e trilha de auditoria. |
+| 5.4 | Registrar intervenções de suporte (mensagem, cancelamento administrativo) e configurar o contato de suporte | P1 | PRD §8.3, §13.4 | **Feito:** intervenções em 25/11/2026 e contato de suporte no banco em 27/11/2026. |
 | 5.5 | Manter a lista oficial de bairros urbanos (13 bairros, `bairros_cameta.txt`), sem habilitação individual | P0 | PRD §8.3, DEC-057 | Pré-requisito de 4.9. |
 | 5.6 | Moderar imagens e informações públicas | P2 | PRD §8.3 | Necessário antes de abrir para batedeiras fora da seleção inicial; não bloqueia o piloto controlado com 3 batedeiras pré-aprovadas. |
-| 5.7 | Painel de métricas do piloto (resposta em 5 min, taxa de aceite, conclusão, cancelamento, recompra) | P1 | PRD §5.2–5.4, §8.3 | Lógica já implementada em `app/lib/order-presentation.ts` (`pilotMetrics`) — migrar o cálculo dos dados do navegador para consulta real ([arquitetura-tecnica.md §10](arquitetura-tecnica.md#10-backup-monitoramento-e-observabilidade)). |
+| 5.7 | Painel de métricas do piloto (resposta em 5 min, taxa de aceite, conclusão, cancelamento, recompra) | P1 | PRD §5.2–5.4, §8.3 | **Feito em parte (27/11/2026):** calculado no servidor; falta medir visitantes e pedidos iniciados (PRD §5.4). |
 | 5.8 | Acesso à trilha de auditoria completa | P1 | PRD §8.3, §18.5 | |
+| 5.9 | Envio de documentos pela batedeira no cadastro e conferência pelo administrador antes da ativação | P1 | DEC-065 | Antes do piloto. Depende da lista de documentos, do armazenamento (ADR-003) e de mudança no schema. |
 
 ## Épico 6 — Atualização em tempo real (transversal)
 
@@ -94,7 +95,7 @@ Cada item referencia a história de usuário (US-xx) ou a seção do PRD que o o
 | 7.1 | Transições de estado como transação atômica no banco | P0 | PRD §18.3, [arquitetura-tecnica.md §11](arquitetura-tecnica.md#11-confiabilidade-e-integridade-de-dados) | Sem isso a corrida operador-aceita/sistema-expira é um bug de dados real, não hipotético. **Feito:** 25/11/2026, com teste de corrida. |
 | 7.2 | Hash de senha com algoritmo lento (scrypt, argon2 ou bcrypt; scrypt, DEC-062) | P0 | PRD §17 | Não negociável mesmo em piloto pequeno — dado pessoal real de cliente e operador. |
 | 7.3 | Limitação de tentativas de login e encerramento de sessão | P1 (**feito para o login em 25/11/2026**) | PRD §16.2, [ADR-001](../architecture/ADRs/ADR-001-sessoes-e-tentativas-de-login.md) | Tabelas `sessoes` e `tentativas_login` (schema 0.8); limitação por e-mail e por origem, conforme a ADR-001. |
-| 7.4 | Recuperação de acesso assistida pelo administrador | P1 | PRD §16.2, DEC-061 | Sem fluxo automatizado por e-mail (fora do MVP, DEC-035). O fluxo `/esqueci-senha` de `app/` só funciona em desenvolvimento (o link vai para o log); em produção a recuperação é assistida até uma nova decisão sobre provedor de e-mail. |
+| 7.4 | Recuperação de senha pelo próprio usuário, por e-mail | P1 | PRD §16.2, DEC-064 | Telas e link de uso único prontos em `app/`; **falta o serviço de e-mail**, obrigatório antes do piloto. A recuperação assistida foi retirada. |
 | 7.8 | Área **Minha conta** nos três perfis (dados pessoais, e-mail, senha, endereços do cliente e cadastro da batedeira) | P1 | DEC-063, PRD §8 | **Feito:** 25/11/2026; telas ainda não verificadas em navegador. |
 | 7.5 | Política de privacidade, termos de uso e finalidade documentada por dado coletado | P1 | PRD §17, §26 | Gate externo (jurídico) — não é trabalho de engenharia, mas é pré-condição do critério de lançamento. Fica por conta do responsável pelo produto/jurídico, não da equipe técnica. |
 | 7.6 | Anonimização de dados pessoais desacoplada do registro operacional do pedido | P2 | PRD §17, [arquitetura-tecnica.md §11](arquitetura-tecnica.md#11-confiabilidade-e-integridade-de-dados) | Necessária antes de excluir qualquer dado de cliente, mas não bloqueia o primeiro pedido do piloto. |
@@ -114,7 +115,7 @@ Itens novos, ainda sem prioridade e ordem aprovadas; dependem do ADR do provedor
 
 | # | Item | Prioridade | Origem | Notas |
 |---|---|---|---|---|
-| 9.1 | ADR do provedor de pagamento (conta conectada, estorno, custo da tarifa no piloto) | P0 | DEC-056, DEC-058 | Gate para os demais itens do épico. [ADR-005](../architecture/ADRs/ADR-005-provedor-de-pagamento-pix.md) em elaboração: comparação feita, provedor não escolhido, prova em sandbox pendente. |
+| 9.1 | ADR do provedor de pagamento (conta conectada, estorno, custo da tarifa no piloto) | P0 | DEC-056, DEC-058, DEC-066 | Gate para os demais itens do épico. [ADR-005](../architecture/ADRs/ADR-005-provedor-de-pagamento-pix.md): comparação feita, provedor não escolhido, prova em sandbox pendente; **adiado para antes do piloto** (DEC-066). |
 | 9.2 | Cadastro assistido da batedeira no provedor, guardando só identificador e status; Pix só após verificada | P0 | PRD §14.4 | |
 | 9.3 | Estado `AGUARDANDO_PAGAMENTO`, expiração em 10 min (escolha da forma e pagamento do Pix) e encerramento sem custo | P0 | PRD §12.2, §14.1 | Máquina de estados centralizada (4.4, 7.1). |
 | 9.4 | Webhook do provedor idempotente, com verificação de assinatura e trilha de auditoria | P0 | PRD §14.1, AGENTS.md | Testes obrigatórios. |

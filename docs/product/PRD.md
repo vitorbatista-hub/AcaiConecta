@@ -4,9 +4,9 @@
 
 **Autor:** Vitor Benedito Ribeiro Batista  
 **Local inicial:** Cametá/PA  
-**Versão:** 2.7
+**Versão:** 2.8
 **Data:** Novembro de 2026  
-**Status:** Aprovado em 25/11/2026 (DEC-060) — Fase 3, Construção do MVP
+**Status:** Aprovado em 25/11/2026 (DEC-060) e revisado em 26/11/2026 por decisões do responsável (DEC-064 a DEC-066) — Fase 3, Construção do MVP  
 **Documento anterior:** [`archive/PRD-v1.md`](archive/PRD-v1.md) (versão 1.0)
 
 ---
@@ -171,6 +171,7 @@ Responsável por cadastrar ou aprovar batedeiras, revisar informações, prestar
 - buscar por nome e filtrar por bairro atendido;
 - consultar perfil, catálogo, preços, horário e estimativa;
 - criar conta com nome, telefone, e-mail e senha;
+- recuperar a senha por e-mail, sem depender do suporte (DEC-064; vale para os três perfis);
 - alterar nome, telefone, e-mail e senha em **Minha conta** (DEC-063);
 - cadastrar até dois endereços de entrega, um principal e um secundário, podendo editá-los, removê-los e alternar o principal (DEC-040);
 - adicionar produtos e quantidades ao pedido;
@@ -186,6 +187,7 @@ Responsável por cadastrar ou aprovar batedeiras, revisar informações, prestar
 
 ### 8.2 Batedeira
 
+- cadastrar-se no site e enviar os documentos exigidos para a ativação (DEC-065);
 - acessar painel protegido;
 - atualizar estado do estabelecimento: aberto ou fechado;
 - atualizar disponibilidade de entrega separadamente;
@@ -202,7 +204,7 @@ Responsável por cadastrar ou aprovar batedeiras, revisar informações, prestar
 
 ### 8.3 Administrador
 
-- revisar os cadastros feitos pelas batedeiras no site (DEC-054) e ativar, suspender e reativar as selecionadas para o piloto;
+- revisar os cadastros e os documentos enviados pelas batedeiras no site (DEC-054, DEC-065) e ativar, suspender e reativar as selecionadas para o piloto;
 - vincular um operador responsável a cada batedeira;
 - consultar pedidos e histórico de estados;
 - prestar suporte e registrar intervenções;
@@ -234,7 +236,6 @@ Responsável por cadastrar ou aprovar batedeiras, revisar informações, prestar
 - múltiplas cidades;
 - múltiplos idiomas;
 - cálculo automático avançado de capacidade;
-- cadastro autônomo e envio de documentos pela batedeira;
 - múltiplos operadores por batedeira;
 - fotografia de entrega;
 - Web Push, SMS e e-mails transacionais de pedidos.
@@ -484,7 +485,7 @@ O dinheiro entra no faturamento quando o pedido é entregue; o Pix entra quando 
 
 ### 14.6 Pontos em aberto
 
-Escolha do provedor (ADR) e quem assume a tarifa depois do piloto (DEC-021, DEC-034). Durante o piloto, a plataforma paga a tarifa e a batedeira não paga comissão nem mensalidade.
+A escolha e a implementação ficam para antes do piloto, sem contratação agora; até lá o sistema opera só com dinheiro na entrega (DEC-066). Escolha do provedor (ADR) e quem assume a tarifa depois do piloto (DEC-021, DEC-034). Durante o piloto, a plataforma paga a tarifa e a batedeira não paga comissão nem mensalidade.
 
 ---
 
@@ -530,7 +531,7 @@ No MVP, cada usuário possuirá um único papel e cada batedeira terá um operad
 ### 16.2 Requisitos mínimos
 
 - cadastro do cliente com e-mail e senha;
-- recuperação de acesso assistida pelo administrador durante o piloto;
+- recuperação de senha pelo próprio usuário, por link de uso único enviado por e-mail (DEC-064); o serviço de e-mail deve estar configurado antes do piloto;
 - limitação de tentativas;
 - encerramento de sessões;
 - bloqueio de conta;
@@ -545,7 +546,7 @@ A estratégia de sessões e de limitação de tentativas está registrada na [AD
 
 ## 17. Dados pessoais, segurança e privacidade
 
-O produto poderá tratar nome, telefone, e-mail, endereço e histórico de pedidos. Dados mínimos do operador responsável são informados no cadastro da batedeira (DEC-054); o CPF/CNPJ segue a DEC-055.
+O produto poderá tratar nome, telefone, e-mail, endereço e histórico de pedidos. Dados mínimos do operador responsável são informados no cadastro da batedeira (DEC-054); o CPF/CNPJ segue a DEC-055 e os documentos enviados, a DEC-065.
 
 Antes do piloto público deverão existir:
 
@@ -567,14 +568,16 @@ Antes do piloto público deverão existir:
 - endereço será solicitado somente quando necessário ao pedido;
 - dados bancários, documentos de pagamento e chave Pix da batedeira são coletados apenas pelo provedor de pagamento, nunca pela plataforma; o CPF/CNPJ do cadastro segue a DEC-055;
 - dados de pagamento e contestação entram na política de privacidade e nos termos (DEC-048);
+- os documentos da batedeira (DEC-065) terão acesso restrito ao responsável e ao administrador, com prazo de guarda definido antes da implementação;
 - dados não necessários à validação serão adiados;
 - ambientes de teste não deverão utilizar dados pessoais reais.
 
 ### 17.2 Elegibilidade da batedeira
 
 - somente as batedeiras previamente selecionadas participarão do piloto;
-- verificações jurídicas e administrativas aplicáveis ocorrerão fora do sistema antes da ativação;
-- o administrador registrará apenas o resultado da elegibilidade, sem copiar documentos para a plataforma;
+- a batedeira enviará os documentos no cadastro, e o administrador os conferirá antes da ativação (DEC-065); enquanto o envio não for implementado, a conferência ocorre fora do sistema e o administrador registra apenas o resultado;
+- a regularidade jurídica, sanitária e administrativa continua sendo responsabilidade da batedeira (DEC-048);
+- a lista de documentos e os critérios de conferência serão definidos antes da implementação;
 - os requisitos locais deverão ser confirmados com os órgãos competentes antes do piloto.
 
 ---
@@ -838,7 +841,8 @@ Este documento adota oficialmente as seis fases descritas em [`roadmap.md`](road
 - comunicação: mensagens predefinidas, linha do tempo e suporte humano;
 - cobrança: piloto gratuito, sem comissão ou mensalidade;
 - pagamento: dinheiro na entrega ou Pix on-line confirmado pelo provedor; estorno em até 24 h e contestação decidida pelo administrador (DEC-056, DEC-058);
-- cadastro de batedeira: feito pela própria batedeira no site, com CPF/CNPJ e um operador responsável, e ativação pelo administrador (DEC-054, DEC-055);
+- cadastro de batedeira: feito pela própria batedeira no site, com CPF/CNPJ, documentos e um operador responsável, e ativação pelo administrador (DEC-054, DEC-055, DEC-065);
+- recuperação de senha: pelo próprio usuário, por e-mail (DEC-064);
 - entrega: sem fotografia; contestação formal decidida pelo administrador (DEC-058).
 
 ### 24.2 Gates externos
@@ -886,7 +890,9 @@ O MVP estará pronto para implementação quando:
 - procedimento para incidentes e cancelamentos definido;
 - testes de pedido, expiração, recusa, cancelamento e falha de entrega aprovados;
 - pagamento em dinheiro (com troco) e Pix, incluindo expiração, webhook repetido, estorno e contestação, aprovados nos testes de ponta a ponta;
-- provedor escolhido em ADR e cadastro assistido da batedeira testado.
+- provedor escolhido em ADR e cadastro assistido da batedeira testado;
+- envio de e-mail de recuperação de senha configurado e testado (DEC-064);
+- envio e conferência dos documentos da batedeira testados (DEC-065).
 
 ---
 
@@ -913,3 +919,4 @@ O MVP estará pronto para implementação quando:
 | 2.5 | Setembro de 2026 | MVP reduzido ao núcleo de descoberta e pedidos; pagamentos passam a ocorrer na entrega e integrações financeiras, documentação, fotografia e contestação saem do escopo. |
 | 2.6 | Setembro de 2026 | Incorporadas a DEC-040 (até dois endereços), a DEC-042 (tamanhos de 500 ml e 1 L), a DEC-043 (faturamento do dia) e a ADR-001 (sessões e tentativas de login); papéis de administrador e batedeira na configuração de bairros esclarecidos; próximos passos atualizados. Aprovada em 28/09/2026, depois dos testes de usabilidade (DEC-044, DEC-045). |
 | 2.7 | Novembro de 2026 | Aprovada em 25/11/2026 (DEC-060): Pix on-line com estorno e contestação (DEC-056, DEC-058), atendimento a bairros urbanos escolhidos pela batedeira (DEC-057) e estado `AGUARDANDO_PAGAMENTO`; prazo de 10 minutos para escolher a forma de pagamento (DEC-059). |
+| 2.8 | Novembro de 2026 | Decisões de 26/11/2026: recuperação de senha pelo próprio usuário por e-mail (DEC-064), envio de documentos pela batedeira (DEC-065) e Pix adiado para antes do piloto (DEC-066). |

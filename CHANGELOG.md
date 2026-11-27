@@ -6,6 +6,16 @@ O formato é inspirado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.
 
 ## [Não lançado]
 
+### Decisões
+
+- 26/11/2026: DEC-061 confirmada; DEC-064 (recuperação de senha pelo próprio usuário, por e-mail), DEC-065 (envio de documentos pela batedeira, antes do piloto) e DEC-066 (Pix adiado para antes do piloto, sem contratação agora); ADR-004 (logs) aprovada, ainda não implementada. PRD 2.8, ADRs, backlog, fluxos, arquitetura, modelo de dados e READMEs atualizados.
+
+### Concluído
+
+- Métricas do administrador (27/11/2026): tempos a partir de 1 hora aparecem em horas e minutos (ex.: `2h 5min`).
+- Persistência, etapa 5 de 7 (27/11/2026, ADR-006): contato de suporte no banco com auditoria (nova tabela `configuracoes_plataforma`, **schema 0.12**, migração 0004) e métricas do piloto calculadas no servidor. Removidos a fila de recuperação assistida, a trilha de auditoria local e o contador de carrinhos do navegador (exibido como "ainda não medido"). Corrigida a recompra, que não aplicava a janela de 30 dias. Testes: 54 sem banco e 41 com banco, `tsc` e `next build` sem erros; telas não verificadas em navegador. Observado: testes de pedido falham se executados no minuto 23:59 (horário de Belém).
+- `.gitignore`: o arquivo local de credenciais deixa de poder ser versionado.
+
 ### Corrigido
 
 - Administração de clientes (26/11/2026, ADR-006 etapa 5 parcial, PRD §16.2): a tela **Usuários** mostrava um único cliente guardado no navegador (com nome desatualizado) e o bloqueio não valia no servidor. Agora lista as contas do banco e bloqueia ou reativa com motivo e auditoria; o bloqueio encerra as sessões e invalida links de redefinição, sem cancelar pedidos. Rotas `GET /api/admin/clientes` e `POST /api/admin/clientes/situacao`. Schema inalterado. Testes: 52 sem banco e 39 com banco.

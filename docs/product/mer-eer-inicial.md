@@ -1,7 +1,7 @@
 # Modelo conceitual e MER inicial — AçaíConecta
 
-**Status:** Base aprovada em 28/09/2026 (DEC-046); atualizado em 25/11/2026 para o PRD 2.7 (DEC-056 a DEC-060). O schema SQL 0.11 é a única fonte da estrutura; o antigo `.mwb` (schema 0.7) foi removido (DEC-061).
-**Base:** [PRD 2.7](PRD.md), [decisions.md](decisions.md), [flows.md](flows.md), [`database/schema.sql`](../../database/schema.sql) (versão 0.11, fonte oficial da estrutura) e a aplicação (`app/lib/domain.ts`, `customer-session.ts`, `order-presentation.ts`).
+**Status:** Base aprovada em 28/09/2026 (DEC-046); atualizado em 25/11/2026 para o PRD 2.7 (DEC-056 a DEC-060). O schema SQL 0.12 é a única fonte da estrutura; o antigo `.mwb` (schema 0.7) foi removido (DEC-061).
+**Base:** [PRD 2.8](PRD.md), [decisions.md](decisions.md), [flows.md](flows.md), [`database/schema.sql`](../../database/schema.sql) (versão 0.12, fonte oficial da estrutura) e a aplicação (`app/lib/domain.ts`, `customer-session.ts`, `order-presentation.ts`).
 
 Este documento descreve entidades, relacionamentos e decisões de modelagem a partir das regras do MVP, alinhado ao schema SQL 0.8. O significado de cada campo e a regra de negócio correspondente ficam somente no [dicionário de dados](../database/data-dictionary.md), para não manter a mesma descrição em dois lugares. Ele não substitui o PRD: qualquer conflito entre este modelo e o PRD ou o `decisions.md` deve ser resolvido nessas fontes; qualquer conflito com o schema deve ser corrigido aqui ou registrado como mudança do schema.
 
@@ -55,6 +55,7 @@ PEDIDO (1) ───────< (0..N) CONTESTACAO >─────── (1) 
 EVENTO_WEBHOOK (N) >── (0..1) PAGAMENTO         [notificação do provedor; idempotência por id externo]
 
 ADMINISTRADOR (1) ─< (0..N) EVENTO_AUDITORIA    [entidade afetada por referência lógica]
+ADMINISTRADOR (1) ─< (0..1) CONFIGURACAO_PLATAFORMA  [linha única: contato de suporte]
 ```
 
 Cardinalidades seguem as regras do MVP: um pedido pertence a exatamente um cliente e uma batedeira; um item de pedido pode perder a referência ao produto sem perder os dados copiados; uma batedeira tem exatamente um operador responsável e um operador responde por no máximo uma batedeira durante o piloto.

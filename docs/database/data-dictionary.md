@@ -1,6 +1,6 @@
 # Dicionário de dados — MVP reduzido
 
-**Versão do schema:** 0.11 (PRD 2.7; validado em MySQL 8.0 em 25/11/2026)
+**Versão do schema:** 0.12 (PRD 2.8; validado em MySQL 8.0 em 27/11/2026)  
 **Status:** Base aprovada em 28/09/2026 (DEC-046); schema 0.11 e este dicionário atualizados em 25/11/2026 (DEC-056 a DEC-061), aguardando revisão do responsável
 **Banco previsto:** MySQL 8+
 **Fonte estrutural oficial:** [`../../database/schema.sql`](../../database/schema.sql)
@@ -299,6 +299,17 @@ As atualizações exibidas ao cliente e os alertas do painel (PRD §15) são der
 Ações administrativas sobre um pedido específico, como o cancelamento por impossibilidade operacional, são registradas aqui, com o administrador como autor, para ficarem visíveis ao cliente e ao operador (PRD §15.1).
 
 Exatamente um entre `usuario_id` e `origem_processo` deve ser informado. Pedidos e autores com eventos associados não devem ser apagados fisicamente.
+
+### `configuracoes_plataforma` *(novo no schema 0.12)*
+
+Configuração geral da plataforma, em uma única linha (`id = 1`).
+
+| Campo | Significado e regra funcional |
+|---|---|
+| `id` | Sempre 1. |
+| `email_suporte` | Canal de atendimento exibido a quem está conectado; nulo quando não há canal configurado. |
+| `atualizado_por` | Administrador que fez a última alteração; cada mudança também entra em `eventos_auditoria`. |
+| `atualizado_em` | Momento da última alteração. |
 
 ### `eventos_auditoria`
 
